@@ -1793,6 +1793,24 @@ async function checkServerStatus() {
 
 // Dynamic Resume and CV PDF/Print generator
 function exportPDF(type) {
+  const printUrl = window.location.origin + window.location.pathname + "?print=" + type;
+  const printWindow = window.open(printUrl, "_blank");
+  if (!printWindow) {
+    alert("Popup blocked! Please allow popups to download your Resume/CV.");
+  }
+}
+
+function checkPrintRoute() {
+  const urlParams = new URLSearchParams(window.location.search);
+  const printType = urlParams.get('print');
+  if (printType === 'resume' || printType === 'cv') {
+    generatePrintLayout(printType);
+    return true;
+  }
+  return false;
+}
+
+function generatePrintLayout(type) {
   const settings = Database.getSettings();
   const projects = Database.getProjects();
   const tech = Database.getTechStacks();
@@ -1816,307 +1834,478 @@ function exportPDF(type) {
   const isResume = type === "resume";
   const docTitle = isResume ? `${name} - Resume` : `${name} - Curriculum Vitae (CV)`;
   
-  // Apply visual differences between a modern 1-page Resume (sans-serif) and a multi-page CV (serif)
-  const fontFamily = isResume ? "'Inter', sans-serif" : "'Georgia', serif";
-  const accentColor = isResume ? "#6366f1" : "#4b5563";
+  const fontFamily = isResume ? "'Inter', 'Outfit', sans-serif" : "'Georgia', serif";
+  const accentColor = isResume ? "#4f46e5" : "#1f2937";
   const headerColor = isResume ? "#1e1b4b" : "#111111";
   const bodySize = isResume ? "9.5pt" : "10.5pt";
-  const itemMargin = isResume ? "16px" : "24px";
+  const itemMargin = isResume ? "14px" : "24px";
   const summaryAlign = isResume ? "justify" : "left";
 
-  let html = `
-    <!DOCTYPE html>
-    <html>
-    <head>
-      <meta charset="utf-8">
-      <title>${docTitle}</title>
-      <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@400;500;600;700&display=swap">
-      <style>
-        * { box-sizing: border-box; margin: 0; padding: 0; }
-        body {
-          font-family: ${fontFamily};
-          color: #2d3748;
-          background-color: #ffffff;
-          line-height: 1.6;
-          padding: 20px;
-          font-size: ${bodySize};
-        }
-        h1, h2, h3, h4 {
-          font-family: ${isResume ? "'Outfit', sans-serif" : "'Georgia', serif"};
-          color: #000000;
-        }
-        h1 {
-          font-size: ${isResume ? '24pt' : '21pt'};
-          font-weight: 700;
-          text-align: ${isResume ? 'center' : 'left'};
-          margin-bottom: 4px;
-          text-transform: ${isResume ? 'uppercase' : 'none'};
-          letter-spacing: -0.5px;
-          color: ${headerColor};
-        }
-        .subtitle {
-          font-family: ${isResume ? "'Outfit', sans-serif" : "'Georgia', serif"};
-          font-size: 11pt;
-          font-weight: 500;
-          text-align: ${isResume ? 'center' : 'left'};
-          color: ${accentColor};
-          margin-bottom: 16px;
-          letter-spacing: 0.5px;
-          text-transform: uppercase;
-          font-style: ${isResume ? 'normal' : 'italic'};
-        }
-        .contact-info {
-          display: flex;
-          justify-content: ${isResume ? 'center' : 'flex-start'};
-          gap: 16px;
-          font-size: 9pt;
-          color: #4a5568;
-          margin-bottom: 20px;
-          border-bottom: 1.5px solid #cbd5e0;
-          padding-bottom: 12px;
-          flex-wrap: wrap;
-        }
-        .contact-info a {
-          color: inherit;
-          text-decoration: none;
-        }
-        .contact-info a:hover {
-          text-decoration: underline;
-        }
-        .section {
-          margin-bottom: ${itemMargin};
-        }
-        .section-title {
-          font-size: 11.5pt;
-          font-weight: 700;
-          text-transform: uppercase;
-          color: ${headerColor};
-          border-bottom: 1.5px solid ${accentColor};
-          padding-bottom: 3px;
-          margin-bottom: 10px;
-          letter-spacing: 0.8px;
-        }
-        .summary {
-          font-size: 9.5pt;
-          color: #4a5568;
-          text-align: ${summaryAlign};
-          margin-bottom: 8px;
-        }
-        .item-header {
-          display: flex;
-          justify-content: space-between;
-          font-weight: 700;
-          font-size: 9.5pt;
-          margin-bottom: 2px;
-          color: #1a202c;
-        }
-        .item-company {
-          font-size: 9pt;
-          color: #4a5568;
-          font-weight: 600;
-          margin-bottom: 4px;
-          font-style: ${isResume ? 'normal' : 'italic'};
-        }
-        .item-desc {
-          font-size: 8.5pt;
-          color: #4a5568;
-          margin-bottom: 10px;
-          text-align: justify;
-          padding-left: 10px;
-        }
-        .skills-grid {
-          display: grid;
-          grid-template-columns: repeat(${isResume ? '2' : '1'}, 1fr);
-          gap: 8px;
-        }
-        .skill-category {
-          margin-bottom: 4px;
-          font-size: 8.5pt;
-        }
-        .skill-category strong {
-          color: #1a202c;
-        }
-        .skill-category span {
-          color: #4a5568;
-        }
-        .project-item {
-          margin-bottom: 8px;
-        }
-        .project-title {
-          font-size: 9.5pt;
-          font-weight: 700;
-          color: #1a202c;
-          margin-bottom: 2px;
-        }
-        .project-desc {
-          font-size: 8.5pt;
-          color: #4a5568;
-          margin-bottom: 4px;
-          text-align: justify;
-        }
-        .project-tech {
-          font-size: 8pt;
-          color: ${accentColor};
-          font-weight: 600;
-        }
-        
-        @media print {
-          body {
-            padding: 0;
-          }
-          a { text-decoration: none; color: #000000; }
-        }
-        @page {
-          size: A4;
-          margin: 1.2cm 1.2cm 1.2cm 1.2cm;
-        }
-      </style>
-    </head>
-    <body>
-  `;
-
-  // Header Details
-  html += `
-    <h1>${name}</h1>
-    <div class="subtitle">Full-Stack Software Engineer & AI Builder</div>
-    <div class="contact-info">
-      <span>Email: <a href="mailto:${email}">${email}</a></span>
-      <span>Location: ${location}</span>
-      ${linkedinUrl ? `<span>LinkedIn: <a href="${linkedinUrl}" target="_blank">${linkedinDisplay}</a></span>` : ""}
-      ${githubUrl ? `<span>GitHub: <a href="${githubUrl}" target="_blank">${githubDisplay}</a></span>` : ""}
-    </div>
-  `;
-
-  // Professional Summary
-  html += `
-    <div class="section">
-      <div class="section-title">Professional Profile</div>
-      <p class="summary">${bio}</p>
-    </div>
-  `;
-
-  // Technical Toolkit / Skills
   const skillCategories = {};
   tech.forEach(t => {
     if (!skillCategories[t.category]) skillCategories[t.category] = [];
     skillCategories[t.category].push(t.name);
   });
 
-  html += `
-    <div class="section">
-      <div class="section-title">Technical Expertise</div>
-      <div class="skills-grid">
-  `;
-  for (const [category, items] of Object.entries(skillCategories)) {
-    html += `
-      <div class="skill-category">
-        <strong>${category}:</strong> <span>${items.join(", ")}</span>
-      </div>
-    `;
-  }
-  html += `
-      </div>
-    </div>
-  `;
-
-  // Sort chronological journey
   const workExperience = timeline.filter(t => t.type === "experience");
   const education = timeline.filter(t => t.type === "education");
 
-  // Experience Section
-  html += `
-    <div class="section">
-      <div class="section-title">Professional Experience</div>
+  const emailIcon = `<svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="contact-svg"><rect width="20" height="16" x="2" y="4" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/></svg>`;
+  const mapPinIcon = `<svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="contact-svg"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/></svg>`;
+  const linkedinIcon = `<svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="contact-svg"><path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-2-2 2 2 0 0 0-2 2v7h-4v-7a6 6 0 0 1 6-6z"/><rect width="4" height="12" x="2" y="9"/><circle cx="4" cy="4" r="2"/></svg>`;
+  const githubIcon = `<svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="contact-svg"><path d="M15 22v-4a4.8 4.8 0 0 0-1-3.5c3 0 6-2 6-5.5.08-1.25-.27-2.48-1-3.5.28-1.15.28-2.35 0-3.5 0 0-1 0-3 1.5-2.64-.5-5.36-.5-8 0C6 2 5 2 5 2c-.3 1.15-.3 2.35 0 3.5A5.403 5.403 0 0 0 4 9c0 3.5 3 5.5 6 5.5-.39.49-.68 1.05-.85 1.65-.17.6-.22 1.23-.15 1.85v4"/><path d="M9 18c-4.51 2-5-2-7-2"/></svg>`;
+
+  document.title = docTitle;
+
+  let printHtml = `
+    <div class="print-container ${type}-view">
+      <header class="print-header">
+        <h1>${name}</h1>
+        <div class="print-subtitle">${isResume ? "Full-Stack Software Engineer & AI Builder" : "Curriculum Vitae"}</div>
+        <div class="print-contact">
+          <div class="contact-item">
+            ${emailIcon}
+            <a href="mailto:${email}">${email}</a>
+          </div>
+          <div class="contact-item">
+            ${mapPinIcon}
+            <span>${location}</span>
+          </div>
+          ${linkedinUrl ? `
+          <div class="contact-item">
+            ${linkedinIcon}
+            <a href="${linkedinUrl}" target="_blank">${linkedinDisplay}</a>
+          </div>` : ""}
+          ${githubUrl ? `
+          <div class="contact-item">
+            ${githubIcon}
+            <a href="${githubUrl}" target="_blank">${githubDisplay}</a>
+          </div>` : ""}
+        </div>
+      </header>
+
+      <main class="print-main">
+        ${bio ? `
+        <section class="print-section print-profile">
+          <h2 class="section-title">Professional Profile</h2>
+          <div class="section-content">
+            <p class="profile-bio">${bio}</p>
+          </div>
+        </section>
+        ` : ""}
+
+        <section class="print-section print-skills">
+          <h2 class="section-title">Technical Expertise</h2>
+          <div class="section-content skills-grid">
   `;
-  
+
+  for (const [category, items] of Object.entries(skillCategories)) {
+    printHtml += `
+            <div class="skill-category item-block">
+              <span class="category-name">${category}:</span>
+              <div class="skills-list">
+                ${items.map(item => `<span class="skill-badge">${item}</span>`).join("")}
+              </div>
+            </div>
+    `;
+  }
+
+  printHtml += `
+          </div>
+        </section>
+
+        <section class="print-section print-experience">
+          <h2 class="section-title">Professional Experience</h2>
+          <div class="section-content timeline-items">
+  `;
+
   const expItems = isResume ? workExperience.slice(0, 3) : workExperience;
   if (expItems.length === 0) {
-    html += `<p style="font-size: 9pt; color: #555555; font-style: italic;">Details available upon request.</p>`;
+    printHtml += `<p class="empty-msg">Detailed professional history available upon request.</p>`;
   } else {
     expItems.forEach(item => {
-      html += `
-        <div style="margin-bottom: 10px;">
-          <div class="item-header">
-            <span>${item.title}</span>
-            <span>${item.dateRange}</span>
-          </div>
-          <div class="item-company">${item.company} &bull; ${item.role}</div>
-          <div class="item-desc">${item.description.replace(/\n/g, "<br/>")}</div>
-        </div>
+      printHtml += `
+            <div class="timeline-item item-block">
+              <div class="item-header">
+                <h3 class="item-title">${item.title}</h3>
+                <span class="item-date">${item.dateRange}</span>
+              </div>
+              <div class="item-sub-header">
+                <span class="item-company">${item.company}</span>
+                <span class="item-role">${item.role}</span>
+              </div>
+              <div class="item-description">${item.description.split("\n").map(p => p.trim() ? `<p>&bull; ${p.trim()}</p>` : "").join("")}</div>
+            </div>
       `;
     });
   }
-  html += `</div>`;
 
-  // Featured Projects
-  html += `
-    <div class="section">
-      <div class="section-title">Featured Projects</div>
+  printHtml += `
+          </div>
+        </section>
+
+        <section class="print-section print-projects">
+          <h2 class="section-title">Featured Projects</h2>
+          <div class="section-content projects-list">
   `;
+
   const projItems = isResume ? projects.slice(0, 2) : projects;
   if (projItems.length === 0) {
-    html += `<p style="font-size: 9pt; color: #555555; font-style: italic;">Project portfolio available on the website.</p>`;
+    printHtml += `<p class="empty-msg">Project case studies and repository details available on the website.</p>`;
   } else {
     projItems.forEach(proj => {
-      html += `
-        <div class="project-item" style="margin-bottom: 8px;">
-          <div class="item-header">
-            <span>${proj.title}</span>
-            <span style="font-weight: normal; font-size: 8pt;">
-              <a href="${proj.githubUrl}" target="_blank" style="color: ${accentColor};">GitHub</a>
-              ${proj.liveUrl ? ` | <a href="${proj.liveUrl}" target="_blank" style="color: ${accentColor};">Live Demo</a>` : ""}
-            </span>
-          </div>
-          <p class="project-desc">${proj.description}</p>
-          <div class="project-tech">Technologies: ${proj.tags.join(", ")}</div>
-        </div>
+      printHtml += `
+            <div class="project-item item-block">
+              <div class="item-header">
+                <h3 class="item-title">${proj.title}</h3>
+                <div class="project-links">
+                  <a href="${proj.githubUrl}" target="_blank">GitHub</a>
+                  ${proj.liveUrl ? ` &bull; <a href="${proj.liveUrl}" target="_blank">Live Demo</a>` : ""}
+                </div>
+              </div>
+              <p class="project-desc">${proj.description}</p>
+              <div class="project-tech"><strong>Technologies:</strong> ${proj.tags.join(", ")}</div>
+            </div>
       `;
     });
   }
-  html += `</div>`;
 
-  // Education Section
-  html += `
-    <div class="section" style="${isResume ? 'margin-bottom: 0;' : ''}">
-      <div class="section-title">Education & Credentials</div>
+  printHtml += `
+          </div>
+        </section>
+
+        <section class="print-section print-education">
+          <h2 class="section-title">Education & Credentials</h2>
+          <div class="section-content education-list">
   `;
+
   const eduItems = isResume ? education.slice(0, 2) : education;
   if (eduItems.length === 0) {
-    html += `<p style="font-size: 9pt; color: #555555; font-style: italic;">Academic credentials available upon request.</p>`;
+    printHtml += `<p class="empty-msg">Educational credentials available upon request.</p>`;
   } else {
     eduItems.forEach(item => {
-      html += `
-        <div style="margin-bottom: 6px;">
-          <div class="item-header">
-            <span>${item.title}</span>
-            <span>${item.dateRange}</span>
-          </div>
-          <div class="item-company">${item.company}</div>
-        </div>
+      printHtml += `
+            <div class="education-item item-block">
+              <div class="item-header">
+                <h3 class="item-title">${item.title}</h3>
+                <span class="item-date">${item.dateRange}</span>
+              </div>
+              <div class="item-institution">${item.company}</div>
+            </div>
       `;
     });
   }
-  html += `</div>`;
 
-  html += `
-      <script>
-        window.onload = function() {
-          setTimeout(function() {
-            window.print();
-          }, 300);
-        }
-      </script>
-    </body>
-    </html>
+  printHtml += `
+          </div>
+        </section>
+      </main>
+    </div>
   `;
 
-  const printWindow = window.open("", "_blank");
-  if (printWindow) {
-    printWindow.document.open();
-    printWindow.document.write(html);
-    printWindow.document.close();
+  const printStyles = `
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@400;500;600;700&display=swap');
+
+    html, body {
+      background-color: #ffffff !important;
+      color: #1f2937 !important;
+      margin: 0 !important;
+      padding: 0 !important;
+      width: 100% !important;
+      height: 100% !important;
+      -webkit-print-color-adjust: exact !important;
+      print-color-adjust: exact !important;
+    }
+
+    body {
+      font-family: ${fontFamily} !important;
+      font-size: ${bodySize} !important;
+      line-height: 1.5 !important;
+    }
+
+    /* Hide everything else on the portfolio website */
+    #app, .app-container, .navbar, .sidebar, .chatbot-container, .modal, .toast {
+      display: none !important;
+    }
+
+    .print-container {
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    .print-header {
+      text-align: ${isResume ? "center" : "left"};
+      margin-bottom: 20px;
+      border-bottom: 2px solid ${accentColor};
+      padding-bottom: 12px;
+    }
+
+    .print-header h1 {
+      font-family: ${isResume ? "'Outfit', sans-serif" : "'Georgia', serif"};
+      font-size: ${isResume ? "24pt" : "22pt"};
+      font-weight: 700;
+      color: ${headerColor};
+      margin: 0 0 4px 0;
+      letter-spacing: -0.5px;
+      text-transform: ${isResume ? "uppercase" : "none"};
+    }
+
+    .print-subtitle {
+      font-family: ${isResume ? "'Outfit', sans-serif" : "'Georgia', serif"};
+      font-size: 11pt;
+      font-weight: 500;
+      color: ${accentColor};
+      margin-bottom: 8px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      font-style: ${isResume ? "normal" : "italic"};
+    }
+
+    .print-contact {
+      display: flex;
+      justify-content: ${isResume ? "center" : "flex-start"};
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 14px;
+      font-size: 8.5pt;
+      color: #4b5563;
+    }
+
+    .contact-item {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    .contact-svg {
+      color: #4b5563;
+      flex-shrink: 0;
+      width: 12px;
+      height: 12px;
+    }
+
+    .print-contact a {
+      color: inherit;
+      text-decoration: none;
+    }
+
+    .print-contact a:hover {
+      text-decoration: underline;
+    }
+
+    .print-section {
+      margin-bottom: ${itemMargin};
+    }
+
+    .section-title {
+      font-family: ${isResume ? "'Outfit', sans-serif" : "'Georgia', serif"};
+      font-size: 11pt;
+      font-weight: 700;
+      text-transform: uppercase;
+      color: ${headerColor};
+      border-bottom: 1px solid ${accentColor};
+      padding-bottom: 3px;
+      margin-bottom: 8px;
+      letter-spacing: 0.8px;
+    }
+
+    .profile-bio {
+      text-align: ${summaryAlign};
+      color: #374151;
+      margin: 0;
+    }
+
+    .skills-grid {
+      display: grid;
+      grid-template-columns: ${isResume ? "repeat(2, 1fr)" : "1fr"};
+      gap: 8px 16px;
+    }
+
+    .skill-category {
+      font-size: 8.5pt;
+    }
+
+    .category-name {
+      font-weight: 700;
+      color: #111111;
+      display: block;
+      margin-bottom: 2px;
+    }
+
+    .skills-list {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 4px;
+    }
+
+    .skill-badge {
+      background-color: #f3f4f6;
+      color: #1f2937;
+      padding: 2px 6px;
+      border-radius: 4px;
+      font-size: 8pt;
+      border: 1px solid #e5e7eb;
+      display: inline-block;
+    }
+
+    .item-block {
+      page-break-inside: avoid !important;
+      break-inside: avoid !important;
+    }
+
+    .timeline-item {
+      margin-bottom: 10px;
+    }
+
+    .item-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      font-weight: 700;
+      color: #111111;
+    }
+
+    .item-title {
+      font-size: 9.5pt;
+      margin: 0;
+      font-weight: 700;
+    }
+
+    .item-date {
+      font-size: 8.5pt;
+      color: #4b5563;
+      font-weight: 500;
+    }
+
+    .item-sub-header {
+      display: flex;
+      gap: 6px;
+      font-size: 8.5pt;
+      color: #4b5563;
+      font-style: ${isResume ? "normal" : "italic"};
+      margin-bottom: 4px;
+    }
+
+    .item-company {
+      font-weight: 600;
+    }
+
+    .item-role {
+      font-weight: normal;
+    }
+
+    .item-description {
+      font-size: 8.5pt;
+      color: #374151;
+      padding-left: 6px;
+    }
+
+    .item-description p {
+      margin-bottom: 2px;
+    }
+
+    .project-item {
+      margin-bottom: 10px;
+    }
+
+    .project-links {
+      font-size: 8pt;
+      font-weight: normal;
+    }
+
+    .project-links a {
+      color: ${accentColor};
+      text-decoration: none;
+    }
+
+    .project-links a:hover {
+      text-decoration: underline;
+    }
+
+    .project-desc {
+      font-size: 8.5pt;
+      color: #374151;
+      margin: 2px 0;
+      text-align: justify;
+    }
+
+    .project-tech {
+      font-size: 8pt;
+      color: #4b5563;
+    }
+
+    .education-item {
+      margin-bottom: 6px;
+    }
+
+    .item-institution {
+      font-size: 8.5pt;
+      color: #4b5563;
+    }
+
+    .empty-msg {
+      font-size: 8.5pt;
+      color: #6b7280;
+      font-style: italic;
+    }
+
+    @page {
+      size: A4;
+      margin: 1.5cm 1.5cm 1.5cm 1.5cm;
+    }
+
+    .cv-view {
+      font-family: 'Georgia', serif !important;
+    }
+    
+    .cv-view .skills-list {
+      display: inline;
+    }
+
+    .cv-view .skill-badge {
+      background-color: transparent;
+      border: none;
+      padding: 0;
+      border-radius: 0;
+      display: inline;
+    }
+    
+    .cv-view .skill-badge:not(:last-child)::after {
+      content: ", ";
+    }
+  `;
+
+  document.body.innerHTML = printHtml;
+  
+  const styleEl = document.createElement("style");
+  styleEl.textContent = printStyles;
+  document.head.appendChild(styleEl);
+
+  // Disable existing stylesheets
+  document.querySelectorAll("link[rel='stylesheet']:not([href*='fonts'])").forEach(link => {
+    link.disabled = true;
+  });
+
+  // Remove existing styles to avoid conflicts
+  document.querySelectorAll("style").forEach(style => {
+    if (style !== styleEl) {
+      style.remove();
+    }
+  });
+
+  // Wait for fonts to load before opening print window
+  if (document.fonts) {
+    document.fonts.ready.then(() => {
+      setTimeout(() => {
+        window.print();
+      }, 500);
+    });
   } else {
-    alert("Popup blocked! Please allow popups to download your Resume/CV.");
+    setTimeout(() => {
+      window.print();
+    }, 600);
   }
 }
 
@@ -2135,6 +2324,9 @@ function initResumeExporter() {
 
 // Initialize Main Execution Flow
 function initApp() {
+  if (checkPrintRoute()) {
+    return;
+  }
   initTheme();
   initJobScanner();
   updateAdminLockUI();
