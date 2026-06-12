@@ -8,6 +8,7 @@ const logo = document.getElementById("brand-logo");
 
 // Active state for sections
 let activeTab = "home";
+let isServerLive = false;
 
 // ----------------------------------------------------
 // ROUTING & NAVIGATION
@@ -88,7 +89,7 @@ function renderHomeStats() {
   const aiStateEl = document.getElementById("stat-ai-mode");
   const subStatusEl = document.getElementById("chat-sub-status");
   
-  if (settings.geminiKey) {
+  if (settings.geminiKey || isServerLive) {
     aiStateEl.textContent = "Gemini API";
     aiStateEl.style.color = "var(--accent-cyan)";
     subStatusEl.textContent = "Gemini AI Agent";
@@ -1776,6 +1777,20 @@ function renderAdminBlogList() {
   });
 }
 
+// Check if the serverless proxy backend has a valid Gemini key
+async function checkServerStatus() {
+  try {
+    const res = await fetch("/api/status");
+    if (res.ok) {
+      const data = await res.json();
+      isServerLive = !!data.live;
+    }
+  } catch (e) {
+    isServerLive = false;
+  }
+  renderHomeStats();
+}
+
 // Initialize Main Execution Flow
 function initApp() {
   initTheme();
@@ -1784,6 +1799,7 @@ function initApp() {
   renderHomeStats();
   initSlider();
   switchPage("home");
+  checkServerStatus(); // Query Vercel serverless state
 }
 
 window.addEventListener("DOMContentLoaded", initApp);
