@@ -1,0 +1,643 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Persona - Premium AI Portfolio</title>
+    <link rel="stylesheet" href="./src/style.css" />
+  </head>
+  <body>
+    <div id="app">
+      <!-- Decorative background blooms -->
+      <div class="bg-decor-1"></div>
+      <div class="bg-decor-2"></div>
+
+      <!-- Navigation Header -->
+      <header class="navbar glass-panel">
+        <div class="nav-brand" id="brand-logo">Persona.</div>
+        <div style="display: flex; align-items: center; gap: 16px;">
+          <ul class="nav-links">
+            <li><span class="nav-link active" data-page="home">Home</span></li>
+            <li><span class="nav-link" data-page="tech">Tech Stack</span></li>
+            <li><span class="nav-link" data-page="projects">Projects</span></li>
+            <li><span class="nav-link" data-page="blog">Blog</span></li>
+            <li><span class="nav-link" data-page="contact">Contact</span></li>
+            <li id="nav-admin-li" style="display: none;"><span class="nav-link" data-page="admin">Admin</span></li>
+          </ul>
+          <button class="theme-toggle-btn" id="theme-toggle-btn" title="Toggle Theme">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" id="theme-icon">
+              <!-- Moon path by default -->
+              <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" />
+            </svg>
+          </button>
+        </div>
+      </header>
+
+      <!-- Main Layout Pages -->
+      <main class="page-container">
+        
+        <!-- PAGE 1: HOME/HERO -->
+        <section id="home-page" class="page active">
+          <div class="hero-section">
+            <div class="hero-text">
+              <div class="hero-subtitle">WELCOME TO MY DIGITAL REALM</div>
+              <h1>Hi, I'm <span id="owner-name-display">Creative Dev</span></h1>
+              <p class="hero-description" id="owner-bio-display">
+                I am a full-stack engineer and AI practitioner passionate about crafting beautiful, high-performance web applications and integration of intelligent agents.
+              </p>
+              <div class="hero-actions">
+                <button class="btn btn-primary" id="cta-view-work">View Projects</button>
+                <button class="btn btn-secondary" id="cta-contact">Get In Touch</button>
+              </div>
+            </div>
+            <div class="hero-visual">
+              <div class="avatar-container">
+                <div class="avatar-inner">
+                  <!-- Vector visual icon -->
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                    <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5" stroke-linecap="round" stroke-linejoin="round"/>
+                  </svg>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- AI Job-Fit Scanner -->
+          <div class="scanner-card glass-panel" style="margin-top: 40px;">
+            <h3 style="margin-bottom: 8px; font-size: 1.4rem;">AI Job-Fit Scanner</h3>
+            <p style="color: var(--text-muted); font-size: 0.9rem; margin-bottom: 20px;">
+              Recruiters: Paste a job description here to check my alignment and retrieve a suitability analysis.
+            </p>
+            <div style="display: flex; flex-direction: column; gap: 12px;">
+              <textarea id="scanner-input" class="glass-input" style="min-height: 100px; resize: none; overflow-y: hidden;" placeholder="e.g. Looking for a full-stack engineer with React, Node.js, and experience building AI tools..."></textarea>
+              <button id="scanner-btn" type="button" class="btn btn-primary" style="align-self: flex-start;">Analyze Job Fit</button>
+            </div>
+            <!-- Results container -->
+            <div class="scanner-results" id="scanner-results-container">
+              <div class="scanner-meter">
+                <svg viewBox="0 0 100 100">
+                  <circle class="scanner-meter-bg" cx="50" cy="50" r="45"></circle>
+                  <circle class="scanner-meter-fill" id="scanner-progress" cx="50" cy="50" r="45"></circle>
+                </svg>
+                <div class="scanner-meter-text" id="scanner-percentage-text">0%</div>
+              </div>
+              <div class="scanner-analysis">
+                <h4 id="scanner-summary-title">Suitability Assessment</h4>
+                <p id="scanner-summary-text">Analysis will be populated here.</p>
+                <div id="scanner-gaps-group" style="margin-top: 10px; display: none;">
+                  <h4 style="font-size: 0.95rem; color: var(--accent-purple);">Suggested Focus Areas / Gaps:</h4>
+                  <p id="scanner-gaps-text" style="font-size: 0.85rem; color: var(--text-muted);"></p>
+                </div>
+                <div id="scanner-projects-group" style="margin-top: 10px;">
+                  <h4 style="font-size: 0.95rem; color: var(--accent-indigo);">Recommended Portfolio Projects:</h4>
+                  <p id="scanner-projects-text" style="font-size: 0.85rem; color: var(--text-muted);"></p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Quick statistics -->
+          <div class="stats-bar glass-panel">
+            <div class="stat-item">
+              <h3 id="stat-projects-count">0</h3>
+              <p>Projects Built</p>
+            </div>
+            <div class="stat-item">
+              <h3 id="stat-skills-count">0</h3>
+              <p>Tech Stacks</p>
+            </div>
+            <div class="stat-item">
+              <h3 id="stat-ai-mode">Sandbox</h3>
+              <p>AI Engine State</p>
+            </div>
+          </div>
+
+          <!-- Slider Section (Testimonials / Highlighted Items) -->
+          <div class="slider-section">
+            <h2 class="section-title" style="margin-top: 40px; margin-bottom: 24px;">Key Philosophies</h2>
+            <div class="slider-container glass-panel">
+              <div class="slider-track" id="philosophy-slider-track">
+                <div class="slide">
+                  <div class="slide-quote">"Simplicity is the ultimate sophistication. Elegant code combined with intuitive layout is the standard."</div>
+                  <div class="slide-author">— Design Principle</div>
+                </div>
+                <div class="slide">
+                  <div class="slide-quote">"AI is not a replacement, but an extension of human intelligence. Embedding systems directly makes websites feel alive."</div>
+                  <div class="slide-author">— Engineering Philosophy</div>
+                </div>
+                <div class="slide">
+                  <div class="slide-quote">"Modern websites require premium transitions, curated palettes, and micro-interactions that respect the viewer's eyes."</div>
+                  <div class="slide-author">— Aesthetic Commitment</div>
+                </div>
+              </div>
+              <div class="slider-controls" id="philosophy-slider-dots">
+                <!-- Dots generated in main.js -->
+              </div>
+            </div>
+          </div>
+
+          <!-- Experience & Education Timeline -->
+          <div class="timeline-section">
+            <h2 class="section-title" style="margin-top: 50px;">Professional Journey</h2>
+            <p class="section-subtitle">A chronological track of education and software engineering experience.</p>
+            <div class="timeline-container" id="timeline-container">
+              <!-- Dynamically populated in main.js -->
+            </div>
+          </div>
+        </section>
+
+        <!-- PAGE 2: TECH STACK -->
+        <section id="tech-page" class="page">
+          <h2 class="section-title">My Technical Toolkit</h2>
+          <p class="section-subtitle">
+            A comprehensive overview of language proficiencies, frameworks, database architectures, and engineering infrastructure.
+          </p>
+
+          <!-- Skill Radar Chart -->
+          <div class="radar-chart-container" id="radar-chart-container">
+            <!-- SVG rendered dynamically in main.js -->
+          </div>
+          
+          <div class="tech-categories" id="tech-category-filters">
+            <!-- Dynamically populated in main.js -->
+          </div>
+
+          <div class="tech-grid" id="tech-grid-container">
+            <!-- Dynamically populated -->
+          </div>
+        </section>
+
+        <!-- PAGE 3: PROJECTS -->
+        <section id="projects-page" class="page">
+          <h2 class="section-title">Featured Creations</h2>
+          <p class="section-subtitle">
+            A curated showcase of engineering builds ranging from custom AI planners to interactive web interfaces.
+          </p>
+
+          <div class="projects-header">
+            <div class="tech-categories" id="project-tech-filters">
+              <!-- Dynamically populated filtering buttons -->
+            </div>
+            <input type="text" id="project-search-input" class="glass-input project-search" placeholder="Search projects..." />
+          </div>
+
+          <div class="projects-grid" id="projects-grid-container">
+            <!-- Dynamically populated -->
+          </div>
+        </section>
+
+        <!-- PAGE 3.5: BLOG -->
+        <section id="blog-page" class="page">
+          <h2 class="section-title">The Developer Chronicle</h2>
+          <p class="section-subtitle">
+            Sharing insights about front-end architecture, user experience design, and client-side AI paradigms.
+          </p>
+          <div class="blog-grid" id="blog-grid-container">
+            <!-- Dynamically populated articles -->
+          </div>
+        </section>
+
+        <!-- PAGE 4: CONTACT -->
+        <section id="contact-page" class="page">
+          <h2 class="section-title">Initiate Contact</h2>
+          <p class="section-subtitle">
+            Have a project in mind or interested in collaborating? Leave a message below, and my virtual assistant will process it immediately.
+          </p>
+
+          <div class="contact-grid">
+            <div class="contact-info glass-panel" style="padding: 32px;">
+              <h3 style="margin-bottom: 20px;">Connection Hub</h3>
+              <div class="contact-info-item">
+                <div class="contact-info-icon">
+                  <svg viewBox="0 0 24 24" width="20" height="20" stroke="currentColor" stroke-width="2" fill="none"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+                </div>
+                <div class="contact-info-text">
+                  <h4>Email</h4>
+                  <p id="contact-email-display">arnavjain1905@gmail.com</p>
+                </div>
+              </div>
+              <div class="contact-info-item">
+                <div class="contact-info-icon">
+                  <svg viewBox="0 0 24 24" width="20" height="20" stroke="currentColor" stroke-width="2" fill="none"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+                </div>
+                <div class="contact-info-text">
+                  <h4>Location</h4>
+                  <p id="contact-location-display">Ludhiana, Punjab, India</p>
+                </div>
+              </div>
+              <div class="contact-info-item">
+                <div class="contact-info-icon">
+                  <svg viewBox="0 0 24 24" width="20" height="20" stroke="currentColor" stroke-width="2" fill="none"><path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-2-2 2 2 0 0 0-2 2v7h-4v-7a6 6 0 0 1 6-6z"/><rect x="2" y="9" width="4" height="12"/><circle cx="4" cy="4" r="2"/></svg>
+                </div>
+                <div class="contact-info-text">
+                  <h4>LinkedIn</h4>
+                  <p id="contact-linkedin-display">linkedin.com/in/arnav-jain007</p>
+                </div>
+              </div>
+              <!-- Developer Profiles & Extra Socials -->
+              <div class="contact-info-item" id="contact-extra-socials-group" style="display: none;">
+                <div class="contact-info-icon">
+                  <svg viewBox="0 0 24 24" width="20" height="20" stroke="currentColor" stroke-width="2" fill="none"><line x1="6" y1="3" x2="6" y2="21"/><line x1="18" y1="3" x2="18" y2="21"/><line x1="6" y1="12" x2="18" y2="12"/><line x1="6" y1="6" x2="18" y2="6"/><line x1="6" y1="18" x2="18" y2="18"/></svg>
+                </div>
+                <div class="contact-info-text">
+                  <h4>Developer Sites</h4>
+                  <div id="contact-extra-socials-list" style="display: flex; flex-direction: column; gap: 4px; margin-top: 4px;"></div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Form -->
+            <form id="contact-submission-form" class="contact-form glass-panel">
+              <div class="form-group">
+                <label class="form-label">Full Name</label>
+                <input type="text" id="contact-name" class="glass-input" placeholder="Your name..." required />
+                <span id="contact-name-error" style="display: none; color: #ef4444; font-size: 0.75rem; margin-top: 4px; font-weight: 500;">Please enter your name (at least 2 characters, only letters and spaces).</span>
+              </div>
+              <div class="form-group">
+                <label class="form-label">Email Address</label>
+                <input type="email" id="contact-email" class="glass-input" placeholder="you@example.com" required />
+                <span id="contact-email-error" style="display: none; color: #ef4444; font-size: 0.75rem; margin-top: 4px; font-weight: 500;">Please enter a valid email address (e.g. name@domain.com).</span>
+              </div>
+              <div class="form-group">
+                <label class="form-label">Your Message</label>
+                <textarea id="contact-message" class="glass-input" placeholder="Let's discuss..." required></textarea>
+                <span id="contact-message-error" style="display: none; color: #ef4444; font-size: 0.75rem; margin-top: 4px; font-weight: 500;">Please enter a message (at least 10 characters).</span>
+              </div>
+              <button type="submit" class="btn btn-primary" style="width: 100%;">Send Message</button>
+              <div id="contact-success-msg" style="display: none; color: #22c55e; margin-top: 15px; text-align: center; font-weight: 500;">
+                Message securely logged. My AI Co-Pilot is analyzing it!
+              </div>
+            </form>
+          </div>
+        </section>
+
+        <!-- PAGE 5: ADMIN DASHBOARD -->
+        <section id="admin-page" class="page">
+          <div class="admin-section glass-panel">
+            
+            <!-- Sidebar tabs -->
+            <div class="admin-sidebar" style="border-right: 1px solid var(--border-light);">
+              <h3 style="padding: 12px 16px 24px 16px;">Control Panel</h3>
+              <button class="admin-tab-btn active" data-pane="admin-pane-tech">
+                <svg viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" stroke-width="2" fill="none"><rect x="3" y="3" width="7" height="9"/><rect x="14" y="3" width="7" height="5"/><rect x="14" y="12" width="7" height="9"/><rect x="3" y="16" width="7" height="5"/></svg>
+                Manage Toolkit
+              </button>
+              <button class="admin-tab-btn" data-pane="admin-pane-projects">
+                <svg viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" stroke-width="2" fill="none"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>
+                Manage Projects
+              </button>
+              <button class="admin-tab-btn" data-pane="admin-pane-timeline">
+                <svg viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" stroke-width="2" fill="none"><circle cx="12" cy="5" r="3"/><line x1="12" y1="8" x2="12" y2="21"/><path d="M5 12h14"/></svg>
+                Manage Journey
+              </button>
+              <button class="admin-tab-btn" data-pane="admin-pane-blog">
+                <svg viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" stroke-width="2" fill="none"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20M4 19.5A2.5 2.5 0 0 0 6.5 22H20M4 19.5v-15A2.5 2.5 0 0 1 6.5 2M20 2v20"/></svg>
+                Manage Blog
+              </button>
+              <button class="admin-tab-btn" data-pane="admin-pane-messages">
+                <svg viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" stroke-width="2" fill="none"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+                Visitor Logs
+              </button>
+              <button class="admin-tab-btn" data-pane="admin-pane-settings">
+                <svg viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" stroke-width="2" fill="none"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+                AI Co-Pilot Settings
+              </button>
+            </div>
+
+            <!-- Content Panes -->
+            <div class="admin-content-pane">
+              
+              <!-- PANE A: TECH STACK -->
+              <div id="admin-pane-tech" class="admin-pane active">
+                <h3 style="margin-bottom: 8px;">Technical Toolkit Database</h3>
+                <p style="color: var(--text-muted); font-size: 0.85rem; margin-bottom: 24px;">Add new technologies and determine user proficiency percentages.</p>
+                
+                 <!-- Add/edit tech form -->
+                 <form id="admin-tech-form" style="display: flex; flex-direction: column; gap: 12px; margin-bottom: 30px;">
+                   <input type="hidden" id="admin-tech-id" value="" />
+                   <div class="form-row-2">
+                     <div class="form-group">
+                       <label class="form-label">Tech Name</label>
+                       <input type="text" id="admin-tech-name" class="glass-input" placeholder="e.g. Angular, Go, AWS..." required />
+                     </div>
+                     <div class="form-group">
+                       <label class="form-label">Category</label>
+                       <select id="admin-tech-category" class="glass-input" style="height: 48px; display: block;" required>
+                         <!-- Dynamically populated in main.js -->
+                       </select>
+                       <div id="admin-tech-custom-category-group" style="display: none; margin-top: 10px;">
+                         <label class="form-label" style="font-size: 0.8rem; color: var(--accent-cyan);">New Category Name</label>
+                         <input type="text" id="admin-tech-custom-category" class="glass-input" placeholder="e.g. Mobile Apps, Machine Learning..." />
+                       </div>
+                     </div>
+                   </div>
+                   <div class="form-group">
+                     <label class="form-label" id="prof-label">Proficiency: 80%</label>
+                     <input type="range" id="admin-tech-level" min="10" max="100" value="80" style="width: 100%; height: 6px; background: rgba(255,255,255,0.06); outline: none; border-radius: 3px; accent-color: var(--accent-indigo);" />
+                   </div>
+                   <div style="display: flex; gap: 10px;">
+                     <button type="submit" class="btn btn-primary" id="admin-tech-submit-btn" style="align-self: flex-start;">Add Technology</button>
+                     <button type="button" class="btn btn-secondary" id="admin-tech-cancel-btn" style="display: none;">Cancel Edit</button>
+                   </div>
+                 </form>
+
+                <div class="admin-list" id="admin-tech-list">
+                  <!-- Dynamically loaded -->
+                </div>
+              </div>
+
+              <!-- PANE B: PROJECTS -->
+              <div id="admin-pane-projects" class="admin-pane">
+                <h3 style="margin-bottom: 8px;">Projects Database</h3>
+                <p style="color: var(--text-muted); font-size: 0.85rem; margin-bottom: 24px;">Manage projects and link them under different technology tags.</p>
+
+                <!-- Add project form -->
+                <form id="admin-project-form" style="display: flex; flex-direction: column; gap: 16px; margin-bottom: 32px;">
+                  <input type="hidden" id="admin-project-id" value="" />
+                  <div class="form-row-2">
+                    <div class="form-group">
+                      <label class="form-label">Project Title</label>
+                      <input type="text" id="admin-project-title" class="glass-input" placeholder="e.g. Portfolio V2" required />
+                    </div>
+                    <div class="form-group">
+                      <label class="form-label">Theme Category</label>
+                      <input type="text" id="admin-project-category" class="glass-input" placeholder="e.g. AI / Tooling, Mobile App" required />
+                    </div>
+                  </div>
+
+                  <!-- Dynamic Tags selection -->
+                  <div class="form-group">
+                    <label class="form-label">Link Technologies (Select Tech Stack)</label>
+                    <div id="admin-project-tech-tags" style="display: flex; flex-wrap: wrap; gap: 8px; max-height: 120px; overflow-y: auto; padding: 10px; border: 1px solid var(--border-light); border-radius: var(--radius-sm); background: rgba(0,0,0,0.15);">
+                      <!-- Checkboxes loaded in main.js -->
+                    </div>
+                  </div>
+
+                  <div class="form-group">
+                    <div class="ai-assistant-helper">
+                      <div class="ai-helper-desc">
+                        <span>AI Co-Pilot:</span> Auto-draft descriptions for this project based on title and tags.
+                      </div>
+                      <button type="button" id="admin-project-ai-suggest" class="btn btn-secondary" style="padding: 6px 14px; font-size: 0.8rem;">
+                        <svg viewBox="0 0 24 24" width="14" height="14" stroke="currentColor" stroke-width="2" fill="none" style="vertical-align: middle; margin-right: 4px;"><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"/></svg>
+                        Draft Description
+                      </button>
+                    </div>
+                    <label class="form-label">Project Description</label>
+                    <textarea id="admin-project-desc" class="glass-input" placeholder="Summarize the core functionality..." required></textarea>
+                  </div>
+
+                  <div class="form-row-2">
+                    <div class="form-group">
+                      <label class="form-label">GitHub Repository URL</label>
+                      <input type="url" id="admin-project-github" class="glass-input" placeholder="https://github.com/..." />
+                    </div>
+                    <div class="form-group">
+                      <label class="form-label">Live Deployment URL</label>
+                      <input type="url" id="admin-project-live" class="glass-input" placeholder="https://..." />
+                    </div>
+                  </div>
+
+                  <div style="display: flex; gap: 10px;">
+                    <button type="submit" class="btn btn-primary" id="admin-project-submit-btn">Save Project</button>
+                    <button type="button" class="btn btn-secondary" id="admin-project-cancel-btn" style="display: none;">Cancel Edit</button>
+                  </div>
+                </form>
+
+                <div class="admin-list" id="admin-project-list">
+                  <!-- Dynamically loaded -->
+                </div>
+              </div>
+
+            <!-- PANE E: MANAGE TIMELINE -->
+            <div id="admin-pane-timeline" class="admin-pane">
+              <h3 style="margin-bottom: 8px;">Journey Database</h3>
+              <p style="color: var(--text-muted); font-size: 0.85rem; margin-bottom: 24px;">Manage experience and education entries to build the timeline track.</p>
+              <form id="admin-timeline-form" style="display: flex; flex-direction: column; gap: 12px; margin-bottom: 30px;">
+                <input type="hidden" id="admin-timeline-id" value="" />
+                <div class="form-row-2">
+                  <div class="form-group">
+                    <label class="form-label">Title / Role</label>
+                    <input type="text" id="admin-timeline-title" class="glass-input" placeholder="e.g. Software Intern, B.Tech CSE..." required />
+                  </div>
+                  <div class="form-group">
+                    <label class="form-label">Institution / Company</label>
+                    <input type="text" id="admin-timeline-company" class="glass-input" placeholder="e.g. PTU, Google, Startup Co..." required />
+                  </div>
+                </div>
+                <div class="form-row-2">
+                  <div class="form-group">
+                    <label class="form-label">Duration (Date Range)</label>
+                    <input type="text" id="admin-timeline-dates" class="glass-input" placeholder="e.g. Jan 2026 - Present" required />
+                  </div>
+                  <div class="form-group">
+                    <label class="form-label">Entry Type</label>
+                    <select id="admin-timeline-type" class="glass-input" style="height: 48px;" required>
+                      <option value="experience">Professional Experience</option>
+                      <option value="education">Education</option>
+                    </select>
+                  </div>
+                </div>
+                <div class="form-group">
+                  <label class="form-label">Key Actions / Descriptions</label>
+                  <textarea id="admin-timeline-desc" class="glass-input" style="min-height: 80px;" placeholder="Describe responsibilities or academic achievements..." required></textarea>
+                </div>
+                <div style="display: flex; gap: 10px;">
+                  <button type="submit" class="btn btn-primary" id="admin-timeline-submit-btn">Save Entry</button>
+                  <button type="button" class="btn btn-secondary" id="admin-timeline-cancel-btn" style="display: none;">Cancel Edit</button>
+                </div>
+              </form>
+              <div class="admin-list" id="admin-timeline-list">
+                <!-- Loaded dynamically in main.js -->
+              </div>
+            </div>
+
+            <!-- PANE F: MANAGE BLOG -->
+            <div id="admin-pane-blog" class="admin-pane">
+              <h3 style="margin-bottom: 8px;">Blog Database</h3>
+              <p style="color: var(--text-muted); font-size: 0.85rem; margin-bottom: 24px;">Publish articles, write markdown articles, and set keyword tags.</p>
+              <form id="admin-blog-form" style="display: flex; flex-direction: column; gap: 12px; margin-bottom: 30px;">
+                <input type="hidden" id="admin-blog-id" value="" />
+                <div class="form-group">
+                  <label class="form-label">Article Title</label>
+                  <input type="text" id="admin-blog-title" class="glass-input" placeholder="e.g. Modern CSS Tricks" required />
+                </div>
+                <div class="form-group">
+                  <label class="form-label">Summary / Short Teaser</label>
+                  <input type="text" id="admin-blog-summary" class="glass-input" placeholder="Brief 1-sentence teaser..." required />
+                </div>
+                <div class="form-group">
+                  <label class="form-label">Tags (Comma-separated)</label>
+                  <input type="text" id="admin-blog-tags" class="glass-input" placeholder="e.g. AI, CSS, Javascript" required />
+                </div>
+                <div class="form-group">
+                  <div class="ai-assistant-helper">
+                    <div class="ai-helper-desc">
+                      <span>AI Co-Pilot:</span> Generate a detailed blog outline based on the title above.
+                    </div>
+                    <button type="button" id="admin-blog-ai-suggest" class="btn btn-secondary" style="padding: 6px 14px; font-size: 0.8rem;">
+                      <svg viewBox="0 0 24 24" width="14" height="14" stroke="currentColor" stroke-width="2" fill="none" style="vertical-align: middle; margin-right: 4px;"><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"/></svg>
+                      Draft Article Outline
+                    </button>
+                  </div>
+                  <label class="form-label">Content / Body (Supports basic HTML/Markdown rendering)</label>
+                  <textarea id="admin-blog-content" class="glass-input" style="min-height: 180px;" placeholder="Write article content here..." required></textarea>
+                </div>
+                <div style="display: flex; gap: 10px;">
+                  <button type="submit" class="btn btn-primary" id="admin-blog-submit-btn">Publish Article</button>
+                  <button type="button" class="btn btn-secondary" id="admin-blog-cancel-btn" style="display: none;">Cancel Edit</button>
+                </div>
+              </form>
+              <div class="admin-list" id="admin-blog-list">
+                <!-- Loaded dynamically in main.js -->
+              </div>
+            </div>
+
+              <!-- PANE C: MESSAGES LOG -->
+              <div id="admin-pane-messages" class="admin-pane">
+                <h3 style="margin-bottom: 8px;">Visitor Inquiry logs</h3>
+                <p style="color: var(--text-muted); font-size: 0.85rem; margin-bottom: 24px;">View communications submitted through the Contact tab. Click to draft AI replies.</p>
+                
+                <div class="admin-list" id="admin-messages-list">
+                  <!-- Dynamically loaded messages -->
+                </div>
+              </div>
+
+              <!-- PANE D: SETTINGS -->
+              <div id="admin-pane-settings" class="admin-pane">
+                <h3 style="margin-bottom: 8px;">AI & Co-Pilot configuration</h3>
+                <p style="color: var(--text-muted); font-size: 0.85rem; margin-bottom: 24px;">Link Gemini API credentials and customize site metadata.</p>
+                
+                <div class="form-group" style="margin-bottom: 20px;">
+                  <label class="form-label">Gemini API Key</label>
+                  <input type="password" id="admin-settings-key" class="glass-input" placeholder="Enter your GEMINI_API_KEY..." />
+                  <div id="api-status-badge" class="api-badge disconnected">Disconnected: Sandbox Fallback Active</div>
+                  <p style="color: var(--text-dimmed); font-size: 0.75rem; margin-top: 6px;">
+                    Your key is saved <strong>exclusively in local storage</strong> on this browser. It is never transmitted to other servers, only directly to Google's API endpoint.
+                  </p>
+                </div>
+
+                <div class="form-row-2" style="margin-bottom: 20px;">
+                  <div class="form-group">
+                    <label class="form-label">Full Name</label>
+                    <input type="text" id="admin-settings-name" class="glass-input" placeholder="e.g. Arnav Jain" required />
+                  </div>
+                  <div class="form-group">
+                    <label class="form-label">Email Address</label>
+                    <input type="email" id="admin-settings-email" class="glass-input" placeholder="you@example.com" required />
+                  </div>
+                </div>
+
+                <div class="form-row-2" style="margin-bottom: 20px;">
+                  <div class="form-group">
+                    <label class="form-label">Location</label>
+                    <input type="text" id="admin-settings-location" class="glass-input" placeholder="e.g. Ludhiana, India" required />
+                  </div>
+                  <div class="form-group">
+                    <label class="form-label">LinkedIn URL</label>
+                    <input type="url" id="admin-settings-linkedin" class="glass-input" placeholder="https://linkedin.com/in/..." required />
+                  </div>
+                </div>
+
+                <div class="form-row-2" style="margin-bottom: 20px;">
+                  <div class="form-group">
+                    <label class="form-label">GitHub URL</label>
+                    <input type="url" id="admin-settings-github" class="glass-input" placeholder="https://github.com/..." />
+                  </div>
+                  <div class="form-group">
+                    <label class="form-label">Codolio URL</label>
+                    <input type="url" id="admin-settings-codolio" class="glass-input" placeholder="https://codolio.com/..." />
+                  </div>
+                </div>
+
+                <div class="form-group" style="margin-bottom: 20px;">
+                  <label class="form-label">Medium URL</label>
+                  <input type="url" id="admin-settings-medium" class="glass-input" placeholder="https://medium.com/@..." />
+                </div>
+
+                <div class="form-group" style="margin-bottom: 24px;">
+                  <label class="form-label">Portfolio Owner Bio (Context for AI Chatbot)</label>
+                  <textarea id="admin-settings-bio" class="glass-input" style="min-height: 100px;"></textarea>
+                  <p style="color: var(--text-dimmed); font-size: 0.75rem; margin-top: 6px;">
+                    This bio is directly injected into the AI's system instructions to help it answer questions about you.
+                  </p>
+                </div>
+
+                <button id="admin-settings-save" class="btn btn-primary">Save Settings</button>
+              </div>
+
+            </div>
+          </div>
+        </section>
+
+      </main>
+
+      <!-- FLOATING CHATBOT INTERFACE -->
+      <div class="chat-widget">
+        <button class="chat-toggle-btn" id="chat-widget-toggle" title="Chat with AI Representative">
+          <!-- Chat svg -->
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </button>
+
+        <div class="chat-box glass-panel" id="chat-widget-box">
+          <div class="chat-header">
+            <div class="chat-header-title">
+              <div class="chat-status-dot"></div>
+              <div>
+                <h4>Persona Bot</h4>
+                <p id="chat-sub-status">Offline Agent</p>
+              </div>
+            </div>
+            <button class="chat-close-btn" id="chat-widget-close">
+              <svg viewBox="0 0 24 24" width="20" height="20" stroke="currentColor" stroke-width="2" fill="none"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+            </button>
+          </div>
+          
+          <div class="chat-messages" id="chat-message-history">
+            <div class="chat-message system">
+              Hi! I am the virtual representative. Ask me anything about my builder's skills, projects, and work experience!
+            </div>
+          </div>
+
+          <!-- Suggestion Chips -->
+          <div id="chat-suggest-chips" style="display: flex; gap: 8px; flex-wrap: wrap; padding: 10px 16px; border-top: 1px solid var(--border-light); background: rgba(0,0,0,0.12);">
+            <span class="chat-chip" data-query="What is Arnav's email?">Email Address</span>
+            <span class="chat-chip" data-query="Can you summarize Arnav's skills?">Skills Summary</span>
+            <span class="chat-chip" data-query="What projects has he built?">Latest Projects</span>
+          </div>
+
+          <div class="chat-input-area">
+            <input type="text" id="chat-user-input" class="glass-input" style="border-radius: 20px; padding: 10px 16px; font-size: 0.9rem;" placeholder="Type a question..." />
+            <button class="chat-send-btn" id="chat-send-btn">
+              <svg viewBox="0 0 24 24" width="20" height="20" stroke="currentColor" stroke-width="2" fill="none" style="transform: rotate(45deg);"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- PORTFOLIO DETAILS MODAL POPUP -->
+      <div class="modal-overlay" id="project-detail-modal">
+        <div class="modal-container glass-panel">
+          <button class="modal-close-btn" id="modal-close-btn">
+            <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+          </button>
+          <div id="modal-content">
+            <!-- Populated dynamically -->
+          </div>
+        </div>
+      </div>
+
+      <footer style="text-align: center; color: var(--text-dimmed); font-size: 0.8rem; padding: 24px; margin-top: auto; border-top: 1px solid var(--border-light); display: flex; justify-content: center; align-items: center; gap: 8px;">
+        <span>&copy; 2026 Developer Portfolio. All rights reserved. Created in Pair Programming Sandbox.</span>
+        <button id="admin-lock-btn" style="background: none; border: none; color: var(--text-dimmed); cursor: pointer; display: none; align-items: center;" title="Admin Portal Control">
+          <svg id="lock-icon" viewBox="0 0 24 24" width="12" height="12" stroke="currentColor" stroke-width="2.5" fill="none"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+        </button>
+      </footer>
+    </div>
+
+    <!-- Application Script -->
+    <script type="module" src="./src/main.js"></script>
+  </body>
+</html>
