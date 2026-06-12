@@ -1791,6 +1791,348 @@ async function checkServerStatus() {
   renderHomeStats();
 }
 
+// Dynamic Resume and CV PDF/Print generator
+function exportPDF(type) {
+  const settings = Database.getSettings();
+  const projects = Database.getProjects();
+  const tech = Database.getTechStacks();
+  const timeline = Database.getTimeline();
+
+  const name = settings.ownerName || "Arnav Jain";
+  const email = settings.email || "arnavjain1905@gmail.com";
+  const location = settings.location || "Ludhiana, Punjab, India";
+  const bio = settings.ownerBio || "";
+  
+  // Format LinkedIn display username
+  const linkedinUrl = settings.linkedin || "";
+  let linkedinDisplay = linkedinUrl.replace(/\/$/, "").split("/").pop() || "";
+  if (linkedinDisplay && !linkedinDisplay.includes("linkedin.com")) {
+    linkedinDisplay = "linkedin.com/in/" + linkedinDisplay;
+  }
+
+  const githubUrl = settings.github || "";
+  const githubDisplay = githubUrl.replace(/\/$/, "").split("/").pop() || "github.com";
+
+  const isResume = type === "resume";
+  const docTitle = isResume ? `${name} - Resume` : `${name} - Curriculum Vitae (CV)`;
+  
+  // Apply visual differences between a modern 1-page Resume (sans-serif) and a multi-page CV (serif)
+  const fontFamily = isResume ? "'Inter', sans-serif" : "'Georgia', serif";
+  const accentColor = isResume ? "#6366f1" : "#4b5563";
+  const headerColor = isResume ? "#1e1b4b" : "#111111";
+  const bodySize = isResume ? "9.5pt" : "10.5pt";
+  const itemMargin = isResume ? "16px" : "24px";
+  const summaryAlign = isResume ? "justify" : "left";
+
+  let html = `
+    <!DOCTYPE html>
+    <html>
+    <head>
+      <meta charset="utf-8">
+      <title>${docTitle}</title>
+      <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@400;500;600;700&display=swap">
+      <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body {
+          font-family: ${fontFamily};
+          color: #2d3748;
+          background-color: #ffffff;
+          line-height: 1.6;
+          padding: 20px;
+          font-size: ${bodySize};
+        }
+        h1, h2, h3, h4 {
+          font-family: ${isResume ? "'Outfit', sans-serif" : "'Georgia', serif"};
+          color: #000000;
+        }
+        h1 {
+          font-size: ${isResume ? '24pt' : '21pt'};
+          font-weight: 700;
+          text-align: ${isResume ? 'center' : 'left'};
+          margin-bottom: 4px;
+          text-transform: ${isResume ? 'uppercase' : 'none'};
+          letter-spacing: -0.5px;
+          color: ${headerColor};
+        }
+        .subtitle {
+          font-family: ${isResume ? "'Outfit', sans-serif" : "'Georgia', serif"};
+          font-size: 11pt;
+          font-weight: 500;
+          text-align: ${isResume ? 'center' : 'left'};
+          color: ${accentColor};
+          margin-bottom: 16px;
+          letter-spacing: 0.5px;
+          text-transform: uppercase;
+          font-style: ${isResume ? 'normal' : 'italic'};
+        }
+        .contact-info {
+          display: flex;
+          justify-content: ${isResume ? 'center' : 'flex-start'};
+          gap: 16px;
+          font-size: 9pt;
+          color: #4a5568;
+          margin-bottom: 20px;
+          border-bottom: 1.5px solid #cbd5e0;
+          padding-bottom: 12px;
+          flex-wrap: wrap;
+        }
+        .contact-info a {
+          color: inherit;
+          text-decoration: none;
+        }
+        .contact-info a:hover {
+          text-decoration: underline;
+        }
+        .section {
+          margin-bottom: ${itemMargin};
+        }
+        .section-title {
+          font-size: 11.5pt;
+          font-weight: 700;
+          text-transform: uppercase;
+          color: ${headerColor};
+          border-bottom: 1.5px solid ${accentColor};
+          padding-bottom: 3px;
+          margin-bottom: 10px;
+          letter-spacing: 0.8px;
+        }
+        .summary {
+          font-size: 9.5pt;
+          color: #4a5568;
+          text-align: ${summaryAlign};
+          margin-bottom: 8px;
+        }
+        .item-header {
+          display: flex;
+          justify-content: space-between;
+          font-weight: 700;
+          font-size: 9.5pt;
+          margin-bottom: 2px;
+          color: #1a202c;
+        }
+        .item-company {
+          font-size: 9pt;
+          color: #4a5568;
+          font-weight: 600;
+          margin-bottom: 4px;
+          font-style: ${isResume ? 'normal' : 'italic'};
+        }
+        .item-desc {
+          font-size: 8.5pt;
+          color: #4a5568;
+          margin-bottom: 10px;
+          text-align: justify;
+          padding-left: 10px;
+        }
+        .skills-grid {
+          display: grid;
+          grid-template-columns: repeat(${isResume ? '2' : '1'}, 1fr);
+          gap: 8px;
+        }
+        .skill-category {
+          margin-bottom: 4px;
+          font-size: 8.5pt;
+        }
+        .skill-category strong {
+          color: #1a202c;
+        }
+        .skill-category span {
+          color: #4a5568;
+        }
+        .project-item {
+          margin-bottom: 8px;
+        }
+        .project-title {
+          font-size: 9.5pt;
+          font-weight: 700;
+          color: #1a202c;
+          margin-bottom: 2px;
+        }
+        .project-desc {
+          font-size: 8.5pt;
+          color: #4a5568;
+          margin-bottom: 4px;
+          text-align: justify;
+        }
+        .project-tech {
+          font-size: 8pt;
+          color: ${accentColor};
+          font-weight: 600;
+        }
+        
+        @media print {
+          body {
+            padding: 0;
+          }
+          a { text-decoration: none; color: #000000; }
+        }
+        @page {
+          size: A4;
+          margin: 1.2cm 1.2cm 1.2cm 1.2cm;
+        }
+      </style>
+    </head>
+    <body>
+  `;
+
+  // Header Details
+  html += `
+    <h1>${name}</h1>
+    <div class="subtitle">Full-Stack Software Engineer & AI Builder</div>
+    <div class="contact-info">
+      <span>Email: <a href="mailto:${email}">${email}</a></span>
+      <span>Location: ${location}</span>
+      ${linkedinUrl ? `<span>LinkedIn: <a href="${linkedinUrl}" target="_blank">${linkedinDisplay}</a></span>` : ""}
+      ${githubUrl ? `<span>GitHub: <a href="${githubUrl}" target="_blank">${githubDisplay}</a></span>` : ""}
+    </div>
+  `;
+
+  // Professional Summary
+  html += `
+    <div class="section">
+      <div class="section-title">Professional Profile</div>
+      <p class="summary">${bio}</p>
+    </div>
+  `;
+
+  // Technical Toolkit / Skills
+  const skillCategories = {};
+  tech.forEach(t => {
+    if (!skillCategories[t.category]) skillCategories[t.category] = [];
+    skillCategories[t.category].push(t.name);
+  });
+
+  html += `
+    <div class="section">
+      <div class="section-title">Technical Expertise</div>
+      <div class="skills-grid">
+  `;
+  for (const [category, items] of Object.entries(skillCategories)) {
+    html += `
+      <div class="skill-category">
+        <strong>${category}:</strong> <span>${items.join(", ")}</span>
+      </div>
+    `;
+  }
+  html += `
+      </div>
+    </div>
+  `;
+
+  // Sort chronological journey
+  const workExperience = timeline.filter(t => t.type === "experience");
+  const education = timeline.filter(t => t.type === "education");
+
+  // Experience Section
+  html += `
+    <div class="section">
+      <div class="section-title">Professional Experience</div>
+  `;
+  
+  const expItems = isResume ? workExperience.slice(0, 3) : workExperience;
+  if (expItems.length === 0) {
+    html += `<p style="font-size: 9pt; color: #555555; font-style: italic;">Details available upon request.</p>`;
+  } else {
+    expItems.forEach(item => {
+      html += `
+        <div style="margin-bottom: 10px;">
+          <div class="item-header">
+            <span>${item.title}</span>
+            <span>${item.dateRange}</span>
+          </div>
+          <div class="item-company">${item.company} &bull; ${item.role}</div>
+          <div class="item-desc">${item.description.replace(/\n/g, "<br/>")}</div>
+        </div>
+      `;
+    });
+  }
+  html += `</div>`;
+
+  // Featured Projects
+  html += `
+    <div class="section">
+      <div class="section-title">Featured Projects</div>
+  `;
+  const projItems = isResume ? projects.slice(0, 2) : projects;
+  if (projItems.length === 0) {
+    html += `<p style="font-size: 9pt; color: #555555; font-style: italic;">Project portfolio available on the website.</p>`;
+  } else {
+    projItems.forEach(proj => {
+      html += `
+        <div class="project-item" style="margin-bottom: 8px;">
+          <div class="item-header">
+            <span>${proj.title}</span>
+            <span style="font-weight: normal; font-size: 8pt;">
+              <a href="${proj.githubUrl}" target="_blank" style="color: ${accentColor};">GitHub</a>
+              ${proj.liveUrl ? ` | <a href="${proj.liveUrl}" target="_blank" style="color: ${accentColor};">Live Demo</a>` : ""}
+            </span>
+          </div>
+          <p class="project-desc">${proj.description}</p>
+          <div class="project-tech">Technologies: ${proj.tags.join(", ")}</div>
+        </div>
+      `;
+    });
+  }
+  html += `</div>`;
+
+  // Education Section
+  html += `
+    <div class="section" style="${isResume ? 'margin-bottom: 0;' : ''}">
+      <div class="section-title">Education & Credentials</div>
+  `;
+  const eduItems = isResume ? education.slice(0, 2) : education;
+  if (eduItems.length === 0) {
+    html += `<p style="font-size: 9pt; color: #555555; font-style: italic;">Academic credentials available upon request.</p>`;
+  } else {
+    eduItems.forEach(item => {
+      html += `
+        <div style="margin-bottom: 6px;">
+          <div class="item-header">
+            <span>${item.title}</span>
+            <span>${item.dateRange}</span>
+          </div>
+          <div class="item-company">${item.company}</div>
+        </div>
+      `;
+    });
+  }
+  html += `</div>`;
+
+  html += `
+      <script>
+        window.onload = function() {
+          setTimeout(function() {
+            window.print();
+          }, 300);
+        }
+      </script>
+    </body>
+    </html>
+  `;
+
+  const printWindow = window.open("", "_blank");
+  if (printWindow) {
+    printWindow.document.open();
+    printWindow.document.write(html);
+    printWindow.document.close();
+  } else {
+    alert("Popup blocked! Please allow popups to download your Resume/CV.");
+  }
+}
+
+// Bind events to resume/cv download buttons
+function initResumeExporter() {
+  const resumeBtn = document.getElementById("btn-download-resume");
+  const cvBtn = document.getElementById("btn-download-cv");
+
+  if (resumeBtn) {
+    resumeBtn.addEventListener("click", () => exportPDF("resume"));
+  }
+  if (cvBtn) {
+    cvBtn.addEventListener("click", () => exportPDF("cv"));
+  }
+}
+
 // Initialize Main Execution Flow
 function initApp() {
   initTheme();
@@ -1800,6 +2142,7 @@ function initApp() {
   initSlider();
   switchPage("home");
   checkServerStatus(); // Query Vercel serverless state
+  initResumeExporter(); // Bind resume/cv click actions
 }
 
 window.addEventListener("DOMContentLoaded", initApp);
