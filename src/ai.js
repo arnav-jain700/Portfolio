@@ -44,6 +44,23 @@ SKILLS & TECH STACK:
 
 // Robust Gemini API HTTP POST caller trying multiple endpoints (v1 and v1beta) to handle 404 deprecations
 async function callGeminiApi(apiKey, payload, customModel = "gemini-1.5-flash") {
+  if (!apiKey) {
+    // Call serverless proxy on Vercel
+    const response = await fetch("/api/gemini", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({ action: "generate", payload })
+    });
+    if (response.ok) {
+      return response;
+    }
+    const errText = await response.text();
+    throw new Error(`Serverless Proxy Error: ${errText}`);
+  }
+
+  // Otherwise, call Google Gemini directly from client side
   const models = [customModel, "gemini-1.5-flash-latest", "gemini-2.0-flash", "gemini-2.5-flash"];
   const versions = ["v1", "v1beta"];
   
@@ -73,6 +90,15 @@ async function callGeminiApi(apiKey, payload, customModel = "gemini-1.5-flash") 
     }
   }
   throw lastError || new Error("All Gemini API endpoints failed.");
+}
+
+// Helper to execute request using client key or serverless proxy
+async function executeGeminiRequest(payload, customModel = "gemini-1.5-flash") {
+  const settings = Database.getSettings();
+  const apiKey = settings.geminiKey;
+  const response = await callGeminiApi(apiKey, payload, customModel);
+  const data = await response.json();
+  return data;
 }
 
 // Simulated rule-based AI engine for offline fallback
@@ -151,18 +177,6 @@ function getSimulatedResponse(message) {
 export const AI = {
   // Chat with Gemini API
   async askAI(message, conversationHistory = []) {
-    const settings = Database.getSettings();
-    const apiKey = settings.geminiKey;
-
-    if (!apiKey) {
-      // Return simulated response after a short delay to feel like a real chatbot
-      return new Promise(resolve => {
-        setTimeout(() => {
-          resolve(getSimulatedResponse(message));
-        }, 800);
-      });
-    }
-
     try {
       const portfolioContext = compilePortfolioContext();
       
@@ -173,8 +187,6 @@ Be professional, elegant, helpful, and concise. Make the developer look good! Do
 PORTFOLIO CONTEXT:
 ${portfolioContext}`;
 
-      // Convert conversation history to Gemini format
-      // history = [{ role: 'user'|'model', parts: [{ text: '...' }] }]
       const contents = [];
       conversationHistory.forEach(msg => {
         contents.push({
@@ -182,13 +194,12 @@ ${portfolioContext}`;
           parts: [{ text: msg.text }]
         });
       });
-      // Add current message
       contents.push({
         role: "user",
         parts: [{ text: message }]
       });
 
-      const response = await callGeminiApi(apiKey, {
+      const data = await executeGeminiRequest({
         contents: contents,
         systemInstruction: {
           parts: [{ text: systemInstruction }]
@@ -199,25 +210,17 @@ ${portfolioContext}`;
         }
       });
 
-      const data = await response.json();
       return data.candidates[0].content.parts[0].text;
     } catch (error) {
-      console.error("AI chat failed:", error);
-      return `[AI Connection Error] I had trouble connecting to the Gemini server. Error: ${error.message}. Falling back to sandbox response: \n\n${getSimulatedResponse(message)}`;
+      console.warn("AI chat failed (falling back to sandbox):", error);
+      return getSimulatedResponse(message);
     }
   },
 
   // Generate a project description based on title and tags
   async generateProjectDescription(title, tags) {
-    const settings = Database.getSettings();
-    const apiKey = settings.geminiKey;
-
-    if (!apiKey) {
-      return `A powerful client-side ${title} application designed to stream workflows and boost productivity, built leveraging ${tags.join(", ") || "modern web frameworks"}.`;
-    }
-
     try {
-      const response = await callGeminiApi(apiKey, {
+      const data = await executeGeminiRequest({
         contents: [
           {
             role: "user",
@@ -233,26 +236,20 @@ Keep it brief and starting with an action-oriented tone.` }]
         }
       });
 
-      const data = await response.json();
       return data.candidates[0].content.parts[0].text.trim();
     } catch (error) {
-      console.error("AI description generator failed:", error);
-      return `A professional application focusing on ${title}, utilizing ${tags.join(", ") || "modern tech stack"} to build reliable user journeys and back-end efficiency.`;
+      console.warn("AI description generator failed:", error);
+      return `A powerful client-side ${title} application designed to stream workflows and boost productivity, built leveraging ${tags.join(", ") || "modern web frameworks"}.`;
     }
   },
 
   // Draft a response to a message
   async draftReplyToMessage(senderName, messageText) {
     const settings = Database.getSettings();
-    const apiKey = settings.geminiKey;
     const ownerName = settings.ownerName || "Arnav Jain";
 
-    if (!apiKey) {
-      return `Hi ${senderName},\n\nThank you for reaching out! I appreciate you contacting me regarding: "${messageText.substring(0, 40)}...". I will review this and get back to you within 24 hours.\n\nBest regards,\n${ownerName}`;
-    }
-
     try {
-      const response = await callGeminiApi(apiKey, {
+      const data = await executeGeminiRequest({
         contents: [
           {
             role: "user",
@@ -268,28 +265,15 @@ Sign off as ${ownerName}. Keep it elegant.` }]
         }
       });
 
-      const data = await response.json();
       return data.candidates[0].content.parts[0].text.trim();
     } catch (error) {
-      console.error("AI email drafting failed:", error);
-      return `Hi ${senderName},\n\nThank you for contacting me. I've received your query and will reply in detail as soon as possible. Let's stay in touch!\n\nBest,\n${ownerName}`;
+      console.warn("AI email drafting failed:", error);
+      return `Hi ${senderName},\n\nThank you for reaching out! I appreciate you contacting me regarding: "${messageText.substring(0, 40)}...". I will review this and get back to you within 24 hours.\n\nBest regards,\n${ownerName}`;
     }
   },
 
   // Analyze recruiter job description for alignment
   async analyzeJobFit(jobDescription) {
-    const settings = Database.getSettings();
-    const apiKey = settings.geminiKey;
-
-    if (!apiKey) {
-      // Run offline analyzer
-      return new Promise(resolve => {
-        setTimeout(() => {
-          resolve(this.analyzeJobFitOffline(jobDescription));
-        }, 1200);
-      });
-    }
-
     try {
       const portfolioContext = compilePortfolioContext();
       
@@ -305,7 +289,7 @@ You MUST respond with a valid JSON object only. Do not wrap in markdown code blo
 }
 Limit summary to 2-3 sentences. Limit strengths/gaps/projects lists to 2-3 bullet items.`;
 
-      const response = await callGeminiApi(apiKey, {
+      const data = await executeGeminiRequest({
         contents: [
           {
             role: "user",
@@ -321,26 +305,18 @@ Limit summary to 2-3 sentences. Limit strengths/gaps/projects lists to 2-3 bulle
         }
       });
 
-      const data = await response.json();
       const text = data.candidates[0].content.parts[0].text;
       return JSON.parse(text);
     } catch (error) {
-      console.error("AI job-fit analysis failed:", error);
+      console.warn("AI job-fit analysis failed:", error);
       return this.analyzeJobFitOffline(jobDescription);
     }
   },
 
   // Generate blog article outline
   async generateBlogOutline(title) {
-    const settings = Database.getSettings();
-    const apiKey = settings.geminiKey;
-
-    if (!apiKey) {
-      return `### 1. Introduction to ${title}\n- Brief definition and context\n- Key motivations for builders\n\n### 2. Core Principles\n- Practical tips and design systems\n- Best practice benchmarks\n\n### 3. Step-by-Step Implementation\n- Code patterns and hooks\n- Testing and optimization\n\n### 4. Summary & Conclusions`;
-    }
-
     try {
-      const response = await callGeminiApi(apiKey, {
+      const data = await executeGeminiRequest({
         contents: [{
           role: "user",
           parts: [{ text: `Create a brief professional article outline for the blog title: "${title}". Use markdown headers (###) and bullet lists. Keep it compact.` }]
@@ -348,11 +324,10 @@ Limit summary to 2-3 sentences. Limit strengths/gaps/projects lists to 2-3 bulle
         generationConfig: { temperature: 0.7, maxOutputTokens: 200 }
       });
 
-      const data = await response.json();
       return data.candidates[0].content.parts[0].text;
     } catch (error) {
-      console.error("AI blog outline generation failed:", error);
-      return `### 1. Introduction to ${title}\n- Outline fallback details.`;
+      console.warn("AI blog outline generation failed:", error);
+      return `### 1. Introduction to ${title}\n- Brief definition and context\n- Key motivations for builders\n\n### 2. Core Principles\n- Practical tips and design systems\n- Best practice benchmarks\n\n### 3. Step-by-Step Implementation\n- Code patterns and hooks\n- Testing and optimization\n\n### 4. Summary & Conclusions`;
     }
   },
 
