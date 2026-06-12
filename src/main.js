@@ -2006,21 +2006,22 @@ function generatePrintLayout(type) {
   const printStyles = `
     @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@400;500;600;700&display=swap');
 
-    html, body {
+    html {
       background-color: #ffffff !important;
-      color: #1f2937 !important;
       margin: 0 !important;
       padding: 0 !important;
-      width: 100% !important;
-      height: 100% !important;
-      -webkit-print-color-adjust: exact !important;
-      print-color-adjust: exact !important;
     }
 
     body {
       font-family: ${fontFamily} !important;
       font-size: ${bodySize} !important;
       line-height: 1.5 !important;
+      background-color: #ffffff !important;
+      color: #1f2937 !important;
+      margin: 1.6cm !important; /* Standard print margin to prevent edge cutoff */
+      padding: 0 !important;
+      -webkit-print-color-adjust: exact !important;
+      print-color-adjust: exact !important;
     }
 
     /* Hide everything else on the portfolio website */
@@ -2253,7 +2254,7 @@ function generatePrintLayout(type) {
 
     @page {
       size: A4;
-      margin: 1.5cm 1.5cm 1.5cm 1.5cm;
+      margin: 0 !important; /* Hides default browser header (title, timestamp) and footer (URL) */
     }
 
     .cv-view {
