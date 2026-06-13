@@ -1077,15 +1077,19 @@ function renderAdminMessages() {
 
       draftBtn.disabled = true;
       draftBtn.textContent = "Drafting with AI...";
-      
-      const responseDraft = await AI.draftReplyToMessage(m.name, m.message);
+       const responseDraft = await AI.draftReplyToMessage(m.name, m.message);
+      const responseDraftCRLF = responseDraft.replace(/\r?\n/g, "\r\n");
       
       displayEl.innerHTML = `
         <textarea class="glass-input reply-textarea" style="min-height: 120px; font-family: inherit; font-size: 0.85rem; margin-bottom: 10px; width: 100%; border-color: rgba(6, 182, 212, 0.3); background: rgba(0,0,0,0.15); line-height: 1.4;">${responseDraft}</textarea>
-        <div style="display: flex; gap: 8px;">
-          <a class="btn btn-primary send-email-btn" href="https://mail.google.com/mail/?view=cm&fs=1&to=${encodeURIComponent(m.email)}&su=${encodeURIComponent("Reply: Portfolio Inquiry")}&body=${encodeURIComponent(responseDraft)}" target="_blank" style="padding: 6px 14px; font-size: 0.8rem; text-decoration: none;">
+        <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+          <a class="btn btn-primary send-email-btn" href="https://mail.google.com/mail/?view=cm&tf=cm&fs=1&to=${encodeURIComponent(m.email)}&su=${encodeURIComponent("Reply: Portfolio Inquiry")}&body=${encodeURIComponent(responseDraftCRLF)}" target="_blank" style="padding: 6px 14px; font-size: 0.8rem; text-decoration: none;">
             <svg viewBox="0 0 24 24" width="12" height="12" stroke="currentColor" stroke-width="2" fill="none" style="vertical-align: middle; margin-right: 4px;"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
             Send via Gmail
+          </a>
+          <a class="btn btn-secondary send-mailto-btn" href="mailto:${m.email}?subject=${encodeURIComponent("Reply: Portfolio Inquiry")}&body=${encodeURIComponent(responseDraftCRLF)}" style="padding: 6px 14px; font-size: 0.8rem; text-decoration: none; border-color: rgba(6, 182, 212, 0.25);">
+            <svg viewBox="0 0 24 24" width="12" height="12" stroke="currentColor" stroke-width="2" fill="none" style="vertical-align: middle; margin-right: 4px;"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+            Send via Mail Client
           </a>
           <button class="btn btn-secondary copy-draft-btn" style="padding: 6px 14px; font-size: 0.8rem;">
             <svg viewBox="0 0 24 24" width="12" height="12" stroke="currentColor" stroke-width="2" fill="none" style="vertical-align: middle; margin-right: 4px;"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
@@ -1097,12 +1101,15 @@ function renderAdminMessages() {
       displayEl.style.display = "block";
       draftBtn.textContent = "Regenerate Draft";
       draftBtn.disabled = false;
-
+ 
       // Realtime email link updates
       const sendBtn = displayEl.querySelector(".send-email-btn");
+      const mailtoBtn = displayEl.querySelector(".send-mailto-btn");
       const textarea = displayEl.querySelector(".reply-textarea");
       textarea.addEventListener("input", () => {
-        sendBtn.href = `https://mail.google.com/mail/?view=cm&fs=1&to=${encodeURIComponent(m.email)}&su=${encodeURIComponent("Reply: Portfolio Inquiry")}&body=${encodeURIComponent(textarea.value)}`;
+        const val = textarea.value.replace(/\r?\n/g, "\r\n");
+        sendBtn.href = `https://mail.google.com/mail/?view=cm&tf=cm&fs=1&to=${encodeURIComponent(m.email)}&su=${encodeURIComponent("Reply: Portfolio Inquiry")}&body=${encodeURIComponent(val)}`;
+        mailtoBtn.href = `mailto:${m.email}?subject=${encodeURIComponent("Reply: Portfolio Inquiry")}&body=${encodeURIComponent(val)}`;
       });
 
       // Copy draft to clipboard action
