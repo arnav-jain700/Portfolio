@@ -2006,34 +2006,106 @@ function generatePrintLayout(type) {
   const printStyles = `
     @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@400;500;600;700&display=swap');
 
-    html {
-      background-color: #ffffff !important;
-      margin: 0 !important;
-      padding: 0 !important;
+    /* Responsive screen styling */
+    @media screen {
+      html {
+        background-color: #f3f4f6 !important;
+        margin: 0 !important;
+        padding: 0 !important;
+      }
+
+      body {
+        font-family: ${fontFamily} !important;
+        font-size: ${bodySize} !important;
+        line-height: 1.5 !important;
+        background-color: #f3f4f6 !important;
+        color: #1f2937 !important;
+        margin: 0 !important;
+        padding: 20px 10px !important;
+      }
+
+      .print-container {
+        background-color: #ffffff !important;
+        max-width: 800px;
+        margin: 20px auto !important;
+        padding: 1.5cm !important;
+        box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05) !important;
+        border-radius: 8px !important;
+        box-sizing: border-box;
+      }
+
+      /* Mobile Phone Aspect Ratio / Viewport Optimizations */
+      @media (max-width: 768px) {
+        body {
+          padding: 10px 5px !important;
+        }
+
+        .print-container {
+          margin: 0 auto !important;
+          padding: 1.0cm 0.6cm !important;
+          border-radius: 6px !important;
+        }
+
+        .print-header h1 {
+          font-size: ${isResume ? "20pt" : "18pt"} !important;
+        }
+
+        .skills-grid {
+          grid-template-columns: 1fr !important;
+          gap: 6px !important;
+        }
+
+        .item-header {
+          flex-direction: column !important;
+          align-items: flex-start !important;
+          gap: 2px !important;
+        }
+
+        .item-date {
+          font-size: 8pt !important;
+          margin-top: 1px !important;
+        }
+
+        .print-contact {
+          flex-direction: column !important;
+          align-items: flex-start !important;
+          gap: 6px !important;
+        }
+      }
     }
 
-    body {
-      font-family: ${fontFamily} !important;
-      font-size: ${bodySize} !important;
-      line-height: 1.5 !important;
-      background-color: #ffffff !important;
-      color: #1f2937 !important;
-      margin: 1.6cm !important; /* Standard print margin to prevent edge cutoff */
-      padding: 0 !important;
-      -webkit-print-color-adjust: exact !important;
-      print-color-adjust: exact !important;
+    /* Print-specific layout */
+    @media print {
+      html {
+        background-color: #ffffff !important;
+        margin: 0 !important;
+        padding: 0 !important;
+      }
+
+      body {
+        font-family: ${fontFamily} !important;
+        font-size: ${bodySize} !important;
+        line-height: 1.5 !important;
+        background-color: #ffffff !important;
+        color: #1f2937 !important;
+        margin: 1.6cm !important; /* Standard print margin to prevent edge cutoff */
+        padding: 0 !important;
+        -webkit-print-color-adjust: exact !important;
+        print-color-adjust: exact !important;
+      }
+
+      .print-container {
+        max-width: 100% !important;
+        margin: 0 !important;
+        padding: 0 !important;
+        box-shadow: none !important;
+        background-color: transparent !important;
+      }
     }
 
     /* Hide everything else on the portfolio website */
     #app, .app-container, .navbar, .sidebar, .chatbot-container, .modal, .toast {
       display: none !important;
-    }
-
-    .print-container {
-      max-width: 800px;
-      margin: 0 auto;
-      padding: 0;
-      box-sizing: border-box;
     }
 
     .print-header {
