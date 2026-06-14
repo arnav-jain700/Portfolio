@@ -322,39 +322,65 @@
               <!-- PANE A: TECH STACK -->
               <div id="admin-pane-tech" class="admin-pane active">
                 <h3 style="margin-bottom: 8px;">Technical Toolkit Database</h3>
-                <p style="color: var(--text-muted); font-size: 0.85rem; margin-bottom: 24px;">Add new technologies and determine user proficiency percentages.</p>
+                <p style="color: var(--text-muted); font-size: 0.85rem; margin-bottom: 24px;">Manage your skill categories and database entries separately.</p>
                 
-                 <!-- Add/edit tech form -->
-                 <form id="admin-tech-form" style="display: flex; flex-direction: column; gap: 12px; margin-bottom: 30px;">
-                   <input type="hidden" id="admin-tech-id" value="" />
-                   <div class="form-row-2">
-                     <div class="form-group">
-                       <label class="form-label">Tech Name</label>
-                       <input type="text" id="admin-tech-name" class="glass-input" placeholder="e.g. Angular, Go, AWS..." required />
-                     </div>
-                     <div class="form-group">
-                       <label class="form-label">Category</label>
-                       <select id="admin-tech-category" class="glass-input" style="height: 48px; display: block;" required>
-                         <!-- Dynamically populated in main.js -->
-                       </select>
-                       <div id="admin-tech-custom-category-group" style="display: none; margin-top: 10px;">
-                         <label class="form-label" style="font-size: 0.8rem; color: var(--accent-cyan);">New Category Name</label>
-                         <input type="text" id="admin-tech-custom-category" class="glass-input" placeholder="e.g. Mobile Apps, Machine Learning..." />
-                       </div>
-                     </div>
-                   </div>
-                   <div class="form-group">
-                     <label class="form-label" id="prof-label">Proficiency: 80%</label>
-                     <input type="range" id="admin-tech-level" min="10" max="100" value="80" style="width: 100%; height: 6px; background: rgba(255,255,255,0.06); outline: none; border-radius: 3px; accent-color: var(--accent-indigo);" />
-                   </div>
-                   <div style="display: flex; gap: 10px;">
-                     <button type="submit" class="btn btn-primary" id="admin-tech-submit-btn" style="align-self: flex-start;">Add Technology</button>
-                     <button type="button" class="btn btn-secondary" id="admin-tech-cancel-btn" style="display: none;">Cancel Edit</button>
-                   </div>
-                 </form>
+                <div class="admin-tech-grid">
+                  <!-- Left Column: Tech Stack Entries -->
+                  <div class="admin-tech-left-column">
+                    <h4 style="margin-bottom: 12px; color: var(--accent-indigo); font-size: 0.95rem;">Manage Tech Stack Entries</h4>
+                    
+                    <!-- Add/edit tech form -->
+                    <form id="admin-tech-form" style="display: flex; flex-direction: column; gap: 12px; margin-bottom: 30px;">
+                      <input type="hidden" id="admin-tech-id" value="" />
+                      <div class="form-row-2">
+                        <div class="form-group">
+                          <label class="form-label">Tech Name</label>
+                          <input type="text" id="admin-tech-name" class="glass-input" placeholder="e.g. Angular, Go, AWS..." required />
+                        </div>
+                        <div class="form-group">
+                          <label class="form-label">Category</label>
+                          <select id="admin-tech-category" class="glass-input" style="height: 48px; display: block;" required>
+                            <!-- Dynamically populated in main.js -->
+                          </select>
+                          <div id="admin-tech-custom-category-group" style="display: none; margin-top: 10px;">
+                            <label class="form-label" style="font-size: 0.8rem; color: var(--accent-cyan);">New Category Name</label>
+                            <input type="text" id="admin-tech-custom-category" class="glass-input" placeholder="e.g. Mobile Apps, Machine Learning..." />
+                          </div>
+                        </div>
+                      </div>
+                      <div class="form-group">
+                        <label class="form-label" id="prof-label">Proficiency: 80%</label>
+                        <input type="range" id="admin-tech-level" min="10" max="100" value="80" style="width: 100%; height: 6px; background: rgba(255,255,255,0.06); outline: none; border-radius: 3px; accent-color: var(--accent-indigo);" />
+                      </div>
+                      <div style="display: flex; gap: 10px;">
+                        <button type="submit" class="btn btn-primary" id="admin-tech-submit-btn" style="align-self: flex-start;">Add Technology</button>
+                        <button type="button" class="btn btn-secondary" id="admin-tech-cancel-btn" style="display: none;">Cancel Edit</button>
+                      </div>
+                    </form>
 
-                <div class="admin-list" id="admin-tech-list">
-                  <!-- Dynamically loaded -->
+                    <div class="admin-list" id="admin-tech-list">
+                      <!-- Dynamically loaded -->
+                    </div>
+                  </div>
+
+                  <!-- Right Column: Standalone Categories Management -->
+                  <div class="admin-tech-right-column">
+                    <div class="admin-category-mgmt glass-panel" style="padding: 16px; background: rgba(255,255,255,0.02); border: 1px solid var(--border-light); border-radius: var(--radius-md);">
+                      <h4 style="margin-bottom: 8px; color: var(--accent-cyan); font-size: 0.95rem;">Manage Categories</h4>
+                      <p style="color: var(--text-muted); font-size: 0.75rem; margin-bottom: 12px;">Add or delete categories independently of technology entries.</p>
+                      
+                      <form id="admin-category-form" style="display: flex; flex-direction: column; gap: 10px; margin-bottom: 20px;">
+                        <div class="form-group">
+                          <input type="text" id="admin-category-name" class="glass-input" placeholder="e.g. Mobile, Testing..." required style="height: 38px; font-size: 0.85rem;" />
+                        </div>
+                        <button type="submit" class="btn btn-primary" style="padding: 6px 12px; font-size: 0.8rem; align-self: flex-start; min-height: auto;">Add Category</button>
+                      </form>
+
+                      <div id="admin-category-list" style="display: flex; flex-direction: column; gap: 8px; max-height: 250px; overflow-y: auto; padding-right: 4px;">
+                        <!-- Populated dynamically in main.js -->
+                      </div>
+                    </div>
+                  </div>
                 </div>
               </div>
 

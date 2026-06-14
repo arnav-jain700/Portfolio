@@ -657,6 +657,88 @@ document.querySelectorAll(".chat-chip").forEach(chip => {
 // ----------------------------------------------------
 // ADMIN DASHBOARD CORE
 // ----------------------------------------------------
+function populateAdminCategoryList() {
+  const container = document.getElementById("admin-category-list");
+  if (!container) return;
+
+  const settings = Database.getSettings();
+  const categories = settings.categories || ["Frontend", "Backend", "Databases", "DevOps"];
+
+  container.innerHTML = "";
+  if (categories.length === 0) {
+    container.innerHTML = `<div style="text-align: center; color: var(--text-muted); padding: 10px; font-size: 0.8rem;">No categories defined.</div>`;
+    return;
+  }
+
+  categories.forEach(cat => {
+    const el = document.createElement("div");
+    el.className = "admin-category-item";
+    el.innerHTML = `
+      <span>${cat}</span>
+      <button class="admin-category-delete-btn" data-category="${cat}" title="Delete Category">
+        <svg viewBox="0 0 24 24" width="14" height="14" stroke="currentColor" stroke-width="2" fill="none"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><line x1="10" y1="11" x2="10" y2="17"/><line x1="14" y1="11" x2="14" y2="17"/></svg>
+      </button>
+    `;
+
+    el.querySelector(".admin-category-delete-btn").addEventListener("click", () => {
+      if (confirm(`Are you sure you want to delete the category "${cat}"?`)) {
+        deleteCategory(cat);
+      }
+    });
+
+    container.appendChild(el);
+  });
+}
+
+function deleteCategory(catName) {
+  const settings = Database.getSettings();
+  const categories = settings.categories || ["Frontend", "Backend", "Databases", "DevOps"];
+  const updated = categories.filter(c => c !== catName);
+  
+  Database.saveSettings({ categories: updated });
+  
+  // Refresh UI
+  populateAdminCategoryList();
+  populateAdminTechCategoriesDropdown();
+  renderTechCategoryFilters();
+  renderAdminTechList();
+}
+
+let isCategoryFormSetup = false;
+function setupAdminCategoryFormOnce() {
+  if (isCategoryFormSetup) return;
+  const form = document.getElementById("admin-category-form");
+  if (!form) return;
+
+  form.addEventListener("submit", (e) => {
+    e.preventDefault();
+    const input = document.getElementById("admin-category-name");
+    const newCat = input.value.trim();
+    if (!newCat) return;
+
+    const settings = Database.getSettings();
+    const categories = settings.categories || ["Frontend", "Backend", "Databases", "DevOps"];
+    
+    if (categories.some(c => c.toLowerCase() === newCat.toLowerCase())) {
+      alert("This category already exists.");
+      return;
+    }
+
+    categories.push(newCat);
+    Database.saveSettings({ categories });
+    
+    input.value = "";
+    
+    // Refresh UI
+    populateAdminCategoryList();
+    populateAdminTechCategoriesDropdown();
+    renderTechCategoryFilters();
+    renderAdminTechList();
+  });
+
+  isCategoryFormSetup = true;
+}
+
 function populateAdminTechCategoriesDropdown() {
   const select = document.getElementById("admin-tech-category");
   if (!select) return;
@@ -695,6 +777,7 @@ function initAdminPanel() {
       if (tab.dataset.pane === "admin-pane-tech") {
         renderAdminTechList();
         populateAdminTechCategoriesDropdown();
+        populateAdminCategoryList();
       } else if (tab.dataset.pane === "admin-pane-projects") {
         renderAdminProjectList();
         renderTechCheckboxes();
@@ -713,6 +796,8 @@ function initAdminPanel() {
   // Load primary default admin lists
   renderAdminTechList();
   populateAdminTechCategoriesDropdown();
+  populateAdminCategoryList();
+  setupAdminCategoryFormOnce();
   
   // Setup range label update
   const levelSlider = document.getElementById("admin-tech-level");
