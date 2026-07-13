@@ -93,6 +93,27 @@ const DEFAULT_ARTICLES = [
   }
 ];
 
+const DEFAULT_CERTIFICATES = [
+  {
+    id: "cert-1",
+    title: "Google Advanced Data Analytics Professional Certificate",
+    issuer: "Google",
+    date: "2025",
+    url: "https://coursera.org",
+    skills: "Python, Regression Analysis, Machine Learning, Data Analytics",
+    image: ""
+  },
+  {
+    id: "cert-2",
+    title: "Deep Learning Specialization",
+    issuer: "DeepLearning.AI",
+    date: "2025",
+    url: "https://coursera.org",
+    skills: "Deep Learning, Neural Networks, TensorFlow, Python",
+    image: ""
+  }
+];
+
 // Initialize Storage
 function initStorage() {
   if (!localStorage.getItem("portfolio_tech_stacks")) {
@@ -109,6 +130,9 @@ function initStorage() {
   }
   if (!localStorage.getItem("portfolio_blog")) {
     localStorage.setItem("portfolio_blog", JSON.stringify(DEFAULT_ARTICLES));
+  }
+  if (!localStorage.getItem("portfolio_certificates")) {
+    localStorage.setItem("portfolio_certificates", JSON.stringify(DEFAULT_CERTIFICATES));
   }
   const currentSettings = localStorage.getItem("portfolio_settings");
   if (!currentSettings) {
@@ -306,5 +330,31 @@ export const Database = {
     const articles = this.getArticles();
     const filtered = articles.filter(a => a.id !== id);
     localStorage.setItem("portfolio_blog", JSON.stringify(filtered));
+  },
+
+  // Certificates CRUD
+  getCertificates() {
+    return JSON.parse(localStorage.getItem("portfolio_certificates") || "[]");
+  },
+
+  saveCertificate(cert) {
+    const certs = this.getCertificates();
+    if (cert.id) {
+      const index = certs.findIndex(c => c.id === cert.id);
+      if (index !== -1) {
+        certs[index] = { ...certs[index], ...cert };
+      }
+    } else {
+      cert.id = "cert-" + Date.now();
+      certs.push(cert);
+    }
+    localStorage.setItem("portfolio_certificates", JSON.stringify(certs));
+    return cert;
+  },
+
+  deleteCertificate(id) {
+    const certs = this.getCertificates();
+    const filtered = certs.filter(c => c.id !== id);
+    localStorage.setItem("portfolio_certificates", JSON.stringify(filtered));
   }
 };

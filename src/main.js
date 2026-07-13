@@ -51,6 +51,8 @@ function switchPage(pageId) {
     renderProjectsGrid();
   } else if (pageId === "blog") {
     renderBlogGrid();
+  } else if (pageId === "certificates") {
+    renderCertificatesGrid();
   } else if (pageId === "admin") {
     initAdminPanel();
   }
@@ -787,6 +789,8 @@ function initAdminPanel() {
         renderAdminBlogList();
       } else if (tab.dataset.pane === "admin-pane-messages") {
         renderAdminMessages();
+      } else if (tab.dataset.pane === "admin-pane-certificates") {
+        renderAdminCertList();
       } else if (tab.dataset.pane === "admin-pane-settings") {
         loadAdminSettings();
       }
@@ -824,6 +828,7 @@ function initAdminPanel() {
 
   setupAdminTimelineFormOnce();
   setupAdminBlogFormOnce();
+  setupAdminCertFormOnce();
 }
 
 // Admin: Manage Tech Stacks
@@ -1578,6 +1583,289 @@ function initJobScanner() {
       btn.disabled = false;
       btn.textContent = "Analyze Job Fit";
     }
+  });
+}
+
+// ----------------------------------------------------
+// ----------------------------------------------------
+// DYNAMIC CERTIFICATES RENDERING
+// ----------------------------------------------------
+function renderCertificatesGrid() {
+  const container = document.getElementById("certificates-grid-container");
+  if (!container) return;
+  const certs = Database.getCertificates();
+  
+  container.innerHTML = "";
+  if (certs.length === 0) {
+    container.innerHTML = `<div style="grid-column: 1/-1; text-align: center; color: var(--text-dimmed); padding: 40px;">No certificates added yet. Add some in the Admin panel!</div>`;
+    return;
+  }
+  
+  certs.forEach(cert => {
+    const card = document.createElement("div");
+    card.className = "certificate-card glass-card";
+    
+    // Skills formatting
+    const skillsList = cert.skills ? cert.skills.split(",").map(s => s.trim()).filter(s => s.length > 0) : [];
+    const skillsMarkup = skillsList.map(s => `<span class="certificate-skill-tag">${s}</span>`).join("");
+    
+    // URL action
+    const urlBtn = cert.url ? `<a href="${cert.url}" target="_blank" rel="noopener noreferrer" class="btn btn-secondary btn-sm" style="font-size: 0.8rem; padding: 6px 12px; border-radius: 4px; display: inline-flex; align-items: center; gap: 6px;">
+        Verify Credential
+        <svg viewBox="0 0 24 24" width="12" height="12" stroke="currentColor" stroke-width="2" fill="none"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+      </a>` : '';
+
+    const imgContainer = cert.image ? `
+      <div class="certificate-image-container" title="Click to view certificate full size">
+        <img src="${cert.image}" alt="${cert.title}" />
+      </div>
+    ` : '';
+
+    card.innerHTML = `
+      ${imgContainer}
+      <div class="certificate-badge-icon">
+        <svg viewBox="0 0 24 24" width="32" height="32" stroke="currentColor" stroke-width="1.5" fill="none"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </div>
+      <div class="certificate-issuer">${cert.issuer}</div>
+      <h3 class="certificate-title">${cert.title}</h3>
+      
+      <div class="certificate-skills">
+        ${skillsMarkup}
+      </div>
+      
+      <div class="certificate-meta">
+        <span>Issued: ${cert.date}</span>
+        ${urlBtn}
+      </div>
+    `;
+    
+    // Zoom click handler
+    const imgEl = card.querySelector(".certificate-image-container");
+    if (imgEl) {
+      imgEl.addEventListener("click", () => {
+        openCertLightbox(cert.image);
+      });
+    }
+
+    container.appendChild(card);
+  });
+}
+
+// Global Lightbox helper
+function openCertLightbox(src) {
+  let lightbox = document.getElementById("cert-lightbox-widget");
+  if (!lightbox) {
+    lightbox = document.createElement("div");
+    lightbox.id = "cert-lightbox-widget";
+    lightbox.className = "cert-lightbox";
+    lightbox.innerHTML = `
+      <div class="cert-lightbox-close">&times;</div>
+      <img class="cert-lightbox-content" src="" />
+    `;
+    document.body.appendChild(lightbox);
+    
+    lightbox.addEventListener("click", () => {
+      lightbox.classList.remove("open");
+    });
+    lightbox.querySelector(".cert-lightbox-close").addEventListener("click", (e) => {
+      e.stopPropagation();
+      lightbox.classList.remove("open");
+    });
+  }
+  
+  lightbox.querySelector(".cert-lightbox-content").src = src;
+  lightbox.classList.add("open");
+}
+
+// ----------------------------------------------------
+// CERTIFICATES ADMIN CRUD LIFECYCLE
+// ----------------------------------------------------
+let certFormBound = false;
+let currentUploadedCertImage = "";
+
+function showCertPreview(src) {
+  const box = document.getElementById("admin-cert-image-preview-box");
+  const img = document.getElementById("admin-cert-preview-img");
+  if (box && img) {
+    img.src = src;
+    box.style.display = "flex";
+  }
+}
+
+function hideCertPreview() {
+  const box = document.getElementById("admin-cert-image-preview-box");
+  const img = document.getElementById("admin-cert-preview-img");
+  const fileInput = document.getElementById("admin-cert-file");
+  const urlInput = document.getElementById("admin-cert-image-url");
+  if (box && img) {
+    img.src = "";
+    box.style.display = "none";
+  }
+  if (fileInput) fileInput.value = "";
+  if (urlInput) urlInput.value = "";
+  currentUploadedCertImage = "";
+}
+
+function setupAdminCertFormOnce() {
+  if (certFormBound) return;
+  certFormBound = true;
+
+  const form = document.getElementById("admin-certificate-form");
+  const cancelBtn = document.getElementById("admin-cert-cancel-btn");
+  const submitBtn = document.getElementById("admin-cert-submit-btn");
+  const fileInput = document.getElementById("admin-cert-file");
+  const urlInput = document.getElementById("admin-cert-image-url");
+  const removeImgBtn = document.getElementById("admin-cert-remove-img-btn");
+
+  if (!form) return;
+
+  // Handle local image file picker and compress via Canvas
+  fileInput.addEventListener("change", (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      urlInput.value = ""; // clear URL input
+      const reader = new FileReader();
+      reader.onload = function(evt) {
+        const img = new Image();
+        img.onload = function() {
+          const canvas = document.createElement("canvas");
+          const MAX_WIDTH = 500; // Optimal width for local storage
+          let width = img.width;
+          let height = img.height;
+
+          if (width > MAX_WIDTH) {
+            height = Math.round((height * MAX_WIDTH) / width);
+            width = MAX_WIDTH;
+          }
+
+          canvas.width = width;
+          canvas.height = height;
+
+          const ctx = canvas.getContext("2d");
+          ctx.drawImage(img, 0, 0, width, height);
+
+          // Compress to JPEG with 0.7 quality
+          currentUploadedCertImage = canvas.toDataURL("image/jpeg", 0.7);
+          showCertPreview(currentUploadedCertImage);
+        };
+        img.src = evt.target.result;
+      };
+      reader.readAsDataURL(file);
+    }
+  });
+
+  // Handle manual image URL input
+  urlInput.addEventListener("input", (e) => {
+    const val = e.target.value.trim();
+    if (val) {
+      fileInput.value = ""; // Clear file selector
+      currentUploadedCertImage = val;
+      showCertPreview(val);
+    } else {
+      hideCertPreview();
+    }
+  });
+
+  // Remove image preview action
+  removeImgBtn.addEventListener("click", () => {
+    hideCertPreview();
+  });
+
+  form.addEventListener("submit", (e) => {
+    e.preventDefault();
+    const id = document.getElementById("admin-certificate-id").value;
+    const title = document.getElementById("admin-cert-title").value.trim();
+    const issuer = document.getElementById("admin-cert-issuer").value.trim();
+    const date = document.getElementById("admin-cert-date").value.trim();
+    const url = document.getElementById("admin-cert-url").value.trim();
+    const skills = document.getElementById("admin-cert-skills").value.trim();
+
+    Database.saveCertificate({
+      id: id || undefined,
+      title,
+      issuer,
+      date,
+      url,
+      skills,
+      image: currentUploadedCertImage
+    });
+
+    resetCertForm();
+    renderAdminCertList();
+    renderCertificatesGrid();
+  });
+
+  cancelBtn.addEventListener("click", resetCertForm);
+}
+
+function resetCertForm() {
+  const form = document.getElementById("admin-certificate-form");
+  if (form) form.reset();
+  document.getElementById("admin-certificate-id").value = "";
+  document.getElementById("admin-cert-submit-btn").textContent = "Add Certificate";
+  document.getElementById("admin-cert-cancel-btn").style.display = "none";
+  hideCertPreview();
+}
+
+function renderAdminCertList() {
+  const container = document.getElementById("admin-certificate-list");
+  if (!container) return;
+  const certs = Database.getCertificates();
+
+  container.innerHTML = "";
+  if (certs.length === 0) {
+    container.innerHTML = `<div style="text-align: center; color: var(--text-dimmed); padding: 20px;">No certificates.</div>`;
+    return;
+  }
+
+  certs.forEach(cert => {
+    const el = document.createElement("div");
+    el.className = "admin-list-item";
+    el.innerHTML = `
+      <div class="admin-list-info">
+        <h4>${cert.title}</h4>
+        <p>${cert.issuer} &bull; ${cert.date}</p>
+      </div>
+      <div class="admin-list-actions">
+        <button class="action-btn edit" title="Edit certificate">
+          <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 1 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+        </button>
+        <button class="action-btn delete" title="Delete certificate">
+          <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><line x1="10" y1="11" x2="10" y2="17"/><line x1="14" y1="11" x2="14" y2="17"/></svg>
+        </button>
+      </div>
+    `;
+
+    el.querySelector(".edit").addEventListener("click", () => {
+      document.getElementById("admin-certificate-id").value = cert.id;
+      document.getElementById("admin-cert-title").value = cert.title;
+      document.getElementById("admin-cert-issuer").value = cert.issuer;
+      document.getElementById("admin-cert-date").value = cert.date;
+      document.getElementById("admin-cert-url").value = cert.url || "";
+      document.getElementById("admin-cert-skills").value = cert.skills || "";
+      
+      currentUploadedCertImage = cert.image || "";
+      if (currentUploadedCertImage) {
+        showCertPreview(currentUploadedCertImage);
+        if (!currentUploadedCertImage.startsWith("data:")) {
+          document.getElementById("admin-cert-image-url").value = currentUploadedCertImage;
+        }
+      } else {
+        hideCertPreview();
+      }
+
+      document.getElementById("admin-cert-submit-btn").textContent = "Update Certificate";
+      document.getElementById("admin-cert-cancel-btn").style.display = "inline-block";
+      document.getElementById("admin-certificate-form").scrollIntoView({ behavior: "smooth" });
+    });
+
+    el.querySelector(".delete").addEventListener("click", () => {
+      Database.deleteCertificate(cert.id);
+      renderAdminCertList();
+      renderCertificatesGrid();
+    });
+
+    container.appendChild(el);
   });
 }
 
