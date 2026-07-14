@@ -2,117 +2,77 @@
 
 // Seed data
 const DEFAULT_TECH_STACKS = [
-  { id: "tech-1", name: "React", category: "Frontend", level: 90, icon: "React" },
-  { id: "tech-2", name: "JavaScript", category: "Frontend", level: 95, icon: "JS" },
-  { id: "tech-3", name: "Node.js", category: "Backend", level: 85, icon: "Node" },
-  { id: "tech-4", name: "Python", category: "Backend", level: 80, icon: "Python" },
-  { id: "tech-5", name: "MongoDB", category: "Databases", level: 75, icon: "Database" },
-  { id: "tech-6", name: "Docker", category: "DevOps", level: 70, icon: "Docker" }
+  {
+    id: "tech-1783838090427",
+    name: "C++",
+    category: "Backend",
+    level: 85,
+    icon: "C++"
+  },
+  {
+    id: "tech-1783838237111",
+    name: "HTML",
+    category: "Frontend",
+    level: 95,
+    icon: "HTML"
+  },
+  {
+    id: "tech-1783838248954",
+    name: "CSS",
+    category: "Frontend",
+    level: 95,
+    icon: "CSS"
+  },
+  {
+    id: "tech-1783838399189",
+    name: "Python",
+    category: "Backend",
+    level: 75,
+    icon: "Python"
+  }
 ];
 
 const DEFAULT_PROJECTS = [
   {
-    id: "proj-1",
-    title: "NeuroPlan: AI Task Agent",
-    description: "An intelligent task manager that uses LLMs to break down complex goals into subtasks, schedule them dynamically, and automate progress logs.",
-    category: "AI / Fullstack",
-    tags: ["React", "Node.js", "MongoDB", "Gemini API"],
-    githubUrl: "https://github.com",
-    liveUrl: "https://example.com",
-    image: ""
-  },
-  {
-    id: "proj-2",
-    title: "Aetheria: Glassmorphic Hub",
-    description: "A highly-aesthetic, responsive dashboard displaying real-time weather, financial metrics, and task tickers with modern glassmorphic glass styling.",
-    category: "Frontend",
-    tags: ["HTML", "CSS", "JavaScript", "Vite"],
-    githubUrl: "https://github.com",
-    liveUrl: "https://example.com",
-    image: ""
-  },
-  {
-    id: "proj-3",
-    title: "SyncChat: Socket Hub",
-    description: "A real-time instant messaging workspace featuring private chat rooms, file sharing, message reactions, and online status counters.",
-    category: "Backend / Realtime",
-    tags: ["Node.js", "React", "Socket.io", "CSS"],
-    githubUrl: "https://github.com",
-    liveUrl: "https://example.com",
+    id: "proj-1783879719230",
+    title: "Global Nav Plexus",
+    category: "High-Performance Systems & 3D Geospatial Visualization",
+    description: "An interactive, graph-based global routing engine that visualises optimal paths between global nodes on a custom 3D WebGL plexus globe. The project combines a high-performance C++17 backend exposing a REST API with a Three.js HTML5/CSS3/Vanilla JS frontend featuring concurrent algorithm overlays, cinematic flight animations, timezone calculations, and live hover previews.",
+    tags: [
+      "C++"
+    ],
+    githubUrl: "https://github.com/arnav-jain700/High-Performance-Navigation-System",
+    liveUrl: "https://global-nav-plexus.onrender.com/",
     image: ""
   }
 ];
 
-const DEFAULT_MESSAGES = [
-  {
-    id: "msg-1",
-    name: "Jane Smith",
-    email: "jane@company.com",
-    message: "Hey! Loved your NeuroPlan project. Are you available for freelance work next month?",
-    timestamp: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000).toISOString() // 3 days ago
-  }
-];
+const DEFAULT_MESSAGES = [];
 
 const DEFAULT_TIMELINE_ITEMS = [
   {
-    id: "time-1",
-    title: "Software Engineer Intern",
-    company: "Innovate AI Labs",
-    role: "Full-stack Intern",
-    dateRange: "Jan 2026 - Present",
-    description: "Engineering client-side workflows with Gemini integrations, crafting beautiful responsive dashboards, and optimizing API responses.",
-    type: "experience"
-  },
-  {
-    id: "time-2",
-    title: "B.Tech in Computer Science",
-    company: "Punjab Technical University",
+    id: "time-1781333225265",
+    title: "Higher Secondary Education",
+    company: "Kundan Vidya Mandir Senior Secondary School",
     role: "Student",
-    dateRange: "2022 - 2026",
-    description: "Specializing in software design, algorithms, web development, and database architectures.",
-    type: "education"
+    dateRange: "2022 - 2023",
+    type: "education",
+    description: ""
+  },
+  {
+    id: "time-1781333648916",
+    title: "Bachelor of Technology Hons(Data Science and Data Engineering)",
+    company: "Lovely Professional University",
+    role: "Student",
+    dateRange: "2024 - 2028",
+    type: "education",
+    description: "Rigorous CSE honors program specializing in Data Science and Data Engineering. Focused on Machine Learning, Deep Learning, Big Data tools, Database Management, and Data Structures, supported by applied analytics projects."
   }
 ];
 
-const DEFAULT_ARTICLES = [
-  {
-    id: "art-1",
-    title: "Building Client-Side AI Applications",
-    summary: "How to use local storage combined with the Gemini API to craft smart, responsive, browser-contained AI assistants without heavy backend dependencies.",
-    content: "### Introduction\nClient-side AI integrations are changing how developers build interactive tools. Instead of routing everything through complex servers, we can let users save keys locally in their browser and make direct, rate-limited API calls.\n\n### The Core Architecture\n1. **Local State**: Store the API key inside `localStorage`.\n2. **Browser Fetches**: Use `fetch()` directly to query Google's endpoints.\n3. **Context Injection**: Build clean system instructions containing DB objects (like projects or about-me info) to dynamically teach the model who it represents.\n\n### Conclusion\nThis ensures low latency, zero backend server costs, and strict privacy control since keys never leave the user's browser tab.",
-    date: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString().split('T')[0], // 2 days ago
-    tags: ["AI", "Gemini", "JavaScript"]
-  },
-  {
-    id: "art-2",
-    title: "The Power of HSL and Glassmorphism",
-    summary: "Dive deep into modern CSS properties, backdrop-filters, and color math using HSL values to craft professional dark-theme interfaces.",
-    content: "### Modern Styling Systems\nAesthetics determine the first impression of any website. Glassmorphism combines semi-transparent background colors with backdrop filters to create depth.\n\n```css\n.glass-card {\n  background: hsla(222, 25%, 12%, 0.65);\n  backdrop-filter: blur(12px);\n  border: 1px solid rgba(255, 255, 255, 0.08);\n}\n```\n\n### Why HSL?\nHSL (Hue, Saturation, Lightness) makes color palette tailoring extremely intuitive. Adjusting lightness (--lightness-offset) allows for automatic light and dark theme generation without rewriting colors.",
-    date: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000).toISOString().split('T')[0], // 5 days ago
-    tags: ["CSS", "Design", "Frontend"]
-  }
-];
+const DEFAULT_ARTICLES = [];
 
-const DEFAULT_CERTIFICATES = [
-  {
-    id: "cert-1",
-    title: "Google Advanced Data Analytics Professional Certificate",
-    issuer: "Google",
-    date: "2025",
-    url: "https://coursera.org",
-    skills: "Python, Regression Analysis, Machine Learning, Data Analytics",
-    image: ""
-  },
-  {
-    id: "cert-2",
-    title: "Deep Learning Specialization",
-    issuer: "DeepLearning.AI",
-    date: "2025",
-    url: "https://coursera.org",
-    skills: "Deep Learning, Neural Networks, TensorFlow, Python",
-    image: ""
-  }
-];
+const DEFAULT_CERTIFICATES = [];
 
 // Initialize Storage
 function initStorage() {
@@ -138,30 +98,30 @@ function initStorage() {
   if (!currentSettings) {
     localStorage.setItem("portfolio_settings", JSON.stringify({
       ownerName: "Arnav Jain",
-      ownerBio: "I am a full-stack engineer and AI developer passionate about crafting beautiful, high-performance web applications and integration of intelligent agents.",
+      ownerBio: "I am a Data Science and AI Developer dedicated to forging robust data architectures and breathing life into complex systems through generative, intelligent models.",
       email: "arnavjain1905@gmail.com",
       location: "Ludhiana, Punjab, India",
       linkedin: "https://www.linkedin.com/in/arnav-jain007/",
-      github: "https://github.com",
-      codolio: "",
-      medium: "",
+      github: "https://github.com/arnav-jain700",
+      codolio: "https://codolio.com/profile/Jarnav",
+      medium: "https://medium.com/@arnav4334",
       geminiKey: "",
-      categories: ["Frontend", "Backend", "Databases", "DevOps"]
+      categories: ["Frontend", "Backend", "Databases", "DevOps", "Version Control"]
     }));
   } else {
     // Merge keys to ensure fields are populated
     const parsed = JSON.parse(currentSettings);
     const updated = {
       ownerName: parsed.ownerName || "Arnav Jain",
-      ownerBio: parsed.ownerBio || "I am a full-stack engineer and AI developer passionate about crafting beautiful, high-performance web applications and integration of intelligent agents.",
+      ownerBio: parsed.ownerBio || "I am a Data Science and AI Developer dedicated to forging robust data architectures and breathing life into complex systems through generative, intelligent models.",
       email: parsed.email || "arnavjain1905@gmail.com",
       location: parsed.location || "Ludhiana, Punjab, India",
       linkedin: parsed.linkedin || "https://www.linkedin.com/in/arnav-jain007/",
-      github: parsed.github || "https://github",
-      codolio: parsed.codolio || "",
-      medium: parsed.medium || "",
+      github: parsed.github || "https://github.com/arnav-jain700",
+      codolio: parsed.codolio || "https://codolio.com/profile/Jarnav",
+      medium: parsed.medium || "https://medium.com/@arnav4334",
       geminiKey: parsed.geminiKey || "",
-      categories: parsed.categories || ["Frontend", "Backend", "Databases", "DevOps"]
+      categories: parsed.categories || ["Frontend", "Backend", "Databases", "DevOps", "Version Control"]
     };
     localStorage.setItem("portfolio_settings", JSON.stringify(updated));
   }
