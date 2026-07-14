@@ -618,6 +618,17 @@
                 </div>
 
                 <button id="admin-settings-save" class="btn btn-primary">Save Settings</button>
+
+                <div style="margin-top: 40px; padding-top: 24px; border-top: 1px solid var(--border-light);">
+                  <h4 style="margin-bottom: 8px; color: var(--accent-cyan); font-size: 1.1rem;">Export Content for Permanent Seeding</h4>
+                  <p style="color: var(--text-dimmed); font-size: 0.8rem; margin-bottom: 16px; line-height: 1.5;">
+                    To make your uploaded content visible to everyone (including on mobile devices and other browsers), click below to copy your database backup. Paste it in our chat, and I will hardcode it as your site's default data!
+                  </p>
+                  <div style="display: flex; align-items: center; gap: 12px; flex-wrap: wrap;">
+                    <button type="button" id="admin-settings-export-db" class="btn btn-secondary">Copy Database Backup</button>
+                    <span id="export-db-toast" style="color: var(--accent-cyan); font-size: 0.85rem; display: none;">✓ Copied to clipboard!</span>
+                  </div>
+                </div>
               </div>
 
               <!-- PANE G: CERTIFICATES -->

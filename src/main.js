@@ -1278,6 +1278,31 @@ document.getElementById("admin-settings-save").addEventListener("click", () => {
   alert("Settings stored securely. Portfolio state synchronized successfully!");
 });
 
+const exportDbBtn = document.getElementById("admin-settings-export-db");
+if (exportDbBtn) {
+  exportDbBtn.addEventListener("click", () => {
+    const backup = {
+      settings: Database.getSettings(),
+      techStacks: Database.getTechStacks(),
+      projects: Database.getProjects(),
+      timeline: Database.getTimeline(),
+      blog: Database.getArticles(),
+      certificates: Database.getCertificates()
+    };
+    navigator.clipboard.writeText(JSON.stringify(backup, null, 2)).then(() => {
+      const toast = document.getElementById("export-db-toast");
+      if (toast) {
+        toast.style.display = "inline";
+        setTimeout(() => {
+          toast.style.display = "none";
+        }, 3000);
+      }
+    }).catch(err => {
+      alert("Failed to copy database: " + err);
+    });
+  });
+}
+
 // Secure SHA-256 hash helper
 async function sha256(message) {
   const msgBuffer = new TextEncoder().encode(message);
