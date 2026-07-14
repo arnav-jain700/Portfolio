@@ -1,5 +1,7 @@
 import { Database } from "./data.js";
 import { AI } from "./ai.js";
+import { auth, isCloudActive } from "./firebase.js";
+import { signInWithEmailAndPassword, signOut } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
 
 // DOM Selector Elements
 const navLinks = document.querySelectorAll(".nav-link");
@@ -762,6 +764,19 @@ function populateAdminTechCategoriesDropdown() {
 }
 
 function initAdminPanel() {
+  const cloudBadge = document.getElementById("cloud-status-badge");
+  if (cloudBadge) {
+    if (isCloudActive) {
+      cloudBadge.textContent = "Cloud Sync";
+      cloudBadge.classList.remove("disconnected");
+      cloudBadge.classList.add("connected");
+    } else {
+      cloudBadge.textContent = "Local Mode";
+      cloudBadge.classList.add("disconnected");
+      cloudBadge.classList.remove("connected");
+    }
+  }
+
   // Toggle Admin Sidebar Sub-Panes
   const tabs = document.querySelectorAll(".admin-tab-btn");
   const panes = document.querySelectorAll(".admin-pane");
@@ -1353,6 +1368,10 @@ function updateAdminLockUI() {
 document.getElementById("admin-lock-btn").addEventListener("click", async () => {
   if (isAdminUnlocked()) {
     sessionStorage.removeItem("portfolio_admin_unlocked");
+    sessionStorage.removeItem("portfolio_admin_passcode");
+    if (isCloudActive) {
+      signOut(auth).catch(err => console.error("Sign out failed:", err));
+    }
     updateAdminLockUI();
     if (activeTab === "admin") {
       switchPage("home");
@@ -1361,9 +1380,22 @@ document.getElementById("admin-lock-btn").addEventListener("click", async () => 
   } else {
     const pass = prompt("Enter passcode to unlock Admin Console:");
     if (pass) {
-      const hash = await sha256(pass.trim());
+      const trimmedPass = pass.trim();
+      const hash = await sha256(trimmedPass);
       if (hash === "6b0eddb3003c5af40ece4f3ab87be46d3acafa9906499304d54c5304494b35ca") {
         sessionStorage.setItem("portfolio_admin_unlocked", "true");
+        sessionStorage.setItem("portfolio_admin_passcode", trimmedPass);
+        
+        if (isCloudActive) {
+          try {
+            await signInWithEmailAndPassword(auth, "arnavjain1905@gmail.com", trimmedPass);
+            console.log("Authenticated successfully with Firebase.");
+          } catch (e) {
+            console.warn("Firebase Auth login failed:", e);
+            alert("Firebase connection warning: Failed to authenticate online. Real-time cloud sync is inactive, but local storage fallback is enabled.");
+          }
+        }
+        
         updateAdminLockUI();
         switchPage("admin");
         alert("Admin console unlocked successfully!");
@@ -2801,13 +2833,24 @@ function initResumeExporter() {
 }
 
 // Initialize Main Execution Flow
-function initApp() {
+async function initApp() {
   if (checkPrintRoute()) {
     return;
   }
   initTheme();
   initJobScanner();
   updateAdminLockUI();
+
+  if (isCloudActive) {
+    const savedPass = sessionStorage.getItem("portfolio_admin_passcode");
+    if (savedPass && sessionStorage.getItem("portfolio_admin_unlocked") === "true") {
+      signInWithEmailAndPassword(auth, "arnavjain1905@gmail.com", savedPass)
+        .then(() => console.log("Auto re-authenticated with cloud database."))
+        .catch(err => console.warn("Auto Firebase login failed:", err));
+    }
+    await Database.syncWithCloud();
+  }
+
   renderHomeStats();
   initSlider();
   switchPage("home");

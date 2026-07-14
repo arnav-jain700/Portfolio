@@ -1,4 +1,5 @@
-// Client-side Database Management using LocalStorage
+import { db, isCloudActive } from "./firebase.js";
+import { collection, getDocs, doc, setDoc, deleteDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
 // Seed data
 const DEFAULT_TECH_STACKS = [
@@ -130,6 +131,48 @@ function initStorage() {
 initStorage();
 
 export const Database = {
+  // Cloud Database Sync
+  async syncWithCloud() {
+    if (!isCloudActive) return false;
+    try {
+      console.log("Syncing database with Firebase Cloud...");
+      
+      // Sync settings
+      const settingsSnap = await getDocs(collection(db, "portfolio_settings_coll"));
+      if (!settingsSnap.empty) {
+        const settingsDoc = settingsSnap.docs[0].data();
+        localStorage.setItem("portfolio_settings", JSON.stringify(settingsDoc));
+      }
+
+      // Helper to fetch collection and store in localStorage
+      const syncCollection = async (collName, storageKey) => {
+        const snap = await getDocs(collection(db, collName));
+        const list = [];
+        snap.forEach(doc => {
+          list.push({ id: doc.id, ...doc.data() });
+        });
+        if (list.length > 0) {
+          localStorage.setItem(storageKey, JSON.stringify(list));
+        }
+      };
+
+      await Promise.all([
+        syncCollection("projects", "portfolio_projects"),
+        syncCollection("tech_stacks", "portfolio_tech_stacks"),
+        syncCollection("timeline", "portfolio_timeline"),
+        syncCollection("blog", "portfolio_blog"),
+        syncCollection("certificates", "portfolio_certificates"),
+        syncCollection("messages", "portfolio_messages")
+      ]);
+
+      console.log("Cloud sync complete. Cache updated.");
+      return true;
+    } catch (e) {
+      console.error("Cloud sync failed, using cached local data:", e);
+      return false;
+    }
+  },
+
   // Projects CRUD
   getProjects() {
     return JSON.parse(localStorage.getItem("portfolio_projects") || "[]");
@@ -149,6 +192,11 @@ export const Database = {
       projects.push(project);
     }
     localStorage.setItem("portfolio_projects", JSON.stringify(projects));
+    
+    if (isCloudActive) {
+      const { id, ...data } = project;
+      setDoc(doc(db, "projects", id), data).catch(err => console.error("Firestore project save failed:", err));
+    }
     return project;
   },
   
@@ -156,6 +204,10 @@ export const Database = {
     const projects = this.getProjects();
     const filtered = projects.filter(p => p.id !== id);
     localStorage.setItem("portfolio_projects", JSON.stringify(filtered));
+    
+    if (isCloudActive) {
+      deleteDoc(doc(db, "projects", id)).catch(err => console.error("Firestore project delete failed:", err));
+    }
   },
 
   // Tech Stacks CRUD
@@ -177,6 +229,11 @@ export const Database = {
       stacks.push(stack);
     }
     localStorage.setItem("portfolio_tech_stacks", JSON.stringify(stacks));
+    
+    if (isCloudActive) {
+      const { id, ...data } = stack;
+      setDoc(doc(db, "tech_stacks", id), data).catch(err => console.error("Firestore skill save failed:", err));
+    }
     return stack;
   },
   
@@ -184,6 +241,10 @@ export const Database = {
     const stacks = this.getTechStacks();
     const filtered = stacks.filter(s => s.id !== id);
     localStorage.setItem("portfolio_tech_stacks", JSON.stringify(filtered));
+    
+    if (isCloudActive) {
+      deleteDoc(doc(db, "tech_stacks", id)).catch(err => console.error("Firestore skill delete failed:", err));
+    }
   },
 
   // Contact Messages CRUD
@@ -198,6 +259,11 @@ export const Database = {
     msg.unread = true; // Mark as unread by default
     messages.unshift(msg); // Newest messages first
     localStorage.setItem("portfolio_messages", JSON.stringify(messages));
+    
+    if (isCloudActive) {
+      const { id, ...data } = msg;
+      setDoc(doc(db, "messages", id), data).catch(err => console.error("Firestore message save failed:", err));
+    }
     return msg;
   },
   
@@ -205,6 +271,10 @@ export const Database = {
     const messages = this.getMessages();
     const filtered = messages.filter(m => m.id !== id);
     localStorage.setItem("portfolio_messages", JSON.stringify(filtered));
+    
+    if (isCloudActive) {
+      deleteDoc(doc(db, "messages", id)).catch(err => console.error("Firestore message delete failed:", err));
+    }
   },
 
   markMessageAsRead(id) {
@@ -213,6 +283,11 @@ export const Database = {
     if (index !== -1) {
       messages[index].unread = false;
       localStorage.setItem("portfolio_messages", JSON.stringify(messages));
+      
+      if (isCloudActive) {
+        const { id: _, ...data } = messages[index];
+        setDoc(doc(db, "messages", id), data).catch(err => console.error("Firestore message read update failed:", err));
+      }
     }
   },
 
@@ -220,11 +295,14 @@ export const Database = {
     const messages = this.getMessages();
     const index = messages.findIndex(m => m.id === id);
     if (index !== -1) {
-      messages[index].unread = messages[index].unread === false ? true : false;
+      messages[index].unread = !messages[index].unread;
       localStorage.setItem("portfolio_messages", JSON.stringify(messages));
-      return messages[index].unread;
+      
+      if (isCloudActive) {
+        const { id: _, ...data } = messages[index];
+        setDoc(doc(db, "messages", id), data).catch(err => console.error("Firestore message read toggle failed:", err));
+      }
     }
-    return null;
   },
 
   // Settings & Bio
@@ -236,6 +314,10 @@ export const Database = {
     const current = this.getSettings();
     const updated = { ...current, ...settings };
     localStorage.setItem("portfolio_settings", JSON.stringify(updated));
+    
+    if (isCloudActive) {
+      setDoc(doc(db, "portfolio_settings_coll", "main_settings"), updated).catch(err => console.error("Firestore settings save failed:", err));
+    }
     return updated;
   },
 
@@ -256,6 +338,11 @@ export const Database = {
       timeline.push(item);
     }
     localStorage.setItem("portfolio_timeline", JSON.stringify(timeline));
+    
+    if (isCloudActive) {
+      const { id, ...data } = item;
+      setDoc(doc(db, "timeline", id), data).catch(err => console.error("Firestore timeline save failed:", err));
+    }
     return item;
   },
 
@@ -263,6 +350,10 @@ export const Database = {
     const timeline = this.getTimeline();
     const filtered = timeline.filter(t => t.id !== id);
     localStorage.setItem("portfolio_timeline", JSON.stringify(filtered));
+    
+    if (isCloudActive) {
+      deleteDoc(doc(db, "timeline", id)).catch(err => console.error("Firestore timeline delete failed:", err));
+    }
   },
 
   // Blog CRUD
@@ -279,10 +370,14 @@ export const Database = {
       }
     } else {
       article.id = "art-" + Date.now();
-      article.date = new Date().toISOString().split('T')[0];
       articles.push(article);
     }
     localStorage.setItem("portfolio_blog", JSON.stringify(articles));
+    
+    if (isCloudActive) {
+      const { id, ...data } = article;
+      setDoc(doc(db, "blog", id), data).catch(err => console.error("Firestore article save failed:", err));
+    }
     return article;
   },
 
@@ -290,6 +385,10 @@ export const Database = {
     const articles = this.getArticles();
     const filtered = articles.filter(a => a.id !== id);
     localStorage.setItem("portfolio_blog", JSON.stringify(filtered));
+    
+    if (isCloudActive) {
+      deleteDoc(doc(db, "blog", id)).catch(err => console.error("Firestore article delete failed:", err));
+    }
   },
 
   // Certificates CRUD
@@ -309,6 +408,11 @@ export const Database = {
       certs.push(cert);
     }
     localStorage.setItem("portfolio_certificates", JSON.stringify(certs));
+    
+    if (isCloudActive) {
+      const { id, ...data } = cert;
+      setDoc(doc(db, "certificates", id), data).catch(err => console.error("Firestore certificate save failed:", err));
+    }
     return cert;
   },
 
@@ -316,5 +420,9 @@ export const Database = {
     const certs = this.getCertificates();
     const filtered = certs.filter(c => c.id !== id);
     localStorage.setItem("portfolio_certificates", JSON.stringify(filtered));
+    
+    if (isCloudActive) {
+      deleteDoc(doc(db, "certificates", id)).catch(err => console.error("Firestore certificate delete failed:", err));
+    }
   }
 };
