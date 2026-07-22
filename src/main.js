@@ -16,6 +16,12 @@ let isServerLive = false;
 // ROUTING & NAVIGATION
 // ----------------------------------------------------
 function switchPage(pageId) {
+  // Close mobile navigation drawer if open
+  const mainNavLinks = document.getElementById("main-nav-links");
+  if (mainNavLinks) {
+    mainNavLinks.classList.remove("mobile-open");
+  }
+
   // Access protection for admin page
   if (pageId === "admin" && !isAdminUnlocked()) {
     switchPage("home");
@@ -39,6 +45,7 @@ function switchPage(pageId) {
   });
 
   activeTab = pageId;
+  window.scrollTo({ top: 0, behavior: "smooth" });
 
   // Specific page initialization callbacks
   if (pageId === "home") {
@@ -51,6 +58,8 @@ function switchPage(pageId) {
   } else if (pageId === "projects") {
     renderProjectFilters();
     renderProjectsGrid();
+  } else if (pageId === "hackathons") {
+    renderHackathonsGrid();
   } else if (pageId === "blog") {
     renderBlogGrid();
   } else if (pageId === "certificates") {
@@ -66,6 +75,22 @@ navLinks.forEach(link => {
     switchPage(link.dataset.page);
   });
 });
+
+// Mobile menu toggle listener
+const mobileMenuToggle = document.getElementById("mobile-menu-toggle");
+const mainNavLinks = document.getElementById("main-nav-links");
+if (mobileMenuToggle && mainNavLinks) {
+  mobileMenuToggle.addEventListener("click", (e) => {
+    e.stopPropagation();
+    mainNavLinks.classList.toggle("mobile-open");
+  });
+
+  document.addEventListener("click", (e) => {
+    if (!mainNavLinks.contains(e.target) && !mobileMenuToggle.contains(e.target)) {
+      mainNavLinks.classList.remove("mobile-open");
+    }
+  });
+}
 
 logo.addEventListener("click", () => {
   switchPage("home");
@@ -806,6 +831,8 @@ function initAdminPanel() {
         renderAdminMessages();
       } else if (tab.dataset.pane === "admin-pane-certificates") {
         renderAdminCertList();
+      } else if (tab.dataset.pane === "admin-pane-hackathons") {
+        renderAdminHackathonList();
       } else if (tab.dataset.pane === "admin-pane-settings") {
         loadAdminSettings();
       }
@@ -817,6 +844,7 @@ function initAdminPanel() {
   populateAdminTechCategoriesDropdown();
   populateAdminCategoryList();
   setupAdminCategoryFormOnce();
+  setupAdminHackathonFormOnce();
   
   // Setup range label update
   const levelSlider = document.getElementById("admin-tech-level");
@@ -1920,6 +1948,295 @@ function renderAdminCertList() {
       Database.deleteCertificate(cert.id);
       renderAdminCertList();
       renderCertificatesGrid();
+    });
+
+    container.appendChild(el);
+  });
+}
+
+// ----------------------------------------------------
+// DYNAMIC HACKATHONS SHOWCASE RENDERING
+// ----------------------------------------------------
+function renderHackathonsGrid() {
+  const container = document.getElementById("hackathons-grid-container");
+  if (!container) return;
+  const hackathons = Database.getHackathons();
+
+  container.innerHTML = "";
+  if (hackathons.length === 0) {
+    container.innerHTML = `<div style="grid-column: 1/-1; text-align: center; color: var(--text-dimmed); padding: 40px;">No hackathons added yet. Add some in the Admin panel!</div>`;
+    return;
+  }
+
+  hackathons.forEach(hack => {
+    const card = document.createElement("div");
+    card.className = "hackathon-card glass-card";
+
+    // Skills tag list
+    const techList = hack.technologies ? hack.technologies.split(",").map(s => s.trim()).filter(s => s.length > 0) : [];
+    const techMarkup = techList.map(s => `<span class="hackathon-skill-tag">${s}</span>`).join("");
+
+    // Action buttons
+    const demoBtn = hack.projectUrl ? `<a href="${hack.projectUrl}" target="_blank" rel="noopener noreferrer" class="btn btn-secondary btn-sm" style="font-size: 0.8rem; padding: 6px 12px; border-radius: 4px; display: inline-flex; align-items: center; gap: 6px;">
+        View Demo
+        <svg viewBox="0 0 24 24" width="12" height="12" stroke="currentColor" stroke-width="2" fill="none"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+      </a>` : '';
+
+    const certBtn = hack.certificateUrl ? `<a href="${hack.certificateUrl}" target="_blank" rel="noopener noreferrer" class="btn btn-secondary btn-sm" style="font-size: 0.8rem; padding: 6px 12px; border-radius: 4px; display: inline-flex; align-items: center; gap: 6px; border-color: rgba(99, 102, 241, 0.4); color: var(--accent-indigo);">
+        Certificate / Proof
+        <svg viewBox="0 0 24 24" width="12" height="12" stroke="currentColor" stroke-width="2" fill="none"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+      </a>` : '';
+
+    const imgContainer = hack.image ? `
+      <div class="hackathon-image-container" title="Click to view photo full size">
+        <img src="${hack.image}" alt="${hack.title}" />
+      </div>
+    ` : '';
+
+    const achievementMarkup = hack.achievement ? `
+      <span class="hackathon-achievement-badge">
+        <svg viewBox="0 0 24 24" width="14" height="14" stroke="currentColor" stroke-width="2" fill="none"><path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6"/><path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18"/><path d="M4 22h16"/><path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22"/><path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22"/><path d="M18 2H6v7a6 6 0 0 0 12 0V2z"/></svg>
+        ${hack.achievement}
+      </span>
+    ` : '';
+
+    card.innerHTML = `
+      ${imgContainer}
+      <div class="hackathon-badge-container">
+        <div class="hackathon-organizer">${hack.organizer || 'Hackathon Event'}</div>
+        ${achievementMarkup}
+      </div>
+      <h3 class="hackathon-title">${hack.title}</h3>
+      <div class="hackathon-project-name">Project: ${hack.projectName}</div>
+      <p class="hackathon-description">${hack.description}</p>
+      
+      <div class="hackathon-skills">
+        ${techMarkup}
+      </div>
+      
+      <div class="hackathon-meta">
+        <span>${hack.role} &bull; ${hack.date}</span>
+        <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+          ${demoBtn}
+          ${certBtn}
+        </div>
+      </div>
+    `;
+
+    const imgEl = card.querySelector(".hackathon-image-container");
+    if (imgEl) {
+      imgEl.addEventListener("click", () => {
+        openCertLightbox(hack.image);
+      });
+    }
+
+    container.appendChild(card);
+  });
+}
+
+// ----------------------------------------------------
+// HACKATHONS ADMIN CRUD LIFECYCLE
+// ----------------------------------------------------
+let hackFormBound = false;
+let currentUploadedHackImage = "";
+
+function showHackPreview(src) {
+  const box = document.getElementById("admin-hack-image-preview-box");
+  const img = document.getElementById("admin-hack-preview-img");
+  if (box && img) {
+    img.src = src;
+    box.style.display = "flex";
+  }
+}
+
+function hideHackPreview() {
+  const box = document.getElementById("admin-hack-image-preview-box");
+  const img = document.getElementById("admin-hack-preview-img");
+  const fileInput = document.getElementById("admin-hack-file");
+  const urlInput = document.getElementById("admin-hack-image-url");
+  if (box && img) {
+    img.src = "";
+    box.style.display = "none";
+  }
+  if (fileInput) fileInput.value = "";
+  if (urlInput) urlInput.value = "";
+  currentUploadedHackImage = "";
+}
+
+function setupAdminHackathonFormOnce() {
+  if (hackFormBound) return;
+  hackFormBound = true;
+
+  const form = document.getElementById("admin-hackathon-form");
+  const cancelBtn = document.getElementById("admin-hack-cancel-btn");
+  const submitBtn = document.getElementById("admin-hack-submit-btn");
+  const fileInput = document.getElementById("admin-hack-file");
+  const urlInput = document.getElementById("admin-hack-image-url");
+  const removeImgBtn = document.getElementById("admin-hack-remove-img-btn");
+
+  if (!form) return;
+
+  fileInput.addEventListener("change", (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      urlInput.value = "";
+      const reader = new FileReader();
+      reader.onload = function(evt) {
+        const img = new Image();
+        img.onload = function() {
+          const canvas = document.createElement("canvas");
+          const MAX_WIDTH = 500;
+          let width = img.width;
+          let height = img.height;
+
+          if (width > MAX_WIDTH) {
+            height = Math.round((height * MAX_WIDTH) / width);
+            width = MAX_WIDTH;
+          }
+
+          canvas.width = width;
+          canvas.height = height;
+
+          const ctx = canvas.getContext("2d");
+          ctx.drawImage(img, 0, 0, width, height);
+
+          currentUploadedHackImage = canvas.toDataURL("image/jpeg", 0.7);
+          showHackPreview(currentUploadedHackImage);
+        };
+        img.src = evt.target.result;
+      };
+      reader.readAsDataURL(file);
+    }
+  });
+
+  urlInput.addEventListener("input", (e) => {
+    const val = e.target.value.trim();
+    if (val) {
+      fileInput.value = "";
+      currentUploadedHackImage = val;
+      showHackPreview(val);
+    } else {
+      hideHackPreview();
+    }
+  });
+
+  if (removeImgBtn) {
+    removeImgBtn.addEventListener("click", () => {
+      hideHackPreview();
+    });
+  }
+
+  form.addEventListener("submit", (e) => {
+    e.preventDefault();
+    const id = document.getElementById("admin-hackathon-id").value;
+    const title = document.getElementById("admin-hack-title").value.trim();
+    const organizer = document.getElementById("admin-hack-organizer").value.trim();
+    const date = document.getElementById("admin-hack-date").value.trim();
+    const role = document.getElementById("admin-hack-role").value.trim();
+    const projectName = document.getElementById("admin-hack-project-name").value.trim();
+    const achievement = document.getElementById("admin-hack-achievement").value.trim();
+    const description = document.getElementById("admin-hack-desc").value.trim();
+    const technologies = document.getElementById("admin-hack-tech").value.trim();
+    const projectUrl = document.getElementById("admin-hack-project-url").value.trim();
+    const certificateUrl = document.getElementById("admin-hack-cert-url").value.trim();
+
+    Database.saveHackathon({
+      id: id || undefined,
+      title,
+      organizer,
+      date,
+      role,
+      projectName,
+      achievement,
+      description,
+      technologies,
+      projectUrl,
+      certificateUrl,
+      image: currentUploadedHackImage
+    });
+
+    resetHackForm();
+    renderAdminHackathonList();
+    renderHackathonsGrid();
+  });
+
+  if (cancelBtn) {
+    cancelBtn.addEventListener("click", resetHackForm);
+  }
+}
+
+function resetHackForm() {
+  const form = document.getElementById("admin-hackathon-form");
+  if (form) form.reset();
+  document.getElementById("admin-hackathon-id").value = "";
+  const submitBtn = document.getElementById("admin-hack-submit-btn");
+  const cancelBtn = document.getElementById("admin-hack-cancel-btn");
+  if (submitBtn) submitBtn.textContent = "Add Hackathon";
+  if (cancelBtn) cancelBtn.style.display = "none";
+  hideHackPreview();
+}
+
+function renderAdminHackathonList() {
+  const container = document.getElementById("admin-hackathon-list");
+  if (!container) return;
+  const hackathons = Database.getHackathons();
+
+  container.innerHTML = "";
+  if (hackathons.length === 0) {
+    container.innerHTML = `<div style="text-align: center; color: var(--text-dimmed); padding: 20px;">No hackathons listed.</div>`;
+    return;
+  }
+
+  hackathons.forEach(hack => {
+    const el = document.createElement("div");
+    el.className = "admin-list-item";
+    el.innerHTML = `
+      <div class="admin-list-info">
+        <h4>${hack.title} (${hack.achievement || 'Participant'})</h4>
+        <p>${hack.projectName} &bull; ${hack.organizer} (${hack.date})</p>
+      </div>
+      <div class="admin-list-actions">
+        <button class="action-btn edit" title="Edit hackathon">
+          <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 1 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+        </button>
+        <button class="action-btn delete" title="Delete hackathon">
+          <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><line x1="10" y1="11" x2="10" y2="17"/><line x1="14" y1="11" x2="14" y2="17"/></svg>
+        </button>
+      </div>
+    `;
+
+    el.querySelector(".edit").addEventListener("click", () => {
+      document.getElementById("admin-hackathon-id").value = hack.id;
+      document.getElementById("admin-hack-title").value = hack.title;
+      document.getElementById("admin-hack-organizer").value = hack.organizer || "";
+      document.getElementById("admin-hack-date").value = hack.date || "";
+      document.getElementById("admin-hack-role").value = hack.role || "";
+      document.getElementById("admin-hack-project-name").value = hack.projectName || "";
+      document.getElementById("admin-hack-achievement").value = hack.achievement || "";
+      document.getElementById("admin-hack-desc").value = hack.description || "";
+      document.getElementById("admin-hack-tech").value = hack.technologies || "";
+      document.getElementById("admin-hack-project-url").value = hack.projectUrl || "";
+      document.getElementById("admin-hack-cert-url").value = hack.certificateUrl || "";
+
+      currentUploadedHackImage = hack.image || "";
+      if (currentUploadedHackImage) {
+        showHackPreview(currentUploadedHackImage);
+        if (!currentUploadedHackImage.startsWith("data:")) {
+          document.getElementById("admin-hack-image-url").value = currentUploadedHackImage;
+        }
+      } else {
+        hideHackPreview();
+      }
+
+      document.getElementById("admin-hack-submit-btn").textContent = "Update Hackathon";
+      document.getElementById("admin-hack-cancel-btn").style.display = "inline-block";
+      document.getElementById("admin-hackathon-form").scrollIntoView({ behavior: "smooth" });
+    });
+
+    el.querySelector(".delete").addEventListener("click", () => {
+      Database.deleteHackathon(hack.id);
+      renderAdminHackathonList();
+      renderHackathonsGrid();
     });
 
     container.appendChild(el);

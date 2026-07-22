@@ -75,6 +75,23 @@ const DEFAULT_ARTICLES = [];
 
 const DEFAULT_CERTIFICATES = [];
 
+const DEFAULT_HACKATHONS = [
+  {
+    id: "hack-1",
+    title: "Global AI & Innovation Hackathon 2025",
+    organizer: "Devfolio & Google Cloud",
+    date: "March 2025",
+    role: "Team Lead & Lead Developer",
+    projectName: "Global Nav Plexus AI",
+    achievement: "🏆 1st Winner",
+    description: "Architected a real-time AI-powered 3D geospatial routing engine and intelligent agent system in a 36-hour hackathon sprint. Integrated graph algorithm overlays, live WebGL rendering, and generative AI job fit analysis.",
+    technologies: "C++, Python, Three.js, JavaScript, TensorFlow, REST API",
+    projectUrl: "https://global-nav-plexus.onrender.com/",
+    certificateUrl: "https://devfolio.co",
+    image: ""
+  }
+];
+
 // Initialize Storage
 function initStorage() {
   if (!localStorage.getItem("portfolio_tech_stacks")) {
@@ -94,6 +111,9 @@ function initStorage() {
   }
   if (!localStorage.getItem("portfolio_certificates")) {
     localStorage.setItem("portfolio_certificates", JSON.stringify(DEFAULT_CERTIFICATES));
+  }
+  if (!localStorage.getItem("portfolio_hackathons")) {
+    localStorage.setItem("portfolio_hackathons", JSON.stringify(DEFAULT_HACKATHONS));
   }
   const currentSettings = localStorage.getItem("portfolio_settings");
   if (!currentSettings) {
@@ -176,6 +196,7 @@ export const Database = {
         syncCollection("timeline", "portfolio_timeline"),
         syncCollection("blog", "portfolio_blog"),
         syncCollection("certificates", "portfolio_certificates"),
+        syncCollection("hackathons", "portfolio_hackathons"),
         syncCollection("messages", "portfolio_messages")
       ]);
 
@@ -437,6 +458,41 @@ export const Database = {
     
     if (isCloudActive) {
       deleteDoc(doc(db, "certificates", id)).catch(err => console.error("Firestore certificate delete failed:", err));
+    }
+  },
+
+  // Hackathons CRUD
+  getHackathons() {
+    return JSON.parse(localStorage.getItem("portfolio_hackathons") || "[]");
+  },
+
+  saveHackathon(hackathon) {
+    const hackathons = this.getHackathons();
+    if (hackathon.id) {
+      const index = hackathons.findIndex(h => h.id === hackathon.id);
+      if (index !== -1) {
+        hackathons[index] = { ...hackathons[index], ...hackathon };
+      }
+    } else {
+      hackathon.id = "hack-" + Date.now();
+      hackathons.push(hackathon);
+    }
+    localStorage.setItem("portfolio_hackathons", JSON.stringify(hackathons));
+    
+    if (isCloudActive) {
+      const { id, ...data } = hackathon;
+      setDoc(doc(db, "hackathons", id), data).catch(err => console.error("Firestore hackathon save failed:", err));
+    }
+    return hackathon;
+  },
+
+  deleteHackathon(id) {
+    const hackathons = this.getHackathons();
+    const filtered = hackathons.filter(h => h.id !== id);
+    localStorage.setItem("portfolio_hackathons", JSON.stringify(filtered));
+    
+    if (isCloudActive) {
+      deleteDoc(doc(db, "hackathons", id)).catch(err => console.error("Firestore hackathon delete failed:", err));
     }
   }
 };
