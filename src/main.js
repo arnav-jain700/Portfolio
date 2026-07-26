@@ -463,17 +463,8 @@ function renderProjectsGrid(projectsList = null) {
         </div>
       `;
     } else {
-      const cleanFilename = (proj.title || "project").toLowerCase().replace(/[^a-z0-9]/g, "-") + ".js";
       thumbnailMarkup = `
         <div class="project-thumbnail project-code-banner">
-          <div class="project-window-bar">
-            <div class="project-window-dots">
-              <span class="dot red"></span>
-              <span class="dot yellow"></span>
-              <span class="dot green"></span>
-            </div>
-            <span class="project-window-title">${cleanFilename}</span>
-          </div>
           <div class="project-graphic-content">
             ${getProjectSvgGraphic(proj)}
           </div>
@@ -550,15 +541,7 @@ function openProjectModal(project) {
     `;
   } else {
     modalGraphicHeader = `
-      <div style="background: radial-gradient(circle at 50% 30%, rgba(99, 102, 241, 0.25), rgba(15, 23, 42, 0.95)); border: 1px solid var(--border-light); border-radius: var(--radius-md); padding: 20px; margin-bottom: 24px; text-align: center; position: relative; overflow: hidden;">
-        <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; border-bottom: 1px solid rgba(255,255,255,0.08); padding-bottom: 6px;">
-          <div style="display: flex; gap: 6px;">
-            <span style="width: 9px; height: 9px; border-radius: 50%; background: #ff5f56;"></span>
-            <span style="width: 9px; height: 9px; border-radius: 50%; background: #ffbd2e;"></span>
-            <span style="width: 9px; height: 9px; border-radius: 50%; background: #27c93f;"></span>
-          </div>
-          <span style="font-family: 'Fira Code', monospace; font-size: 0.75rem; color: var(--accent-cyan); opacity: 0.85;">${(project.title || "system").toLowerCase().replace(/[^a-z0-9]/g, '-')}.js</span>
-        </div>
+      <div style="background: radial-gradient(circle at 50% 30%, rgba(99, 102, 241, 0.25), rgba(15, 23, 42, 0.95)); border: 1px solid var(--border-light); border-radius: var(--radius-md); padding: 24px; margin-bottom: 24px; text-align: center; position: relative; overflow: hidden; display: flex; align-items: center; justify-content: center; min-height: 140px;">
         ${getProjectSvgGraphic(project)}
       </div>
     `;
