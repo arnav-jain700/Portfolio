@@ -467,6 +467,19 @@
                     <textarea id="admin-project-desc" class="glass-input" placeholder="Summarize the core functionality..." required></textarea>
                   </div>
 
+                  <div class="form-group">
+                    <label class="form-label">Project Screenshot / Banner (Upload File or Paste Image URL)</label>
+                    <div style="display: flex; gap: 12px; align-items: center; flex-wrap: wrap;">
+                      <input type="file" id="admin-project-file" class="glass-input" accept="image/*" style="padding: 6px 12px; flex: 1; min-width: 200px;" />
+                      <span style="color: var(--text-dimmed); font-size: 0.85rem;">or</span>
+                      <input type="url" id="admin-project-image-url" class="glass-input" placeholder="https://example.com/project-screenshot.jpg" style="flex: 1; min-width: 200px;" />
+                    </div>
+                    <div id="admin-project-image-preview-box" style="margin-top: 12px; display: none; align-items: center; gap: 12px;">
+                      <img id="admin-project-preview-img" src="" style="max-height: 100px; border-radius: var(--radius-sm); border: 1px solid var(--border-light);" />
+                      <button type="button" id="admin-project-remove-img-btn" class="btn btn-secondary btn-sm" style="padding: 4px 8px; font-size: 0.75rem; border-color: rgba(239, 68, 68, 0.4); color: #f87171;">Remove Image</button>
+                    </div>
+                  </div>
+
                   <div class="form-row-2">
                     <div class="form-group">
                       <label class="form-label">GitHub Repository URL</label>

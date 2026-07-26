@@ -363,6 +363,80 @@ function renderProjectFilters() {
   });
 }
 
+function getProjectSvgGraphic(proj) {
+  const cat = (proj.category || "").toLowerCase();
+  const title = (proj.title || "").toLowerCase();
+  const tagsStr = (proj.tags || []).join(" ").toLowerCase();
+
+  // 1. 3D / Geospatial / C++ / WebGL / Graph / Plexus
+  if (cat.includes("3d") || cat.includes("geospatial") || cat.includes("nav") || title.includes("plexus") || title.includes("nav") || tagsStr.includes("c++") || tagsStr.includes("three.js") || tagsStr.includes("webgl")) {
+    return `
+      <svg class="project-graphic-svg" viewBox="0 0 240 100" fill="none" stroke="currentColor">
+        <defs>
+          <linearGradient id="grad-plexus" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stop-color="#06b6d4" />
+            <stop offset="100%" stop-color="#6366f1" />
+          </linearGradient>
+        </defs>
+        <circle cx="120" cy="50" r="34" stroke="url(#grad-plexus)" stroke-width="1.5" stroke-dasharray="4 3" opacity="0.6"/>
+        <ellipse cx="120" cy="50" rx="46" ry="18" stroke="url(#grad-plexus)" stroke-width="1" opacity="0.4" transform="rotate(-15 120 50)"/>
+        <path d="M40 75 Q120 15 200 75" stroke="#06b6d4" stroke-width="1.5" stroke-dasharray="6 4" opacity="0.7"/>
+        <path d="M60 25 Q120 85 180 25" stroke="#a855f7" stroke-width="1.5" opacity="0.5"/>
+        <circle cx="75" cy="45" r="4" fill="#06b6d4"/>
+        <circle cx="120" cy="22" r="5" fill="#6366f1"/>
+        <circle cx="165" cy="55" r="4.5" fill="#a855f7"/>
+        <circle cx="130" cy="72" r="3.5" fill="#38bdf8"/>
+        <circle cx="95" cy="65" r="3" fill="#818cf8"/>
+        <line x1="75" y1="45" x2="120" y2="22" stroke="#06b6d4" stroke-width="1.2" opacity="0.8"/>
+        <line x1="120" y1="22" x2="165" y2="55" stroke="#6366f1" stroke-width="1.2" opacity="0.8"/>
+        <line x1="165" y1="55" x2="130" y2="72" stroke="#a855f7" stroke-width="1.2" opacity="0.8"/>
+        <line x1="130" y1="72" x2="95" y2="65" stroke="#38bdf8" stroke-width="1.2" opacity="0.8"/>
+        <line x1="95" y1="65" x2="75" y2="45" stroke="#818cf8" stroke-width="1.2" opacity="0.8"/>
+        <line x1="75" y1="45" x2="165" y2="55" stroke="#06b6d4" stroke-width="0.8" opacity="0.4"/>
+      </svg>
+    `;
+  }
+
+  // 2. AI / Agent / Intelligence / Machine Learning / Python / Data Science
+  if (cat.includes("ai") || cat.includes("intelligence") || cat.includes("agent") || title.includes("ai") || tagsStr.includes("python") || tagsStr.includes("tensorflow") || tagsStr.includes("ai")) {
+    return `
+      <svg class="project-graphic-svg" viewBox="0 0 240 100" fill="none" stroke="currentColor">
+        <defs>
+          <linearGradient id="grad-ai" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stop-color="#a855f7" />
+            <stop offset="100%" stop-color="#06b6d4" />
+          </linearGradient>
+        </defs>
+        <rect x="90" y="20" width="60" height="60" rx="12" stroke="url(#grad-ai)" stroke-width="2" fill="rgba(168, 85, 247, 0.08)"/>
+        <circle cx="120" cy="50" r="16" fill="none" stroke="#38bdf8" stroke-width="2"/>
+        <path d="M120 38 L120 62 M108 50 L132 50" stroke="#a855f7" stroke-width="2" stroke-linecap="round"/>
+        <path d="M40 50 L90 50 M150 50 L200 50 M120 20 L120 8 M120 80 L120 92" stroke="url(#grad-ai)" stroke-width="1.5" stroke-dasharray="4 2"/>
+        <circle cx="40" cy="50" r="4" fill="#a855f7"/>
+        <circle cx="200" cy="50" r="4" fill="#06b6d4"/>
+        <circle cx="120" cy="8" r="3" fill="#38bdf8"/>
+        <circle cx="120" cy="92" r="3" fill="#c084fc"/>
+      </svg>
+    `;
+  }
+
+  // 3. Web Development / Full-Stack / Systems / Default Code Window
+  return `
+    <svg class="project-graphic-svg" viewBox="0 0 240 100" fill="none" stroke="currentColor">
+      <defs>
+        <linearGradient id="grad-code" x1="0%" y1="0%" x2="100%" y2="100%">
+          <stop offset="0%" stop-color="#6366f1" />
+          <stop offset="100%" stop-color="#38bdf8" />
+        </linearGradient>
+      </defs>
+      <rect x="50" y="15" width="140" height="70" rx="8" stroke="url(#grad-code)" stroke-width="1.5" fill="rgba(99, 102, 241, 0.06)"/>
+      <path d="M70 35 L85 50 L70 65" stroke="#06b6d4" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+      <path d="M170 35 L155 50 L170 65" stroke="#6366f1" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+      <line x1="125" y1="35" x2="115" y2="65" stroke="#a855f7" stroke-width="2.5" stroke-linecap="round"/>
+      <rect x="95" y="72" width="50" height="3" rx="1.5" fill="#38bdf8" opacity="0.6"/>
+    </svg>
+  `;
+}
+
 function renderProjectsGrid(projectsList = null) {
   const grid = document.getElementById("projects-grid-container");
   const projects = projectsList || Database.getProjects();
@@ -378,17 +452,40 @@ function renderProjectsGrid(projectsList = null) {
     const card = document.createElement("div");
     card.className = "project-card glass-card";
 
-    // Set custom icon graphic or code vector as thumbnail representation
-    card.innerHTML = `
-      <div class="project-thumbnail">
-        <svg viewBox="0 0 100 100" style="width: 100%; height: 100%; max-height: 120px;" fill="none" stroke="currentColor" stroke-width="0.8">
-          <circle cx="50" cy="50" r="30" stroke="rgba(99, 102, 241, 0.15)" stroke-width="4"/>
-          <path d="M35 50 L45 60 L65 40" stroke="var(--accent-cyan)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-        </svg>
-        <div class="project-badges">
-          <span class="badge">${proj.category}</span>
+    let thumbnailMarkup = "";
+    if (proj.image && proj.image.trim() !== "") {
+      thumbnailMarkup = `
+        <div class="project-thumbnail">
+          <img src="${proj.image}" alt="${proj.title}" />
+          <div class="project-badges">
+            <span class="badge">${proj.category}</span>
+          </div>
         </div>
-      </div>
+      `;
+    } else {
+      const cleanFilename = (proj.title || "project").toLowerCase().replace(/[^a-z0-9]/g, "-") + ".js";
+      thumbnailMarkup = `
+        <div class="project-thumbnail project-code-banner">
+          <div class="project-window-bar">
+            <div class="project-window-dots">
+              <span class="dot red"></span>
+              <span class="dot yellow"></span>
+              <span class="dot green"></span>
+            </div>
+            <span class="project-window-title">${cleanFilename}</span>
+          </div>
+          <div class="project-graphic-content">
+            ${getProjectSvgGraphic(proj)}
+          </div>
+          <div class="project-badges">
+            <span class="badge">${proj.category}</span>
+          </div>
+        </div>
+      `;
+    }
+
+    card.innerHTML = `
+      ${thumbnailMarkup}
       <div class="project-content">
         <h3>${proj.title}</h3>
         <p class="project-desc">${proj.description}</p>
@@ -443,18 +540,35 @@ const modalOverlay = document.getElementById("project-detail-modal");
 
 function openProjectModal(project) {
   const content = document.getElementById("modal-content");
+  let modalGraphicHeader = "";
+
+  if (project.image && project.image.trim() !== "") {
+    modalGraphicHeader = `
+      <div style="width: 100%; max-height: 260px; overflow: hidden; border-radius: var(--radius-md); border: 1px solid var(--border-light); margin-bottom: 24px; background: rgba(0,0,0,0.3);">
+        <img src="${project.image}" alt="${project.title}" style="width: 100%; height: 100%; object-fit: cover;" />
+      </div>
+    `;
+  } else {
+    modalGraphicHeader = `
+      <div style="background: radial-gradient(circle at 50% 30%, rgba(99, 102, 241, 0.25), rgba(15, 23, 42, 0.95)); border: 1px solid var(--border-light); border-radius: var(--radius-md); padding: 20px; margin-bottom: 24px; text-align: center; position: relative; overflow: hidden;">
+        <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; border-bottom: 1px solid rgba(255,255,255,0.08); padding-bottom: 6px;">
+          <div style="display: flex; gap: 6px;">
+            <span style="width: 9px; height: 9px; border-radius: 50%; background: #ff5f56;"></span>
+            <span style="width: 9px; height: 9px; border-radius: 50%; background: #ffbd2e;"></span>
+            <span style="width: 9px; height: 9px; border-radius: 50%; background: #27c93f;"></span>
+          </div>
+          <span style="font-family: 'Fira Code', monospace; font-size: 0.75rem; color: var(--accent-cyan); opacity: 0.85;">${(project.title || "system").toLowerCase().replace(/[^a-z0-9]/g, '-')}.js</span>
+        </div>
+        ${getProjectSvgGraphic(project)}
+      </div>
+    `;
+  }
+
   content.innerHTML = `
     <h2 style="font-size: 2rem; margin-bottom: 8px;">${project.title}</h2>
     <span class="badge" style="display: inline-block; margin-bottom: 20px;">${project.category}</span>
     
-    <div style="background: rgba(0,0,0,0.25); border: 1px solid var(--border-light); border-radius: var(--radius-md); padding: 30px; margin-bottom: 24px; text-align: center;">
-      <svg viewBox="0 0 24 24" width="64" height="64" stroke="var(--accent-cyan)" stroke-width="1.5" fill="none" style="margin-bottom: 12px;">
-        <rect x="2" y="3" width="20" height="14" rx="2" ry="2"/>
-        <line x1="8" y1="21" x2="16" y2="21"/>
-        <line x1="12" y1="17" x2="12" y2="21"/>
-      </svg>
-      <p style="color: var(--text-muted); font-size: 0.9rem;">Interactive Sandbox System Mockup</p>
-    </div>
+    ${modalGraphicHeader}
 
     <h3 style="margin-bottom: 8px;">About Project</h3>
     <p style="color: var(--text-muted); margin-bottom: 20px; font-size: 1rem; line-height: 1.7;">
@@ -983,6 +1097,88 @@ const projectForm = document.getElementById("admin-project-form");
 const cancelProjEdit = document.getElementById("admin-project-cancel-btn");
 const submitProjBtn = document.getElementById("admin-project-submit-btn");
 
+let currentUploadedProjImage = "";
+
+function showProjPreview(src) {
+  const box = document.getElementById("admin-project-image-preview-box");
+  const img = document.getElementById("admin-project-preview-img");
+  if (box && img) {
+    img.src = src;
+    box.style.display = "flex";
+  }
+}
+
+function hideProjPreview() {
+  const box = document.getElementById("admin-project-image-preview-box");
+  const img = document.getElementById("admin-project-preview-img");
+  const fileInput = document.getElementById("admin-project-file");
+  const urlInput = document.getElementById("admin-project-image-url");
+  if (box && img) {
+    img.src = "";
+    box.style.display = "none";
+  }
+  if (fileInput) fileInput.value = "";
+  if (urlInput) urlInput.value = "";
+  currentUploadedProjImage = "";
+}
+
+// Bind project image upload handlers
+const projFileInput = document.getElementById("admin-project-file");
+const projUrlInput = document.getElementById("admin-project-image-url");
+const projRemoveImgBtn = document.getElementById("admin-project-remove-img-btn");
+
+if (projFileInput) {
+  projFileInput.addEventListener("change", (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      if (projUrlInput) projUrlInput.value = "";
+      const reader = new FileReader();
+      reader.onload = function(evt) {
+        const img = new Image();
+        img.onload = function() {
+          const canvas = document.createElement("canvas");
+          const MAX_WIDTH = 600;
+          let width = img.width;
+          let height = img.height;
+
+          if (width > MAX_WIDTH) {
+            height = Math.round((height * MAX_WIDTH) / width);
+            width = MAX_WIDTH;
+          }
+
+          canvas.width = width;
+          canvas.height = height;
+
+          const ctx = canvas.getContext("2d");
+          ctx.drawImage(img, 0, 0, width, height);
+
+          currentUploadedProjImage = canvas.toDataURL("image/jpeg", 0.75);
+          showProjPreview(currentUploadedProjImage);
+        };
+        img.src = evt.target.result;
+      };
+      reader.readAsDataURL(file);
+    }
+  });
+}
+
+if (projUrlInput) {
+  projUrlInput.addEventListener("input", (e) => {
+    const val = e.target.value.trim();
+    if (val) {
+      if (projFileInput) projFileInput.value = "";
+      currentUploadedProjImage = val;
+      showProjPreview(val);
+    } else {
+      hideProjPreview();
+    }
+  });
+}
+
+if (projRemoveImgBtn) {
+  projRemoveImgBtn.addEventListener("click", hideProjPreview);
+}
+
 function renderTechCheckboxes() {
   const container = document.getElementById("admin-project-tech-tags");
   const tech = Database.getTechStacks();
@@ -1054,11 +1250,12 @@ projectForm.addEventListener("submit", (e) => {
     tags,
     githubUrl,
     liveUrl,
-    image: ""
+    image: currentUploadedProjImage
   });
 
   resetProjectForm();
   renderAdminProjectList();
+  renderProjectsGrid();
 });
 
 cancelProjEdit.addEventListener("click", resetProjectForm);
@@ -1068,6 +1265,7 @@ function resetProjectForm() {
   document.getElementById("admin-project-id").value = "";
   submitProjBtn.textContent = "Save Project";
   cancelProjEdit.style.display = "none";
+  hideProjPreview();
 }
 
 function renderAdminProjectList() {
@@ -1107,6 +1305,18 @@ function renderAdminProjectList() {
       document.getElementById("admin-project-github").value = p.githubUrl || "";
       document.getElementById("admin-project-live").value = p.liveUrl || "";
 
+      // Load image preview if present
+      currentUploadedProjImage = p.image || "";
+      if (currentUploadedProjImage) {
+        showProjPreview(currentUploadedProjImage);
+        if (!currentUploadedProjImage.startsWith("data:")) {
+          const urlInput = document.getElementById("admin-project-image-url");
+          if (urlInput) urlInput.value = currentUploadedProjImage;
+        }
+      } else {
+        hideProjPreview();
+      }
+
       // Check linked tags checkboxes
       const checkboxes = document.querySelectorAll('input[name="proj-tags"]');
       checkboxes.forEach(cb => {
@@ -1122,6 +1332,7 @@ function renderAdminProjectList() {
     el.querySelector(".delete").addEventListener("click", () => {
       Database.deleteProject(p.id);
       renderAdminProjectList();
+      renderProjectsGrid();
     });
 
     container.appendChild(el);
