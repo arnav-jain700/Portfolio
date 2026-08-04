@@ -1,0 +1,24 @@
+# Arnav Jain - Data Science & AI Developer
+> Portfolio: https://arnavjaindev.vercel.app/
+
+Arnav Jain is a Data Science and AI Developer dedicated to forging robust data architectures and breathing life into complex systems through generative, intelligent models.
+
+## Key Projects
+- Global Nav Plexus: An interactive, graph-based 3D geospatial routing engine visualising optimal paths on a custom WebGL globe with high-performance C++17 REST API backend.
+- Persona AI Co-Pilot: Client-side AI portfolio representative with Gemini API integration and hybrid offline/cloud database synchronization.
+
+## Tech Stack
+- Backend: C++, Python
+- Frontend: HTML, CSS, JavaScript, Three.js, WebGL
+- AI / ML: Gemini API, TensorFlow, Generative Models
+- Databases: Firebase Firestore, Local Storage
+
+## Education & Background
+- B.Tech Hons (Data Science and Data Engineering), Lovely Professional University (2024 - 2028).
+
+## Contact Information
+- Email: arnavjain1905@gmail.com
+- LinkedIn: https://www.linkedin.com/in/arnav-jain007/
+- GitHub: https://github.com/arnav-jain700
+- Codolio: https://codolio.com/profile/Jarnav
+- Medium: https://medium.com/@arnav4334
