@@ -2,14 +2,14 @@ import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebas
 import { getFirestore } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 import { getAuth } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
 
-// Read configurations from environment variables (standard for Vite)
+// Read configurations from environment variables or fallback values for production client connection
 const firebaseConfig = {
-  apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
-  authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN,
-  projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID,
-  storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET,
-  messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID,
-  appId: import.meta.env.VITE_FIREBASE_APP_ID
+  apiKey: import.meta.env.VITE_FIREBASE_API_KEY || "AIzaSyCziNQymbKYqu4Z1iTWSg5BCHxiLUbQ7Jo",
+  authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN || "persona-portfolio-site.firebaseapp.com",
+  projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID || "persona-portfolio-site",
+  storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET || "persona-portfolio-site.firebasestorage.app",
+  messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID || "792368184832",
+  appId: import.meta.env.VITE_FIREBASE_APP_ID || "1:792368184832:web:6b2806cd993d083aed308f"
 };
 
 let db = null;
