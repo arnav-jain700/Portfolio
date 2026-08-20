@@ -43,6 +43,18 @@ function showToast(message, type = "success") {
   }, 3200);
 }
 
+function refreshAllPublicViews() {
+  try { renderHomeStats(); } catch (e) {}
+  try { renderTimeline(); } catch (e) {}
+  try { renderTechCategoryFilters(); } catch (e) {}
+  try { renderTechGrid("All"); } catch (e) {}
+  try { renderProjectFilters(); } catch (e) {}
+  try { renderProjectsGrid(); } catch (e) {}
+  try { renderHackathonsGrid(); } catch (e) {}
+  try { renderCertificatesGrid(); } catch (e) {}
+  try { renderBlogGrid(); } catch (e) {}
+}
+
 // ----------------------------------------------------
 // ROUTING & NAVIGATION
 // ----------------------------------------------------
@@ -962,6 +974,7 @@ function populateAdminTechCategoriesDropdown() {
   select.appendChild(optNew);
 }
 
+let isAdminPanelInitialized = false;
 function initAdminPanel() {
   const cloudBadge = document.getElementById("cloud-status-badge");
   if (cloudBadge) {
@@ -975,6 +988,14 @@ function initAdminPanel() {
       cloudBadge.classList.remove("connected");
     }
   }
+
+  if (isAdminPanelInitialized) {
+    renderAdminTechList();
+    populateAdminTechCategoriesDropdown();
+    populateAdminCategoryList();
+    return;
+  }
+  isAdminPanelInitialized = true;
 
   // Toggle Admin Sidebar Sub-Panes
   const tabs = document.querySelectorAll(".admin-tab-btn");
@@ -1081,11 +1102,8 @@ techForm.addEventListener("submit", (e) => {
   showToast(id ? `Updated technology "${name}"` : `Added "${name}" to toolkit!`);
   resetTechForm();
   renderAdminTechList();
-  renderTechGrid("All");
-  
-  // Refresh dropdown and categories list filter
   populateAdminTechCategoriesDropdown();
-  renderTechCategoryFilters();
+  refreshAllPublicViews();
 });
 
 cancelTechEdit.addEventListener("click", resetTechForm);
@@ -1149,7 +1167,7 @@ function renderAdminTechList() {
       Database.deleteTechStack(t.id);
       showToast(`Removed "${t.name}" from toolkit.`, "delete");
       renderAdminTechList();
-      renderTechGrid("All");
+      refreshAllPublicViews();
     });
 
     container.appendChild(el);
@@ -1320,8 +1338,7 @@ projectForm.addEventListener("submit", (e) => {
   showToast(id ? `Updated project "${title}"` : `Project "${title}" saved successfully!`);
   resetProjectForm();
   renderAdminProjectList();
-  renderProjectsGrid();
-  renderHomeStats();
+  refreshAllPublicViews();
 });
 
 cancelProjEdit.addEventListener("click", resetProjectForm);
@@ -1399,8 +1416,7 @@ function renderAdminProjectList() {
       Database.deleteProject(p.id);
       showToast(`Deleted project "${p.title}".`, "delete");
       renderAdminProjectList();
-      renderProjectsGrid();
-      renderHomeStats();
+      refreshAllPublicViews();
     });
 
     container.appendChild(el);
