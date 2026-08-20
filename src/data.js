@@ -158,35 +158,41 @@ export const Database = {
       console.log("Syncing database with Firebase Cloud...");
       
       // Sync settings
-      const settingsSnap = await getDocs(collection(db, "portfolio_settings_coll"));
-      const localSettings = JSON.parse(localStorage.getItem("portfolio_settings") || "{}");
-      if (settingsSnap.empty && localSettings && localSettings.ownerName) {
-        console.log("Cloud settings empty. Uploading local settings cache...");
-        await setDoc(doc(db, "portfolio_settings_coll", "main_settings"), localSettings);
-      } else if (!settingsSnap.empty) {
-        const settingsDoc = settingsSnap.docs[0].data();
-        localStorage.setItem("portfolio_settings", JSON.stringify(settingsDoc));
+      try {
+        const settingsSnap = await getDocs(collection(db, "portfolio_settings_coll"));
+        const localSettings = JSON.parse(localStorage.getItem("portfolio_settings") || "{}");
+        if (settingsSnap.empty && localSettings && localSettings.ownerName) {
+          console.log("Cloud settings empty. Uploading local settings cache...");
+          await setDoc(doc(db, "portfolio_settings_coll", "main_settings"), localSettings);
+        } else if (!settingsSnap.empty) {
+          const settingsDoc = settingsSnap.docs[0].data();
+          localStorage.setItem("portfolio_settings", JSON.stringify(settingsDoc));
+        }
+      } catch (err) {
+        console.warn("Firestore settings read failed:", err);
       }
 
       // Helper to fetch collection and store in localStorage or upload if cloud is empty
       const syncCollection = async (collName, storageKey) => {
-        const snap = await getDocs(collection(db, collName));
-        const localList = JSON.parse(localStorage.getItem(storageKey) || "[]");
-        
-        if (snap.empty && localList && localList.length > 0) {
-          console.log(`Cloud collection '${collName}' is empty. Uploading local cache...`);
-          for (const item of localList) {
-            const { id, ...data } = item;
-            await setDoc(doc(db, collName, id), data);
-          }
-        } else {
-          const list = [];
-          snap.forEach(doc => {
-            list.push({ id: doc.id, ...doc.data() });
-          });
-          if (list.length > 0) {
+        try {
+          const snap = await getDocs(collection(db, collName));
+          const localList = JSON.parse(localStorage.getItem(storageKey) || "[]");
+          
+          if (snap.empty && localList && localList.length > 0) {
+            console.log(`Cloud collection '${collName}' is empty. Uploading local cache...`);
+            for (const item of localList) {
+              const { id, ...data } = item;
+              await setDoc(doc(db, collName, id), data);
+            }
+          } else {
+            const list = [];
+            snap.forEach(doc => {
+              list.push({ id: doc.id, ...doc.data() });
+            });
             localStorage.setItem(storageKey, JSON.stringify(list));
           }
+        } catch (err) {
+          console.warn(`Firestore collection read failed for '${collName}':`, err);
         }
       };
 
