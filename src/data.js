@@ -93,27 +93,21 @@ const DEFAULT_HACKATHONS = [
 
 // Initialize Storage
 function initStorage() {
-  if (!localStorage.getItem("portfolio_tech_stacks")) {
-    localStorage.setItem("portfolio_tech_stacks", JSON.stringify(DEFAULT_TECH_STACKS));
-  }
-  if (!localStorage.getItem("portfolio_projects")) {
-    localStorage.setItem("portfolio_projects", JSON.stringify(DEFAULT_PROJECTS));
-  }
-  if (!localStorage.getItem("portfolio_messages")) {
-    localStorage.setItem("portfolio_messages", JSON.stringify(DEFAULT_MESSAGES));
-  }
-  if (!localStorage.getItem("portfolio_timeline")) {
-    localStorage.setItem("portfolio_timeline", JSON.stringify(DEFAULT_TIMELINE_ITEMS));
-  }
-  if (!localStorage.getItem("portfolio_blog")) {
-    localStorage.setItem("portfolio_blog", JSON.stringify(DEFAULT_ARTICLES));
-  }
-  if (!localStorage.getItem("portfolio_certificates")) {
-    localStorage.setItem("portfolio_certificates", JSON.stringify(DEFAULT_CERTIFICATES));
-  }
-  if (!localStorage.getItem("portfolio_hackathons")) {
-    localStorage.setItem("portfolio_hackathons", JSON.stringify(DEFAULT_HACKATHONS));
-  }
+  const getOrSeed = (key, defaultData) => {
+    const existing = localStorage.getItem(key);
+    if (!existing || (existing === "[]" && defaultData.length > 0)) {
+      localStorage.setItem(key, JSON.stringify(defaultData));
+    }
+  };
+
+  getOrSeed("portfolio_tech_stacks", DEFAULT_TECH_STACKS);
+  getOrSeed("portfolio_projects", DEFAULT_PROJECTS);
+  getOrSeed("portfolio_messages", DEFAULT_MESSAGES);
+  getOrSeed("portfolio_timeline", DEFAULT_TIMELINE_ITEMS);
+  getOrSeed("portfolio_blog", DEFAULT_ARTICLES);
+  getOrSeed("portfolio_certificates", DEFAULT_CERTIFICATES);
+  getOrSeed("portfolio_hackathons", DEFAULT_HACKATHONS);
+
   const currentSettings = localStorage.getItem("portfolio_settings");
   if (!currentSettings) {
     localStorage.setItem("portfolio_settings", JSON.stringify({
@@ -129,7 +123,6 @@ function initStorage() {
       categories: ["Frontend", "Backend", "Databases", "DevOps", "Version Control"]
     }));
   } else {
-    // Merge keys to ensure fields are populated
     const parsed = JSON.parse(currentSettings);
     const updated = {
       ownerName: parsed.ownerName || "Arnav Jain",
@@ -165,7 +158,7 @@ export const Database = {
           await supabase.from("portfolio_settings").upsert({ id: "main_settings", ...localSettings });
         } else if (settingsData) {
           const { id, ...cleanSettings } = settingsData;
-          localStorage.setItem("portfolio_settings", JSON.stringify(cleanSettings));
+          localStorage.setItem("portfolio_settings", JSON.stringify({ ...localSettings, ...cleanSettings }));
         }
       } catch (err) {
         console.warn("Supabase settings read failed:", err);
@@ -186,7 +179,7 @@ export const Database = {
             for (const item of localList) {
               await supabase.from(tableName).upsert(item);
             }
-          } else if (cloudItems) {
+          } else if (cloudItems && cloudItems.length > 0) {
             localStorage.setItem(storageKey, JSON.stringify(cloudItems));
           }
         } catch (err) {
