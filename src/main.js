@@ -472,19 +472,12 @@ function formatFormattedDescription(text) {
   if (!text) return "";
   let raw = text.trim();
 
-  // If text contains bullet characters '•'
+  // 1. If text contains bullet symbol '•'
   if (raw.includes("•")) {
     const parts = raw.split("•").map(p => p.trim()).filter(Boolean);
     if (parts.length > 1) {
-      let header = "";
-      let bullets = [];
-
-      if (!raw.startsWith("•")) {
-        header = parts[0];
-        bullets = parts.slice(1);
-      } else {
-        bullets = parts;
-      }
+      let header = !raw.startsWith("•") ? parts[0] : "";
+      let bullets = !raw.startsWith("•") ? parts.slice(1) : parts;
 
       let html = header ? `<p style="margin-bottom: 12px; line-height: 1.6; color: var(--text-primary); font-weight: 500;">${header}</p>` : "";
       html += `<ul style="margin: 0 0 20px 0; padding-left: 20px; display: flex; flex-direction: column; gap: 8px; list-style-type: disc;">`;
@@ -496,21 +489,26 @@ function formatFormattedDescription(text) {
     }
   }
 
-  // If text contains line breaks (\n)
+  // 2. If text contains line breaks (\n)
   const lines = raw.split(/\r?\n/).map(l => l.trim()).filter(Boolean);
   if (lines.length > 1) {
-    const isBulletList = lines.some(l => l.startsWith("- ") || l.startsWith("* ") || l.startsWith("•"));
-    if (isBulletList) {
-      let html = `<ul style="margin: 0 0 20px 0; padding-left: 20px; display: flex; flex-direction: column; gap: 8px; list-style-type: disc;">`;
-      lines.forEach(l => {
-        const clean = l.replace(/^[-*•]\s*/, "");
-        html += `<li style="color: var(--text-muted); line-height: 1.6; font-size: 0.95rem;">${clean}</li>`;
-      });
-      html += `</ul>`;
-      return html;
-    } else {
-      return lines.map(l => `<p style="margin-bottom: 10px; line-height: 1.6; color: var(--text-muted);">${l}</p>`).join("");
+    let header = "";
+    let items = lines;
+
+    // If first line ends with ':' or doesn't start with bullet symbol/number, treat line 1 as header
+    if (lines[0].endsWith(":") || lines[0].toLowerCase().includes("highlight") || lines[0].toLowerCase().includes("feature") || lines[0].toLowerCase().includes("about")) {
+      header = lines[0];
+      items = lines.slice(1);
     }
+
+    let html = header ? `<p style="margin-bottom: 12px; line-height: 1.6; color: var(--text-primary); font-weight: 500;">${header}</p>` : "";
+    html += `<ul style="margin: 0 0 20px 0; padding-left: 20px; display: flex; flex-direction: column; gap: 8px; list-style-type: disc;">`;
+    items.forEach(l => {
+      const clean = l.replace(/^[-*•\d+.]\s*/, "");
+      html += `<li style="color: var(--text-muted); line-height: 1.6; font-size: 0.95rem;">${clean}</li>`;
+    });
+    html += `</ul>`;
+    return html;
   }
 
   return `<p style="line-height: 1.6; color: var(--text-muted); white-space: pre-wrap;">${raw}</p>`;
