@@ -1586,40 +1586,49 @@ function updateAdminLockUI() {
   }
 }
 
-document.getElementById("admin-lock-btn").addEventListener("click", async () => {
-  if (isAdminUnlocked()) {
-    sessionStorage.removeItem("portfolio_admin_unlocked");
-    sessionStorage.removeItem("portfolio_admin_passcode");
-    if (isCloudActive) {
-      signOut(auth).catch(err => console.error("Sign out failed:", err));
-    }
-    updateAdminLockUI();
-    if (activeTab === "admin") {
-      switchPage("home");
-    }
-    alert("Admin session locked.");
-  } else {
-    const pass = prompt("Enter passcode to unlock Admin Console:");
-    if (pass) {
-      const trimmedPass = pass.trim();
-      const hash = await sha256(trimmedPass);
-      if (hash === "6b0eddb3003c5af40ece4f3ab87be46d3acafa9906499304d54c5304494b35ca") {
-        sessionStorage.setItem("portfolio_admin_unlocked", "true");
-        sessionStorage.setItem("portfolio_admin_passcode", trimmedPass);
-        
-        if (isCloudActive) {
-          console.log("Admin unlocked. Supabase Cloud Sync active.");
+function lockAdminSession() {
+  sessionStorage.removeItem("portfolio_admin_unlocked");
+  sessionStorage.removeItem("portfolio_admin_passcode");
+  updateAdminLockUI();
+  if (activeTab === "admin") {
+    switchPage("home");
+  }
+  alert("Admin session locked.");
+}
+
+const lockBtn = document.getElementById("admin-lock-btn");
+if (lockBtn) {
+  lockBtn.addEventListener("click", async () => {
+    if (isAdminUnlocked()) {
+      lockAdminSession();
+    } else {
+      const pass = prompt("Enter passcode to unlock Admin Console:");
+      if (pass) {
+        const trimmedPass = pass.trim();
+        const hash = await sha256(trimmedPass);
+        if (hash === "6b0eddb3003c5af40ece4f3ab87be46d3acafa9906499304d54c5304494b35ca") {
+          sessionStorage.setItem("portfolio_admin_unlocked", "true");
+          sessionStorage.setItem("portfolio_admin_passcode", trimmedPass);
+          
+          if (isCloudActive) {
+            console.log("Admin unlocked. Supabase Cloud Sync active.");
+          }
+          
+          updateAdminLockUI();
+          switchPage("admin");
+          alert("Admin console unlocked successfully!");
+        } else {
+          alert("Access Denied: Incorrect Passcode");
         }
-        
-        updateAdminLockUI();
-        switchPage("admin");
-        alert("Admin console unlocked successfully!");
-      } else {
-        alert("Access Denied: Incorrect Passcode");
       }
     }
-  }
-});
+  });
+}
+
+const panelLockBtn = document.getElementById("admin-panel-lock-btn");
+if (panelLockBtn) {
+  panelLockBtn.addEventListener("click", lockAdminSession);
+}
 
 // ----------------------------------------------------
 // THEME SWITCHER
