@@ -648,10 +648,29 @@ h1, h2, h3, h4, h5, h6 {
   font-size: 0.9rem;
   margin-bottom: 20px;
   flex-grow: 1;
-  display: -webkit-box;
-  -webkit-line-clamp: 3;
-  -webkit-box-orient: vertical;
-  overflow: hidden;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+.project-desc ul,
+.hackathon-description ul,
+.timeline-desc ul,
+#modal-content ul {
+  list-style-type: disc;
+  padding-left: 20px;
+  margin: 10px 0 16px 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.project-desc li,
+.hackathon-description li,
+.timeline-desc li,
+#modal-content li {
+  margin-bottom: 4px;
+  color: var(--text-muted);
+  line-height: 1.6;
 }
 
 .project-tech-list {

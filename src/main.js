@@ -436,6 +436,54 @@ function getProjectSvgGraphic(proj) {
   `;
 }
 
+function formatFormattedDescription(text) {
+  if (!text) return "";
+  let raw = text.trim();
+
+  // If text contains bullet characters '•'
+  if (raw.includes("•")) {
+    const parts = raw.split("•").map(p => p.trim()).filter(Boolean);
+    if (parts.length > 1) {
+      let header = "";
+      let bullets = [];
+
+      if (!raw.startsWith("•")) {
+        header = parts[0];
+        bullets = parts.slice(1);
+      } else {
+        bullets = parts;
+      }
+
+      let html = header ? `<p style="margin-bottom: 12px; line-height: 1.6; color: var(--text-primary); font-weight: 500;">${header}</p>` : "";
+      html += `<ul style="margin: 0 0 20px 0; padding-left: 20px; display: flex; flex-direction: column; gap: 8px; list-style-type: disc;">`;
+      bullets.forEach(b => {
+        html += `<li style="color: var(--text-muted); line-height: 1.6; font-size: 0.95rem;">${b}</li>`;
+      });
+      html += `</ul>`;
+      return html;
+    }
+  }
+
+  // If text contains line breaks (\n)
+  const lines = raw.split(/\r?\n/).map(l => l.trim()).filter(Boolean);
+  if (lines.length > 1) {
+    const isBulletList = lines.some(l => l.startsWith("- ") || l.startsWith("* ") || l.startsWith("•"));
+    if (isBulletList) {
+      let html = `<ul style="margin: 0 0 20px 0; padding-left: 20px; display: flex; flex-direction: column; gap: 8px; list-style-type: disc;">`;
+      lines.forEach(l => {
+        const clean = l.replace(/^[-*•]\s*/, "");
+        html += `<li style="color: var(--text-muted); line-height: 1.6; font-size: 0.95rem;">${clean}</li>`;
+      });
+      html += `</ul>`;
+      return html;
+    } else {
+      return lines.map(l => `<p style="margin-bottom: 10px; line-height: 1.6; color: var(--text-muted);">${l}</p>`).join("");
+    }
+  }
+
+  return `<p style="line-height: 1.6; color: var(--text-muted); white-space: pre-wrap;">${raw}</p>`;
+}
+
 function renderProjectsGrid(projectsList = null) {
   const grid = document.getElementById("projects-grid-container");
   const projects = projectsList || Database.getProjects();
@@ -478,7 +526,7 @@ function renderProjectsGrid(projectsList = null) {
       ${thumbnailMarkup}
       <div class="project-content">
         <h3>${proj.title}</h3>
-        <p class="project-desc">${proj.description}</p>
+        <div class="project-desc">${formatFormattedDescription(proj.description)}</div>
         <div class="project-tech-list">
           ${proj.tags.map(tag => `<span class="project-tech-tag">${tag}</span>`).join("")}
         </div>
@@ -552,10 +600,10 @@ function openProjectModal(project) {
     
     ${modalGraphicHeader}
 
-    <h3 style="margin-bottom: 8px;">About Project</h3>
-    <p style="color: var(--text-muted); margin-bottom: 20px; font-size: 1rem; line-height: 1.7;">
-      ${project.description}
-    </p>
+    <h3 style="margin-bottom: 12px;">About Project</h3>
+    <div style="margin-bottom: 24px;">
+      ${formatFormattedDescription(project.description)}
+    </div>
 
     <h3 style="margin-bottom: 10px;">Tech Stack Employed</h3>
     <div style="display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 30px;">
