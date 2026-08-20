@@ -164,7 +164,7 @@ export const Database = {
         console.warn("Supabase settings read failed:", err);
       }
 
-      // Helper to fetch collection and store in localStorage or upload if cloud is empty
+      // Helper to fetch collection and merge with localStorage safely without overwriting new local entries
       const syncTable = async (tableName, storageKey) => {
         try {
           const { data: cloudItems, error } = await supabase.from(tableName).select("*");
@@ -173,17 +173,34 @@ export const Database = {
             return;
           }
           const localList = JSON.parse(localStorage.getItem(storageKey) || "[]");
+          const cloudList = cloudItems || [];
+
+          // Map by ID to merge local and cloud items without data loss
+          const itemMap = new Map();
           
-          if ((!cloudItems || cloudItems.length === 0) && localList && localList.length > 0) {
-            console.log(`Cloud table '${tableName}' is empty. Uploading local cache...`);
-            for (const item of localList) {
-              await supabase.from(tableName).upsert(item);
+          localList.forEach(item => {
+            if (item && item.id) itemMap.set(item.id, item);
+          });
+
+          cloudList.forEach(item => {
+            if (item && item.id) itemMap.set(item.id, item);
+          });
+
+          const mergedList = Array.from(itemMap.values());
+          localStorage.setItem(storageKey, JSON.stringify(mergedList));
+
+          // Upload any local items missing from cloud
+          const cloudIds = new Set(cloudList.map(i => i.id));
+          const missingInCloud = localList.filter(i => i && i.id && !cloudIds.has(i.id));
+
+          if (missingInCloud.length > 0) {
+            console.log(`Syncing ${missingInCloud.length} local items to Supabase '${tableName}'...`);
+            for (const item of missingInCloud) {
+              await supabase.from(tableName).upsert(item).catch(err => console.warn(`Upload failed for item ${item.id}:`, err));
             }
-          } else if (cloudItems && cloudItems.length > 0) {
-            localStorage.setItem(storageKey, JSON.stringify(cloudItems));
           }
         } catch (err) {
-          console.warn(`Supabase table read failed for '${tableName}':`, err);
+          console.warn(`Supabase table sync failed for '${tableName}':`, err);
         }
       };
 
