@@ -1,5 +1,4 @@
-import { db, isCloudActive } from "./firebase.js";
-import { collection, getDocs, doc, setDoc, deleteDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+import { supabase, isCloudActive } from "./supabase.js";
 
 // Seed data
 const DEFAULT_TECH_STACKS = [
@@ -153,63 +152,62 @@ initStorage();
 export const Database = {
   // Cloud Database Sync
   async syncWithCloud() {
-    if (!isCloudActive) return false;
+    if (!isCloudActive || !supabase) return false;
     try {
-      console.log("Syncing database with Firebase Cloud...");
+      console.log("Syncing database with Supabase Cloud...");
       
       // Sync settings
       try {
-        const settingsSnap = await getDocs(collection(db, "portfolio_settings_coll"));
+        const { data: settingsData } = await supabase.from("portfolio_settings").select("*").eq("id", "main_settings").maybeSingle();
         const localSettings = JSON.parse(localStorage.getItem("portfolio_settings") || "{}");
-        if (settingsSnap.empty && localSettings && localSettings.ownerName) {
+        if (!settingsData && localSettings && localSettings.ownerName) {
           console.log("Cloud settings empty. Uploading local settings cache...");
-          await setDoc(doc(db, "portfolio_settings_coll", "main_settings"), localSettings);
-        } else if (!settingsSnap.empty) {
-          const settingsDoc = settingsSnap.docs[0].data();
-          localStorage.setItem("portfolio_settings", JSON.stringify(settingsDoc));
+          await supabase.from("portfolio_settings").upsert({ id: "main_settings", ...localSettings });
+        } else if (settingsData) {
+          const { id, ...cleanSettings } = settingsData;
+          localStorage.setItem("portfolio_settings", JSON.stringify(cleanSettings));
         }
       } catch (err) {
-        console.warn("Firestore settings read failed:", err);
+        console.warn("Supabase settings read failed:", err);
       }
 
       // Helper to fetch collection and store in localStorage or upload if cloud is empty
-      const syncCollection = async (collName, storageKey) => {
+      const syncTable = async (tableName, storageKey) => {
         try {
-          const snap = await getDocs(collection(db, collName));
+          const { data: cloudItems, error } = await supabase.from(tableName).select("*");
+          if (error) {
+            console.warn(`Supabase read error for '${tableName}':`, error);
+            return;
+          }
           const localList = JSON.parse(localStorage.getItem(storageKey) || "[]");
           
-          if (snap.empty && localList && localList.length > 0) {
-            console.log(`Cloud collection '${collName}' is empty. Uploading local cache...`);
+          if ((!cloudItems || cloudItems.length === 0) && localList && localList.length > 0) {
+            console.log(`Cloud table '${tableName}' is empty. Uploading local cache...`);
             for (const item of localList) {
-              const { id, ...data } = item;
-              await setDoc(doc(db, collName, id), data);
+              await supabase.from(tableName).upsert(item);
             }
-          } else {
-            const list = [];
-            snap.forEach(doc => {
-              list.push({ id: doc.id, ...doc.data() });
-            });
-            localStorage.setItem(storageKey, JSON.stringify(list));
+          } else if (cloudItems) {
+            localStorage.setItem(storageKey, JSON.stringify(cloudItems));
           }
         } catch (err) {
-          console.warn(`Firestore collection read failed for '${collName}':`, err);
+          console.warn(`Supabase table read failed for '${tableName}':`, err);
         }
       };
 
       await Promise.all([
-        syncCollection("projects", "portfolio_projects"),
-        syncCollection("tech_stacks", "portfolio_tech_stacks"),
-        syncCollection("timeline", "portfolio_timeline"),
-        syncCollection("blog", "portfolio_blog"),
-        syncCollection("certificates", "portfolio_certificates"),
-        syncCollection("hackathons", "portfolio_hackathons"),
-        syncCollection("messages", "portfolio_messages")
+        syncTable("portfolio_projects", "portfolio_projects"),
+        syncTable("portfolio_tech_stacks", "portfolio_tech_stacks"),
+        syncTable("portfolio_timeline", "portfolio_timeline"),
+        syncTable("portfolio_blog", "portfolio_blog"),
+        syncTable("portfolio_certificates", "portfolio_certificates"),
+        syncTable("portfolio_hackathons", "portfolio_hackathons"),
+        syncTable("portfolio_messages", "portfolio_messages")
       ]);
 
-      console.log("Cloud sync complete. Cache updated.");
+      console.log("Supabase Cloud sync complete. Cache updated.");
       return true;
     } catch (e) {
-      console.error("Cloud sync failed, using cached local data:", e);
+      console.error("Supabase Cloud sync failed, using cached local data:", e);
       return false;
     }
   },
@@ -222,21 +220,18 @@ export const Database = {
   saveProject(project) {
     const projects = this.getProjects();
     if (project.id) {
-      // Edit
       const index = projects.findIndex(p => p.id === project.id);
       if (index !== -1) {
         projects[index] = { ...projects[index], ...project };
       }
     } else {
-      // Create
       project.id = "proj-" + Date.now();
       projects.push(project);
     }
     localStorage.setItem("portfolio_projects", JSON.stringify(projects));
     
-    if (isCloudActive) {
-      const { id, ...data } = project;
-      setDoc(doc(db, "projects", id), data).catch(err => console.error("Firestore project save failed:", err));
+    if (isCloudActive && supabase) {
+      supabase.from("portfolio_projects").upsert(project).catch(err => console.error("Supabase project save failed:", err));
     }
     return project;
   },
@@ -246,8 +241,8 @@ export const Database = {
     const filtered = projects.filter(p => p.id !== id);
     localStorage.setItem("portfolio_projects", JSON.stringify(filtered));
     
-    if (isCloudActive) {
-      deleteDoc(doc(db, "projects", id)).catch(err => console.error("Firestore project delete failed:", err));
+    if (isCloudActive && supabase) {
+      supabase.from("portfolio_projects").delete().eq("id", id).catch(err => console.error("Supabase project delete failed:", err));
     }
   },
 
@@ -259,21 +254,18 @@ export const Database = {
   saveTechStack(stack) {
     const stacks = this.getTechStacks();
     if (stack.id) {
-      // Edit
       const index = stacks.findIndex(s => s.id === stack.id);
       if (index !== -1) {
         stacks[index] = { ...stacks[index], ...stack };
       }
     } else {
-      // Create
       stack.id = "tech-" + Date.now();
       stacks.push(stack);
     }
     localStorage.setItem("portfolio_tech_stacks", JSON.stringify(stacks));
     
-    if (isCloudActive) {
-      const { id, ...data } = stack;
-      setDoc(doc(db, "tech_stacks", id), data).catch(err => console.error("Firestore skill save failed:", err));
+    if (isCloudActive && supabase) {
+      supabase.from("portfolio_tech_stacks").upsert(stack).catch(err => console.error("Supabase skill save failed:", err));
     }
     return stack;
   },
@@ -283,8 +275,8 @@ export const Database = {
     const filtered = stacks.filter(s => s.id !== id);
     localStorage.setItem("portfolio_tech_stacks", JSON.stringify(filtered));
     
-    if (isCloudActive) {
-      deleteDoc(doc(db, "tech_stacks", id)).catch(err => console.error("Firestore skill delete failed:", err));
+    if (isCloudActive && supabase) {
+      supabase.from("portfolio_tech_stacks").delete().eq("id", id).catch(err => console.error("Supabase skill delete failed:", err));
     }
   },
 
@@ -297,13 +289,12 @@ export const Database = {
     const messages = this.getMessages();
     msg.id = "msg-" + Date.now();
     msg.timestamp = new Date().toISOString();
-    msg.unread = true; // Mark as unread by default
-    messages.unshift(msg); // Newest messages first
+    msg.unread = true;
+    messages.unshift(msg);
     localStorage.setItem("portfolio_messages", JSON.stringify(messages));
     
-    if (isCloudActive) {
-      const { id, ...data } = msg;
-      setDoc(doc(db, "messages", id), data).catch(err => console.error("Firestore message save failed:", err));
+    if (isCloudActive && supabase) {
+      supabase.from("portfolio_messages").upsert(msg).catch(err => console.error("Supabase message save failed:", err));
     }
     return msg;
   },
@@ -313,8 +304,8 @@ export const Database = {
     const filtered = messages.filter(m => m.id !== id);
     localStorage.setItem("portfolio_messages", JSON.stringify(filtered));
     
-    if (isCloudActive) {
-      deleteDoc(doc(db, "messages", id)).catch(err => console.error("Firestore message delete failed:", err));
+    if (isCloudActive && supabase) {
+      supabase.from("portfolio_messages").delete().eq("id", id).catch(err => console.error("Supabase message delete failed:", err));
     }
   },
 
@@ -325,9 +316,8 @@ export const Database = {
       messages[index].unread = false;
       localStorage.setItem("portfolio_messages", JSON.stringify(messages));
       
-      if (isCloudActive) {
-        const { id: _, ...data } = messages[index];
-        setDoc(doc(db, "messages", id), data).catch(err => console.error("Firestore message read update failed:", err));
+      if (isCloudActive && supabase) {
+        supabase.from("portfolio_messages").upsert(messages[index]).catch(err => console.error("Supabase message read update failed:", err));
       }
     }
   },
@@ -339,9 +329,8 @@ export const Database = {
       messages[index].unread = !messages[index].unread;
       localStorage.setItem("portfolio_messages", JSON.stringify(messages));
       
-      if (isCloudActive) {
-        const { id: _, ...data } = messages[index];
-        setDoc(doc(db, "messages", id), data).catch(err => console.error("Firestore message read toggle failed:", err));
+      if (isCloudActive && supabase) {
+        supabase.from("portfolio_messages").upsert(messages[index]).catch(err => console.error("Supabase message read toggle failed:", err));
       }
     }
   },
@@ -356,8 +345,8 @@ export const Database = {
     const updated = { ...current, ...settings };
     localStorage.setItem("portfolio_settings", JSON.stringify(updated));
     
-    if (isCloudActive) {
-      setDoc(doc(db, "portfolio_settings_coll", "main_settings"), updated).catch(err => console.error("Firestore settings save failed:", err));
+    if (isCloudActive && supabase) {
+      supabase.from("portfolio_settings").upsert({ id: "main_settings", ...updated }).catch(err => console.error("Supabase settings save failed:", err));
     }
     return updated;
   },
@@ -380,9 +369,8 @@ export const Database = {
     }
     localStorage.setItem("portfolio_timeline", JSON.stringify(timeline));
     
-    if (isCloudActive) {
-      const { id, ...data } = item;
-      setDoc(doc(db, "timeline", id), data).catch(err => console.error("Firestore timeline save failed:", err));
+    if (isCloudActive && supabase) {
+      supabase.from("portfolio_timeline").upsert(item).catch(err => console.error("Supabase timeline save failed:", err));
     }
     return item;
   },
@@ -392,8 +380,8 @@ export const Database = {
     const filtered = timeline.filter(t => t.id !== id);
     localStorage.setItem("portfolio_timeline", JSON.stringify(filtered));
     
-    if (isCloudActive) {
-      deleteDoc(doc(db, "timeline", id)).catch(err => console.error("Firestore timeline delete failed:", err));
+    if (isCloudActive && supabase) {
+      supabase.from("portfolio_timeline").delete().eq("id", id).catch(err => console.error("Supabase timeline delete failed:", err));
     }
   },
 
@@ -415,9 +403,8 @@ export const Database = {
     }
     localStorage.setItem("portfolio_blog", JSON.stringify(articles));
     
-    if (isCloudActive) {
-      const { id, ...data } = article;
-      setDoc(doc(db, "blog", id), data).catch(err => console.error("Firestore article save failed:", err));
+    if (isCloudActive && supabase) {
+      supabase.from("portfolio_blog").upsert(article).catch(err => console.error("Supabase article save failed:", err));
     }
     return article;
   },
@@ -427,8 +414,8 @@ export const Database = {
     const filtered = articles.filter(a => a.id !== id);
     localStorage.setItem("portfolio_blog", JSON.stringify(filtered));
     
-    if (isCloudActive) {
-      deleteDoc(doc(db, "blog", id)).catch(err => console.error("Firestore article delete failed:", err));
+    if (isCloudActive && supabase) {
+      supabase.from("portfolio_blog").delete().eq("id", id).catch(err => console.error("Supabase article delete failed:", err));
     }
   },
 
@@ -450,9 +437,8 @@ export const Database = {
     }
     localStorage.setItem("portfolio_certificates", JSON.stringify(certs));
     
-    if (isCloudActive) {
-      const { id, ...data } = cert;
-      setDoc(doc(db, "certificates", id), data).catch(err => console.error("Firestore certificate save failed:", err));
+    if (isCloudActive && supabase) {
+      supabase.from("portfolio_certificates").upsert(cert).catch(err => console.error("Supabase certificate save failed:", err));
     }
     return cert;
   },
@@ -462,8 +448,8 @@ export const Database = {
     const filtered = certs.filter(c => c.id !== id);
     localStorage.setItem("portfolio_certificates", JSON.stringify(filtered));
     
-    if (isCloudActive) {
-      deleteDoc(doc(db, "certificates", id)).catch(err => console.error("Firestore certificate delete failed:", err));
+    if (isCloudActive && supabase) {
+      supabase.from("portfolio_certificates").delete().eq("id", id).catch(err => console.error("Supabase certificate delete failed:", err));
     }
   },
 
@@ -485,9 +471,8 @@ export const Database = {
     }
     localStorage.setItem("portfolio_hackathons", JSON.stringify(hackathons));
     
-    if (isCloudActive) {
-      const { id, ...data } = hackathon;
-      setDoc(doc(db, "hackathons", id), data).catch(err => console.error("Firestore hackathon save failed:", err));
+    if (isCloudActive && supabase) {
+      supabase.from("portfolio_hackathons").upsert(hackathon).catch(err => console.error("Supabase hackathon save failed:", err));
     }
     return hackathon;
   },
@@ -497,8 +482,8 @@ export const Database = {
     const filtered = hackathons.filter(h => h.id !== id);
     localStorage.setItem("portfolio_hackathons", JSON.stringify(filtered));
     
-    if (isCloudActive) {
-      deleteDoc(doc(db, "hackathons", id)).catch(err => console.error("Firestore hackathon delete failed:", err));
+    if (isCloudActive && supabase) {
+      supabase.from("portfolio_hackathons").delete().eq("id", id).catch(err => console.error("Supabase hackathon delete failed:", err));
     }
   }
 };

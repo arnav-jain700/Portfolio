@@ -1,7 +1,6 @@
 import { Database } from "./data.js";
 import { AI } from "./ai.js";
-import { auth, isCloudActive } from "./firebase.js";
-import { signInWithEmailAndPassword, signOut } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
+import { isCloudActive } from "./supabase.js";
 
 // DOM Selector Elements
 const navLinks = document.querySelectorAll(".nav-link");
@@ -1609,13 +1608,7 @@ document.getElementById("admin-lock-btn").addEventListener("click", async () => 
         sessionStorage.setItem("portfolio_admin_passcode", trimmedPass);
         
         if (isCloudActive) {
-          try {
-            await signInWithEmailAndPassword(auth, "arnavjain1905@gmail.com", trimmedPass);
-            console.log("Authenticated successfully with Firebase.");
-          } catch (e) {
-            console.warn("Firebase Auth login failed:", e);
-            alert("Firebase connection warning: Failed to authenticate online. Real-time cloud sync is inactive, but local storage fallback is enabled.");
-          }
+          console.log("Admin unlocked. Supabase Cloud Sync active.");
         }
         
         updateAdminLockUI();
@@ -3353,12 +3346,6 @@ async function initApp() {
   updateAdminLockUI();
 
   if (isCloudActive) {
-    const savedPass = sessionStorage.getItem("portfolio_admin_passcode");
-    if (savedPass && sessionStorage.getItem("portfolio_admin_unlocked") === "true") {
-      signInWithEmailAndPassword(auth, "arnavjain1905@gmail.com", savedPass)
-        .then(() => console.log("Auto re-authenticated with cloud database."))
-        .catch(err => console.warn("Auto Firebase login failed:", err));
-    }
     await Database.syncWithCloud();
   }
 
