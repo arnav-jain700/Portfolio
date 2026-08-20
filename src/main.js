@@ -12,6 +12,38 @@ let activeTab = "home";
 let isServerLive = false;
 
 // ----------------------------------------------------
+// TOAST NOTIFICATIONS & FEEDBACK
+// ----------------------------------------------------
+function showToast(message, type = "success") {
+  let container = document.getElementById("toast-container");
+  if (!container) {
+    container = document.createElement("div");
+    container.id = "toast-container";
+    document.body.appendChild(container);
+  }
+
+  const toast = document.createElement("div");
+  toast.className = `toast-item toast-${type}`;
+
+  const icon = type === 'error' ? '❌' : (type === 'delete' ? '🗑️' : '✅');
+  toast.innerHTML = `<span style="font-size: 1.1rem;">${icon}</span> <span>${message}</span>`;
+  container.appendChild(toast);
+
+  requestAnimationFrame(() => {
+    toast.style.opacity = "1";
+    toast.style.transform = "translateY(0) scale(1)";
+  });
+
+  setTimeout(() => {
+    toast.style.opacity = "0";
+    toast.style.transform = "translateY(-10px) scale(0.95)";
+    setTimeout(() => {
+      if (toast.parentNode) toast.parentNode.removeChild(toast);
+    }, 300);
+  }, 3200);
+}
+
+// ----------------------------------------------------
 // ROUTING & NAVIGATION
 // ----------------------------------------------------
 function switchPage(pageId) {
@@ -1048,8 +1080,10 @@ techForm.addEventListener("submit", (e) => {
   }
 
   Database.saveTechStack({ id: id || undefined, name, category, level, icon: name });
+  showToast(id ? `Updated technology "${name}"` : `Added "${name}" to toolkit!`);
   resetTechForm();
   renderAdminTechList();
+  renderTechGrid("All");
   
   // Refresh dropdown and categories list filter
   populateAdminTechCategoriesDropdown();
@@ -1115,7 +1149,9 @@ function renderAdminTechList() {
 
     el.querySelector(".delete").addEventListener("click", () => {
       Database.deleteTechStack(t.id);
+      showToast(`Removed "${t.name}" from toolkit.`, "delete");
       renderAdminTechList();
+      renderTechGrid("All");
     });
 
     container.appendChild(el);
@@ -1283,9 +1319,11 @@ projectForm.addEventListener("submit", (e) => {
     image: currentUploadedProjImage
   });
 
+  showToast(id ? `Updated project "${title}"` : `Project "${title}" saved successfully!`);
   resetProjectForm();
   renderAdminProjectList();
   renderProjectsGrid();
+  renderHomeStats();
 });
 
 cancelProjEdit.addEventListener("click", resetProjectForm);
@@ -1361,8 +1399,10 @@ function renderAdminProjectList() {
 
     el.querySelector(".delete").addEventListener("click", () => {
       Database.deleteProject(p.id);
+      showToast(`Deleted project "${p.title}".`, "delete");
       renderAdminProjectList();
       renderProjectsGrid();
+      renderHomeStats();
     });
 
     container.appendChild(el);
@@ -2100,103 +2140,105 @@ function setupAdminCertFormOnce() {
     hideCertPreview();
   });
 
-  form.addEventListener("submit", (e) => {
-    e.preventDefault();
-    const id = document.getElementById("admin-certificate-id").value;
-    const title = document.getElementById("admin-cert-title").value.trim();
-    const issuer = document.getElementById("admin-cert-issuer").value.trim();
-    const date = document.getElementById("admin-cert-date").value.trim();
-    const url = document.getElementById("admin-cert-url").value.trim();
-    const skills = document.getElementById("admin-cert-skills").value.trim();
+    form.addEventListener("submit", (e) => {
+      e.preventDefault();
+      const id = document.getElementById("admin-certificate-id").value;
+      const title = document.getElementById("admin-cert-title").value.trim();
+      const issuer = document.getElementById("admin-cert-issuer").value.trim();
+      const date = document.getElementById("admin-cert-date").value.trim();
+      const url = document.getElementById("admin-cert-url").value.trim();
+      const skills = document.getElementById("admin-cert-skills").value.trim();
 
-    Database.saveCertificate({
-      id: id || undefined,
-      title,
-      issuer,
-      date,
-      url,
-      skills,
-      image: currentUploadedCertImage
-    });
+      Database.saveCertificate({
+        id: id || undefined,
+        title,
+        issuer,
+        date,
+        url,
+        skills,
+        image: currentUploadedCertImage
+      });
 
-    resetCertForm();
-    renderAdminCertList();
-    renderCertificatesGrid();
-  });
-
-  cancelBtn.addEventListener("click", resetCertForm);
-}
-
-function resetCertForm() {
-  const form = document.getElementById("admin-certificate-form");
-  if (form) form.reset();
-  document.getElementById("admin-certificate-id").value = "";
-  document.getElementById("admin-cert-submit-btn").textContent = "Add Certificate";
-  document.getElementById("admin-cert-cancel-btn").style.display = "none";
-  hideCertPreview();
-}
-
-function renderAdminCertList() {
-  const container = document.getElementById("admin-certificate-list");
-  if (!container) return;
-  const certs = Database.getCertificates();
-
-  container.innerHTML = "";
-  if (certs.length === 0) {
-    container.innerHTML = `<div style="text-align: center; color: var(--text-dimmed); padding: 20px;">No certificates.</div>`;
-    return;
-  }
-
-  certs.forEach(cert => {
-    const el = document.createElement("div");
-    el.className = "admin-list-item";
-    el.innerHTML = `
-      <div class="admin-list-info">
-        <h4>${cert.title}</h4>
-        <p>${cert.issuer} &bull; ${cert.date}</p>
-      </div>
-      <div class="admin-list-actions">
-        <button class="action-btn edit" title="Edit certificate">
-          <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 1 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
-        </button>
-        <button class="action-btn delete" title="Delete certificate">
-          <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><line x1="10" y1="11" x2="10" y2="17"/><line x1="14" y1="11" x2="14" y2="17"/></svg>
-        </button>
-      </div>
-    `;
-
-    el.querySelector(".edit").addEventListener("click", () => {
-      document.getElementById("admin-certificate-id").value = cert.id;
-      document.getElementById("admin-cert-title").value = cert.title;
-      document.getElementById("admin-cert-issuer").value = cert.issuer;
-      document.getElementById("admin-cert-date").value = cert.date;
-      document.getElementById("admin-cert-url").value = cert.url || "";
-      document.getElementById("admin-cert-skills").value = cert.skills || "";
-      
-      currentUploadedCertImage = cert.image || "";
-      if (currentUploadedCertImage) {
-        showCertPreview(currentUploadedCertImage);
-        if (!currentUploadedCertImage.startsWith("data:")) {
-          document.getElementById("admin-cert-image-url").value = currentUploadedCertImage;
-        }
-      } else {
-        hideCertPreview();
-      }
-
-      document.getElementById("admin-cert-submit-btn").textContent = "Update Certificate";
-      document.getElementById("admin-cert-cancel-btn").style.display = "inline-block";
-      document.getElementById("admin-certificate-form").scrollIntoView({ behavior: "smooth" });
-    });
-
-    el.querySelector(".delete").addEventListener("click", () => {
-      Database.deleteCertificate(cert.id);
+      showToast(id ? `Updated certificate "${title}"` : `Certificate "${title}" saved!`);
+      resetCertForm();
       renderAdminCertList();
       renderCertificatesGrid();
     });
 
-    container.appendChild(el);
-  });
-}
+    cancelBtn.addEventListener("click", resetCertForm);
+  }
+
+  function resetCertForm() {
+    const form = document.getElementById("admin-certificate-form");
+    if (form) form.reset();
+    document.getElementById("admin-certificate-id").value = "";
+    document.getElementById("admin-cert-submit-btn").textContent = "Add Certificate";
+    document.getElementById("admin-cert-cancel-btn").style.display = "none";
+    hideCertPreview();
+  }
+
+  function renderAdminCertList() {
+    const container = document.getElementById("admin-certificate-list");
+    if (!container) return;
+    const certs = Database.getCertificates();
+
+    container.innerHTML = "";
+    if (certs.length === 0) {
+      container.innerHTML = `<div style="text-align: center; color: var(--text-dimmed); padding: 20px;">No certificates.</div>`;
+      return;
+    }
+
+    certs.forEach(cert => {
+      const el = document.createElement("div");
+      el.className = "admin-list-item";
+      el.innerHTML = `
+        <div class="admin-list-info">
+          <h4>${cert.title}</h4>
+          <p>${cert.issuer} &bull; ${cert.date}</p>
+        </div>
+        <div class="admin-list-actions">
+          <button class="action-btn edit" title="Edit certificate">
+            <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 1 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+          </button>
+          <button class="action-btn delete" title="Delete certificate">
+            <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><line x1="10" y1="11" x2="10" y2="17"/><line x1="14" y1="11" x2="14" y2="17"/></svg>
+          </button>
+        </div>
+      `;
+
+      el.querySelector(".edit").addEventListener("click", () => {
+        document.getElementById("admin-certificate-id").value = cert.id;
+        document.getElementById("admin-cert-title").value = cert.title;
+        document.getElementById("admin-cert-issuer").value = cert.issuer;
+        document.getElementById("admin-cert-date").value = cert.date;
+        document.getElementById("admin-cert-url").value = cert.url || "";
+        document.getElementById("admin-cert-skills").value = cert.skills || "";
+        
+        currentUploadedCertImage = cert.image || "";
+        if (currentUploadedCertImage) {
+          showCertPreview(currentUploadedCertImage);
+          if (!currentUploadedCertImage.startsWith("data:")) {
+            document.getElementById("admin-cert-image-url").value = currentUploadedCertImage;
+          }
+        } else {
+          hideCertPreview();
+        }
+
+        document.getElementById("admin-cert-submit-btn").textContent = "Update Certificate";
+        document.getElementById("admin-cert-cancel-btn").style.display = "inline-block";
+        document.getElementById("admin-certificate-form").scrollIntoView({ behavior: "smooth" });
+      });
+
+      el.querySelector(".delete").addEventListener("click", () => {
+        Database.deleteCertificate(cert.id);
+        showToast(`Deleted certificate "${cert.title}".`, "delete");
+        renderAdminCertList();
+        renderCertificatesGrid();
+      });
+
+      container.appendChild(el);
+    });
+  }
 
 // ----------------------------------------------------
 // DYNAMIC HACKATHONS SHOWCASE RENDERING
@@ -2399,6 +2441,7 @@ function setupAdminHackathonFormOnce() {
       image: currentUploadedHackImage
     });
 
+    showToast(id ? `Updated hackathon "${title}"` : `Hackathon "${title}" saved successfully!`);
     resetHackForm();
     renderAdminHackathonList();
     renderHackathonsGrid();
@@ -2479,6 +2522,7 @@ function renderAdminHackathonList() {
 
     el.querySelector(".delete").addEventListener("click", () => {
       Database.deleteHackathon(hack.id);
+      showToast(`Deleted hackathon "${hack.title}".`, "delete");
       renderAdminHackathonList();
       renderHackathonsGrid();
     });
