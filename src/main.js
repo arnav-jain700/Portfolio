@@ -12,7 +12,8 @@ let activeTab = "home";
 let isServerLive = false;
 
 // ----------------------------------------------------
-// TOAST NOTIFICATIONS & FEEDBACK
+// ----------------------------------------------------
+// TOAST NOTIFICATIONS & INTERACTIVE FEEDBACK
 // ----------------------------------------------------
 function showToast(message, type = "success") {
   let container = document.getElementById("toast-container");
@@ -25,22 +26,85 @@ function showToast(message, type = "success") {
   const toast = document.createElement("div");
   toast.className = `toast-item toast-${type}`;
 
-  const icon = type === 'error' ? '❌' : (type === 'delete' ? '🗑️' : '✅');
-  toast.innerHTML = `<span style="font-size: 1.1rem;">${icon}</span> <span>${message}</span>`;
+  const iconSvg = type === 'error' 
+    ? `<svg viewBox="0 0 24 24" width="20" height="20" stroke="#f87171" stroke-width="2.5" fill="none"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>`
+    : (type === 'delete' 
+      ? `<svg viewBox="0 0 24 24" width="20" height="20" stroke="#f87171" stroke-width="2" fill="none"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>`
+      : `<svg viewBox="0 0 24 24" width="20" height="20" stroke="#34d399" stroke-width="2.5" fill="none"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>`);
+
+  const titleText = type === 'error' ? 'Error' : (type === 'delete' ? 'Deleted' : 'Success');
+
+  toast.innerHTML = `
+    <div class="toast-icon-wrap">${iconSvg}</div>
+    <div class="toast-text-wrap">
+      <div class="toast-title">${titleText}</div>
+      <div class="toast-msg">${message}</div>
+    </div>
+    <button type="button" class="toast-close-btn" aria-label="Close">&times;</button>
+  `;
+
+  const closeBtn = toast.querySelector(".toast-close-btn");
+  if (closeBtn) {
+    closeBtn.addEventListener("click", () => {
+      toast.classList.remove("toast-show");
+      toast.classList.add("toast-hide");
+      setTimeout(() => { if (toast.parentNode) toast.parentNode.removeChild(toast); }, 250);
+    });
+  }
+
   container.appendChild(toast);
 
   requestAnimationFrame(() => {
-    toast.style.opacity = "1";
-    toast.style.transform = "translateY(0) scale(1)";
+    toast.classList.add("toast-show");
   });
 
   setTimeout(() => {
-    toast.style.opacity = "0";
-    toast.style.transform = "translateY(-10px) scale(0.95)";
-    setTimeout(() => {
-      if (toast.parentNode) toast.parentNode.removeChild(toast);
-    }, 300);
-  }, 3200);
+    if (toast.parentNode) {
+      toast.classList.remove("toast-show");
+      toast.classList.add("toast-hide");
+      setTimeout(() => {
+        if (toast.parentNode) toast.parentNode.removeChild(toast);
+      }, 350);
+    }
+  }, 4000);
+}
+
+function flashButtonSuccess(btn, successText = "✓ Saved Successfully!") {
+  if (!btn) return;
+  const originalHtml = btn.innerHTML;
+  const originalWidth = btn.offsetWidth ? `${btn.offsetWidth}px` : "auto";
+  btn.style.minWidth = originalWidth;
+  btn.classList.add("btn-success-flash");
+  btn.innerHTML = `<svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2.5" fill="none" style="vertical-align: middle; margin-right: 6px;"><polyline points="20 6 9 17 4 12"/></svg>${successText}`;
+
+  setTimeout(() => {
+    btn.classList.remove("btn-success-flash");
+    btn.innerHTML = originalHtml;
+    btn.style.minWidth = "";
+  }, 2200);
+}
+
+function initButtonRipples() {
+  document.addEventListener("pointerdown", (e) => {
+    const btn = e.target.closest(".btn, .admin-tab-btn, .action-btn, .nav-link");
+    if (!btn) return;
+
+    const circle = document.createElement("span");
+    const diameter = Math.max(btn.clientWidth, btn.clientHeight) || 60;
+    const radius = diameter / 2;
+    const rect = btn.getBoundingClientRect();
+
+    circle.style.width = circle.style.height = `${diameter}px`;
+    circle.style.left = `${e.clientX - rect.left - radius}px`;
+    circle.style.top = `${e.clientY - rect.top - radius}px`;
+    circle.classList.add("btn-ripple");
+
+    const existing = btn.querySelector(".btn-ripple");
+    if (existing) existing.remove();
+
+    btn.appendChild(circle);
+    setTimeout(() => circle.remove(), 600);
+  });
 }
 
 function refreshAllPublicViews() {
@@ -935,20 +999,23 @@ function setupAdminCategoryFormOnce() {
     const categories = settings.categories || ["Frontend", "Backend", "Databases", "DevOps"];
     
     if (categories.some(c => c.toLowerCase() === newCat.toLowerCase())) {
-      alert("This category already exists.");
+      showToast("This category already exists.", "error");
       return;
     }
 
     categories.push(newCat);
     Database.saveSettings({ categories });
+
+    const submitBtn = form.querySelector('button[type="submit"]');
+    flashButtonSuccess(submitBtn, "✓ Category Added!");
+    showToast(`Category "${newCat}" added successfully!`);
     
     input.value = "";
     
     // Refresh UI
     populateAdminCategoryList();
     populateAdminTechCategoriesDropdown();
-    renderTechCategoryFilters();
-    renderAdminTechList();
+    refreshAllPublicViews();
   });
 
   isCategoryFormSetup = true;
@@ -1099,6 +1166,7 @@ techForm.addEventListener("submit", (e) => {
   }
 
   Database.saveTechStack({ id: id || undefined, name, category, level, icon: name });
+  flashButtonSuccess(submitTechBtn, id ? "✓ Updated!" : "✓ Added to Toolkit!");
   showToast(id ? `Updated technology "${name}"` : `Added "${name}" to toolkit!`);
   resetTechForm();
   renderAdminTechList();
@@ -1335,6 +1403,7 @@ projectForm.addEventListener("submit", (e) => {
     image: currentUploadedProjImage
   });
 
+  flashButtonSuccess(submitProjBtn, id ? "✓ Project Updated!" : "✓ Project Saved!");
   showToast(id ? `Updated project "${title}"` : `Project "${title}" saved successfully!`);
   resetProjectForm();
   renderAdminProjectList();
@@ -1611,9 +1680,10 @@ document.getElementById("admin-settings-save").addEventListener("click", () => {
   });
   updateApiBadge(geminiKey);
   
-  // Refresh displays
-  renderHomeStats();
-  alert("Settings stored securely. Portfolio state synchronized successfully!");
+  const saveBtn = document.getElementById("admin-settings-save");
+  flashButtonSuccess(saveBtn, "✓ Settings Saved & Synced!");
+  showToast("Platform profile and AI Co-Pilot settings saved!");
+  refreshAllPublicViews();
 });
 
 const exportDbBtn = document.getElementById("admin-settings-export-db");
@@ -2173,10 +2243,12 @@ function setupAdminCertFormOnce() {
         image: currentUploadedCertImage
       });
 
+      const submitBtn = document.getElementById("admin-cert-submit-btn");
+      flashButtonSuccess(submitBtn, id ? "✓ Certificate Updated!" : "✓ Certificate Saved!");
       showToast(id ? `Updated certificate "${title}"` : `Certificate "${title}" saved!`);
       resetCertForm();
       renderAdminCertList();
-      renderCertificatesGrid();
+      refreshAllPublicViews();
     });
 
     cancelBtn.addEventListener("click", resetCertForm);
@@ -2455,10 +2527,12 @@ function setupAdminHackathonFormOnce() {
       image: currentUploadedHackImage
     });
 
+    const submitBtn = document.getElementById("admin-hack-submit-btn");
+    flashButtonSuccess(submitBtn, id ? "✓ Hackathon Updated!" : "✓ Hackathon Saved!");
     showToast(id ? `Updated hackathon "${title}"` : `Hackathon "${title}" saved successfully!`);
     resetHackForm();
     renderAdminHackathonList();
-    renderHackathonsGrid();
+    refreshAllPublicViews();
   });
 
   if (cancelBtn) {
@@ -2647,9 +2721,11 @@ function setupAdminTimelineFormOnce() {
       description
     });
 
+    flashButtonSuccess(submitBtn, id ? "✓ Entry Updated!" : "✓ Entry Saved!");
+    showToast(id ? `Updated journey entry "${title}"` : `Journey entry "${title}" saved!`);
     resetTimelineForm();
     renderAdminTimelineList();
-    renderTimeline();
+    refreshAllPublicViews();
   });
 
   cancelBtn.addEventListener("click", resetTimelineForm);
@@ -2748,9 +2824,11 @@ function setupAdminBlogFormOnce() {
       content
     });
 
+    flashButtonSuccess(submitBtn, id ? "✓ Article Updated!" : "✓ Article Published!");
+    showToast(id ? `Updated article "${title}"` : `Article "${title}" published!`);
     resetBlogForm();
     renderAdminBlogList();
-    renderBlogGrid();
+    refreshAllPublicViews();
   });
 
   cancelBtn.addEventListener("click", resetBlogForm);
@@ -3457,6 +3535,7 @@ async function initApp() {
     return;
   }
   initTheme();
+  initButtonRipples();
   initJobScanner();
   updateAdminLockUI();
 
