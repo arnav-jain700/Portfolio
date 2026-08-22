@@ -224,276 +224,456 @@ export const Database = {
 
   // Projects CRUD
   getProjects() {
-    return JSON.parse(localStorage.getItem("portfolio_projects") || "[]");
+    try {
+      const items = JSON.parse(localStorage.getItem("portfolio_projects") || "[]");
+      return (Array.isArray(items) ? items : []).map(p => ({
+        id: p.id || "proj-" + Date.now(),
+        title: p.title || "Untitled Project",
+        category: p.category || "Development",
+        description: p.description || "",
+        tags: Array.isArray(p.tags) ? p.tags : (typeof p.tags === "string" ? p.tags.split(",").map(t => t.trim()).filter(Boolean) : []),
+        githubUrl: p.githubUrl || "",
+        liveUrl: p.liveUrl || "",
+        image: p.image || ""
+      }));
+    } catch (e) {
+      console.warn("Failed to parse projects:", e);
+      return [];
+    }
   },
   
   saveProject(project) {
-    const projects = this.getProjects();
-    if (project.id) {
-      const index = projects.findIndex(p => p.id === project.id);
-      if (index !== -1) {
-        projects[index] = { ...projects[index], ...project };
+    try {
+      const projects = this.getProjects();
+      if (!Array.isArray(project.tags)) {
+        project.tags = typeof project.tags === "string" ? project.tags.split(",").map(t => t.trim()).filter(Boolean) : [];
       }
-    } else {
-      project.id = "proj-" + Date.now();
-      projects.push(project);
-    }
-    localStorage.setItem("portfolio_projects", JSON.stringify(projects));
-    
-    if (isCloudActive && supabase) {
-      supabase.from("portfolio_projects").upsert(project).catch(err => console.error("Supabase project save failed:", err));
+      if (project.id) {
+        const index = projects.findIndex(p => p.id === project.id);
+        if (index !== -1) {
+          projects[index] = { ...projects[index], ...project };
+        } else {
+          projects.push(project);
+        }
+      } else {
+        project.id = "proj-" + Date.now();
+        projects.push(project);
+      }
+      localStorage.setItem("portfolio_projects", JSON.stringify(projects));
+      
+      if (isCloudActive && supabase) {
+        supabase.from("portfolio_projects").upsert(project).catch(err => console.warn("Supabase project save failed:", err));
+      }
+    } catch (err) {
+      console.error("Local save project error:", err);
     }
     return project;
   },
   
   deleteProject(id) {
-    const projects = this.getProjects();
-    const filtered = projects.filter(p => p.id !== id);
-    localStorage.setItem("portfolio_projects", JSON.stringify(filtered));
-    
-    if (isCloudActive && supabase) {
-      supabase.from("portfolio_projects").delete().eq("id", id).catch(err => console.error("Supabase project delete failed:", err));
+    try {
+      const projects = this.getProjects();
+      const filtered = projects.filter(p => p.id !== id);
+      localStorage.setItem("portfolio_projects", JSON.stringify(filtered));
+      
+      if (isCloudActive && supabase) {
+        supabase.from("portfolio_projects").delete().eq("id", id).catch(err => console.warn("Supabase project delete failed:", err));
+      }
+    } catch (err) {
+      console.error("Local delete project error:", err);
     }
   },
 
   // Tech Stacks CRUD
   getTechStacks() {
-    return JSON.parse(localStorage.getItem("portfolio_tech_stacks") || "[]");
+    try {
+      const items = JSON.parse(localStorage.getItem("portfolio_tech_stacks") || "[]");
+      return (Array.isArray(items) ? items : []).map(s => ({
+        id: s.id || "tech-" + Date.now(),
+        name: s.name || "",
+        category: s.category || "General",
+        level: Number(s.level) || 80,
+        icon: s.icon || s.name || ""
+      }));
+    } catch (e) {
+      console.warn("Failed to parse tech stacks:", e);
+      return [];
+    }
   },
   
   saveTechStack(stack) {
-    const stacks = this.getTechStacks();
-    if (stack.id) {
-      const index = stacks.findIndex(s => s.id === stack.id);
-      if (index !== -1) {
-        stacks[index] = { ...stacks[index], ...stack };
+    try {
+      const stacks = this.getTechStacks();
+      stack.level = Number(stack.level) || 80;
+      if (stack.id) {
+        const index = stacks.findIndex(s => s.id === stack.id);
+        if (index !== -1) {
+          stacks[index] = { ...stacks[index], ...stack };
+        } else {
+          stacks.push(stack);
+        }
+      } else {
+        stack.id = "tech-" + Date.now();
+        stacks.push(stack);
       }
-    } else {
-      stack.id = "tech-" + Date.now();
-      stacks.push(stack);
-    }
-    localStorage.setItem("portfolio_tech_stacks", JSON.stringify(stacks));
-    
-    if (isCloudActive && supabase) {
-      supabase.from("portfolio_tech_stacks").upsert(stack).catch(err => console.error("Supabase skill save failed:", err));
+      localStorage.setItem("portfolio_tech_stacks", JSON.stringify(stacks));
+      
+      if (isCloudActive && supabase) {
+        supabase.from("portfolio_tech_stacks").upsert(stack).catch(err => console.warn("Supabase skill save failed:", err));
+      }
+    } catch (err) {
+      console.error("Local save skill error:", err);
     }
     return stack;
   },
   
   deleteTechStack(id) {
-    const stacks = this.getTechStacks();
-    const filtered = stacks.filter(s => s.id !== id);
-    localStorage.setItem("portfolio_tech_stacks", JSON.stringify(filtered));
-    
-    if (isCloudActive && supabase) {
-      supabase.from("portfolio_tech_stacks").delete().eq("id", id).catch(err => console.error("Supabase skill delete failed:", err));
+    try {
+      const stacks = this.getTechStacks();
+      const filtered = stacks.filter(s => s.id !== id);
+      localStorage.setItem("portfolio_tech_stacks", JSON.stringify(filtered));
+      
+      if (isCloudActive && supabase) {
+        supabase.from("portfolio_tech_stacks").delete().eq("id", id).catch(err => console.warn("Supabase skill delete failed:", err));
+      }
+    } catch (err) {
+      console.error("Local delete skill error:", err);
     }
   },
 
   // Contact Messages CRUD
   getMessages() {
-    return JSON.parse(localStorage.getItem("portfolio_messages") || "[]");
+    try {
+      const items = JSON.parse(localStorage.getItem("portfolio_messages") || "[]");
+      return Array.isArray(items) ? items : [];
+    } catch (e) {
+      return [];
+    }
   },
   
   saveMessage(msg) {
-    const messages = this.getMessages();
-    msg.id = "msg-" + Date.now();
-    msg.timestamp = new Date().toISOString();
-    msg.unread = true;
-    messages.unshift(msg);
-    localStorage.setItem("portfolio_messages", JSON.stringify(messages));
-    
-    if (isCloudActive && supabase) {
-      supabase.from("portfolio_messages").upsert(msg).catch(err => console.error("Supabase message save failed:", err));
+    try {
+      const messages = this.getMessages();
+      msg.id = msg.id || "msg-" + Date.now();
+      msg.timestamp = msg.timestamp || new Date().toISOString();
+      msg.unread = msg.unread !== undefined ? msg.unread : true;
+      messages.unshift(msg);
+      localStorage.setItem("portfolio_messages", JSON.stringify(messages));
+      
+      if (isCloudActive && supabase) {
+        supabase.from("portfolio_messages").upsert(msg).catch(err => console.warn("Supabase message save failed:", err));
+      }
+    } catch (err) {
+      console.error("Local save message error:", err);
     }
     return msg;
   },
   
   deleteMessage(id) {
-    const messages = this.getMessages();
-    const filtered = messages.filter(m => m.id !== id);
-    localStorage.setItem("portfolio_messages", JSON.stringify(filtered));
-    
-    if (isCloudActive && supabase) {
-      supabase.from("portfolio_messages").delete().eq("id", id).catch(err => console.error("Supabase message delete failed:", err));
+    try {
+      const messages = this.getMessages();
+      const filtered = messages.filter(m => m.id !== id);
+      localStorage.setItem("portfolio_messages", JSON.stringify(filtered));
+      
+      if (isCloudActive && supabase) {
+        supabase.from("portfolio_messages").delete().eq("id", id).catch(err => console.warn("Supabase message delete failed:", err));
+      }
+    } catch (err) {
+      console.error("Local delete message error:", err);
     }
   },
 
   markMessageAsRead(id) {
-    const messages = this.getMessages();
-    const index = messages.findIndex(m => m.id === id);
-    if (index !== -1) {
-      messages[index].unread = false;
-      localStorage.setItem("portfolio_messages", JSON.stringify(messages));
-      
-      if (isCloudActive && supabase) {
-        supabase.from("portfolio_messages").upsert(messages[index]).catch(err => console.error("Supabase message read update failed:", err));
+    try {
+      const messages = this.getMessages();
+      const index = messages.findIndex(m => m.id === id);
+      if (index !== -1) {
+        messages[index].unread = false;
+        localStorage.setItem("portfolio_messages", JSON.stringify(messages));
+        
+        if (isCloudActive && supabase) {
+          supabase.from("portfolio_messages").upsert(messages[index]).catch(err => console.warn("Supabase message read update failed:", err));
+        }
       }
+    } catch (err) {
+      console.error("Local message read error:", err);
     }
   },
 
   toggleMessageRead(id) {
-    const messages = this.getMessages();
-    const index = messages.findIndex(m => m.id === id);
-    if (index !== -1) {
-      messages[index].unread = !messages[index].unread;
-      localStorage.setItem("portfolio_messages", JSON.stringify(messages));
-      
-      if (isCloudActive && supabase) {
-        supabase.from("portfolio_messages").upsert(messages[index]).catch(err => console.error("Supabase message read toggle failed:", err));
+    try {
+      const messages = this.getMessages();
+      const index = messages.findIndex(m => m.id === id);
+      if (index !== -1) {
+        messages[index].unread = !messages[index].unread;
+        localStorage.setItem("portfolio_messages", JSON.stringify(messages));
+        
+        if (isCloudActive && supabase) {
+          supabase.from("portfolio_messages").upsert(messages[index]).catch(err => console.warn("Supabase message read toggle failed:", err));
+        }
       }
+    } catch (err) {
+      console.error("Local message toggle error:", err);
     }
   },
 
   // Settings & Bio
   getSettings() {
-    return JSON.parse(localStorage.getItem("portfolio_settings") || "{}");
+    try {
+      return JSON.parse(localStorage.getItem("portfolio_settings") || "{}");
+    } catch (e) {
+      return {};
+    }
   },
   
   saveSettings(settings) {
-    const current = this.getSettings();
-    const updated = { ...current, ...settings };
-    localStorage.setItem("portfolio_settings", JSON.stringify(updated));
-    
-    if (isCloudActive && supabase) {
-      supabase.from("portfolio_settings").upsert({ id: "main_settings", ...updated }).catch(err => console.error("Supabase settings save failed:", err));
+    try {
+      const current = this.getSettings();
+      const updated = { ...current, ...settings };
+      localStorage.setItem("portfolio_settings", JSON.stringify(updated));
+      
+      if (isCloudActive && supabase) {
+        supabase.from("portfolio_settings").upsert({ id: "main_settings", ...updated }).catch(err => console.warn("Supabase settings save failed:", err));
+      }
+      return updated;
+    } catch (err) {
+      console.error("Local save settings error:", err);
+      return settings;
     }
-    return updated;
   },
 
   // Timeline CRUD
   getTimeline() {
-    return JSON.parse(localStorage.getItem("portfolio_timeline") || "[]");
+    try {
+      const items = JSON.parse(localStorage.getItem("portfolio_timeline") || "[]");
+      return (Array.isArray(items) ? items : []).map(t => ({
+        id: t.id || "time-" + Date.now(),
+        title: t.title || "",
+        company: t.company || "",
+        role: t.role || "",
+        dateRange: t.dateRange || "",
+        type: t.type || "experience",
+        description: t.description || ""
+      }));
+    } catch (e) {
+      return [];
+    }
   },
 
   saveTimelineItem(item) {
-    const timeline = this.getTimeline();
-    if (item.id) {
-      const index = timeline.findIndex(t => t.id === item.id);
-      if (index !== -1) {
-        timeline[index] = { ...timeline[index], ...item };
+    try {
+      const timeline = this.getTimeline();
+      if (item.id) {
+        const index = timeline.findIndex(t => t.id === item.id);
+        if (index !== -1) {
+          timeline[index] = { ...timeline[index], ...item };
+        } else {
+          timeline.push(item);
+        }
+      } else {
+        item.id = "time-" + Date.now();
+        timeline.push(item);
       }
-    } else {
-      item.id = "time-" + Date.now();
-      timeline.push(item);
-    }
-    localStorage.setItem("portfolio_timeline", JSON.stringify(timeline));
-    
-    if (isCloudActive && supabase) {
-      supabase.from("portfolio_timeline").upsert(item).catch(err => console.error("Supabase timeline save failed:", err));
+      localStorage.setItem("portfolio_timeline", JSON.stringify(timeline));
+      
+      if (isCloudActive && supabase) {
+        supabase.from("portfolio_timeline").upsert(item).catch(err => console.warn("Supabase timeline save failed:", err));
+      }
+    } catch (err) {
+      console.error("Local save timeline error:", err);
     }
     return item;
   },
 
   deleteTimelineItem(id) {
-    const timeline = this.getTimeline();
-    const filtered = timeline.filter(t => t.id !== id);
-    localStorage.setItem("portfolio_timeline", JSON.stringify(filtered));
-    
-    if (isCloudActive && supabase) {
-      supabase.from("portfolio_timeline").delete().eq("id", id).catch(err => console.error("Supabase timeline delete failed:", err));
+    try {
+      const timeline = this.getTimeline();
+      const filtered = timeline.filter(t => t.id !== id);
+      localStorage.setItem("portfolio_timeline", JSON.stringify(filtered));
+      
+      if (isCloudActive && supabase) {
+        supabase.from("portfolio_timeline").delete().eq("id", id).catch(err => console.warn("Supabase timeline delete failed:", err));
+      }
+    } catch (err) {
+      console.error("Local delete timeline error:", err);
     }
   },
 
   // Blog CRUD
   getArticles() {
-    return JSON.parse(localStorage.getItem("portfolio_blog") || "[]");
+    try {
+      const items = JSON.parse(localStorage.getItem("portfolio_blog") || "[]");
+      return (Array.isArray(items) ? items : []).map(a => ({
+        id: a.id || "blog-" + Date.now(),
+        title: a.title || "",
+        summary: a.summary || "",
+        tags: Array.isArray(a.tags) ? a.tags : (typeof a.tags === "string" ? a.tags.split(",").map(t => t.trim()).filter(Boolean) : []),
+        content: a.content || "",
+        date: a.date || new Date().toISOString().split("T")[0]
+      }));
+    } catch (e) {
+      return [];
+    }
   },
 
   saveArticle(article) {
-    const articles = this.getArticles();
-    if (article.id) {
-      const index = articles.findIndex(a => a.id === article.id);
-      if (index !== -1) {
-        articles[index] = { ...articles[index], ...article };
+    try {
+      const articles = this.getArticles();
+      if (!Array.isArray(article.tags)) {
+        article.tags = typeof article.tags === "string" ? article.tags.split(",").map(t => t.trim()).filter(Boolean) : [];
       }
-    } else {
-      article.id = "art-" + Date.now();
-      articles.push(article);
-    }
-    localStorage.setItem("portfolio_blog", JSON.stringify(articles));
-    
-    if (isCloudActive && supabase) {
-      supabase.from("portfolio_blog").upsert(article).catch(err => console.error("Supabase article save failed:", err));
+      if (article.id) {
+        const index = articles.findIndex(a => a.id === article.id);
+        if (index !== -1) {
+          articles[index] = { ...articles[index], ...article };
+        } else {
+          articles.push(article);
+        }
+      } else {
+        article.id = "art-" + Date.now();
+        articles.push(article);
+      }
+      localStorage.setItem("portfolio_blog", JSON.stringify(articles));
+      
+      if (isCloudActive && supabase) {
+        supabase.from("portfolio_blog").upsert(article).catch(err => console.warn("Supabase article save failed:", err));
+      }
+    } catch (err) {
+      console.error("Local save article error:", err);
     }
     return article;
   },
 
   deleteArticle(id) {
-    const articles = this.getArticles();
-    const filtered = articles.filter(a => a.id !== id);
-    localStorage.setItem("portfolio_blog", JSON.stringify(filtered));
-    
-    if (isCloudActive && supabase) {
-      supabase.from("portfolio_blog").delete().eq("id", id).catch(err => console.error("Supabase article delete failed:", err));
+    try {
+      const articles = this.getArticles();
+      const filtered = articles.filter(a => a.id !== id);
+      localStorage.setItem("portfolio_blog", JSON.stringify(filtered));
+      
+      if (isCloudActive && supabase) {
+        supabase.from("portfolio_blog").delete().eq("id", id).catch(err => console.warn("Supabase article delete failed:", err));
+      }
+    } catch (err) {
+      console.error("Local delete article error:", err);
     }
   },
 
   // Certificates CRUD
   getCertificates() {
-    return JSON.parse(localStorage.getItem("portfolio_certificates") || "[]");
+    try {
+      const items = JSON.parse(localStorage.getItem("portfolio_certificates") || "[]");
+      return (Array.isArray(items) ? items : []).map(c => ({
+        id: c.id || "cert-" + Date.now(),
+        title: c.title || "",
+        issuer: c.issuer || "",
+        date: c.date || "",
+        url: c.url || "",
+        skills: c.skills || "",
+        image: c.image || ""
+      }));
+    } catch (e) {
+      return [];
+    }
   },
 
   saveCertificate(cert) {
-    const certs = this.getCertificates();
-    if (cert.id) {
-      const index = certs.findIndex(c => c.id === cert.id);
-      if (index !== -1) {
-        certs[index] = { ...certs[index], ...cert };
+    try {
+      const certs = this.getCertificates();
+      if (cert.id) {
+        const index = certs.findIndex(c => c.id === cert.id);
+        if (index !== -1) {
+          certs[index] = { ...certs[index], ...cert };
+        } else {
+          certs.push(cert);
+        }
+      } else {
+        cert.id = "cert-" + Date.now();
+        certs.push(cert);
       }
-    } else {
-      cert.id = "cert-" + Date.now();
-      certs.push(cert);
-    }
-    localStorage.setItem("portfolio_certificates", JSON.stringify(certs));
-    
-    if (isCloudActive && supabase) {
-      supabase.from("portfolio_certificates").upsert(cert).catch(err => console.error("Supabase certificate save failed:", err));
+      localStorage.setItem("portfolio_certificates", JSON.stringify(certs));
+      
+      if (isCloudActive && supabase) {
+        supabase.from("portfolio_certificates").upsert(cert).catch(err => console.warn("Supabase certificate save failed:", err));
+      }
+    } catch (err) {
+      console.error("Local save certificate error:", err);
     }
     return cert;
   },
 
   deleteCertificate(id) {
-    const certs = this.getCertificates();
-    const filtered = certs.filter(c => c.id !== id);
-    localStorage.setItem("portfolio_certificates", JSON.stringify(filtered));
-    
-    if (isCloudActive && supabase) {
-      supabase.from("portfolio_certificates").delete().eq("id", id).catch(err => console.error("Supabase certificate delete failed:", err));
+    try {
+      const certs = this.getCertificates();
+      const filtered = certs.filter(c => c.id !== id);
+      localStorage.setItem("portfolio_certificates", JSON.stringify(filtered));
+      
+      if (isCloudActive && supabase) {
+        supabase.from("portfolio_certificates").delete().eq("id", id).catch(err => console.warn("Supabase certificate delete failed:", err));
+      }
+    } catch (err) {
+      console.error("Local delete certificate error:", err);
     }
   },
 
   // Hackathons CRUD
   getHackathons() {
-    return JSON.parse(localStorage.getItem("portfolio_hackathons") || "[]");
+    try {
+      const items = JSON.parse(localStorage.getItem("portfolio_hackathons") || "[]");
+      return (Array.isArray(items) ? items : []).map(h => ({
+        id: h.id || "hack-" + Date.now(),
+        title: h.title || "",
+        organizer: h.organizer || "",
+        date: h.date || "",
+        role: h.role || "",
+        projectName: h.projectName || "",
+        achievement: h.achievement || "",
+        description: h.description || "",
+        technologies: h.technologies || "",
+        projectUrl: h.projectUrl || "",
+        certificateUrl: h.certificateUrl || "",
+        image: h.image || ""
+      }));
+    } catch (e) {
+      return [];
+    }
   },
 
   saveHackathon(hackathon) {
-    const hackathons = this.getHackathons();
-    if (hackathon.id) {
-      const index = hackathons.findIndex(h => h.id === hackathon.id);
-      if (index !== -1) {
-        hackathons[index] = { ...hackathons[index], ...hackathon };
+    try {
+      const hackathons = this.getHackathons();
+      if (hackathon.id) {
+        const index = hackathons.findIndex(h => h.id === hackathon.id);
+        if (index !== -1) {
+          hackathons[index] = { ...hackathons[index], ...hackathon };
+        } else {
+          hackathons.push(hackathon);
+        }
+      } else {
+        hackathon.id = "hack-" + Date.now();
+        hackathons.push(hackathon);
       }
-    } else {
-      hackathon.id = "hack-" + Date.now();
-      hackathons.push(hackathon);
-    }
-    localStorage.setItem("portfolio_hackathons", JSON.stringify(hackathons));
-    
-    if (isCloudActive && supabase) {
-      supabase.from("portfolio_hackathons").upsert(hackathon).catch(err => console.error("Supabase hackathon save failed:", err));
+      localStorage.setItem("portfolio_hackathons", JSON.stringify(hackathons));
+      
+      if (isCloudActive && supabase) {
+        supabase.from("portfolio_hackathons").upsert(hackathon).catch(err => console.warn("Supabase hackathon save failed:", err));
+      }
+    } catch (err) {
+      console.error("Local save hackathon error:", err);
     }
     return hackathon;
   },
 
   deleteHackathon(id) {
-    const hackathons = this.getHackathons();
-    const filtered = hackathons.filter(h => h.id !== id);
-    localStorage.setItem("portfolio_hackathons", JSON.stringify(filtered));
-    
-    if (isCloudActive && supabase) {
-      supabase.from("portfolio_hackathons").delete().eq("id", id).catch(err => console.error("Supabase hackathon delete failed:", err));
+    try {
+      const hackathons = this.getHackathons();
+      const filtered = hackathons.filter(h => h.id !== id);
+      localStorage.setItem("portfolio_hackathons", JSON.stringify(filtered));
+      
+      if (isCloudActive && supabase) {
+        supabase.from("portfolio_hackathons").delete().eq("id", id).catch(err => console.warn("Supabase hackathon delete failed:", err));
+      }
+    } catch (err) {
+      console.error("Local delete hackathon error:", err);
     }
   }
 };

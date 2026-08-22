@@ -27,12 +27,12 @@ function showToast(message, type = "success") {
   toast.className = `toast-item toast-${type}`;
 
   const iconSvg = type === 'error' 
-    ? `<svg viewBox="0 0 24 24" width="20" height="20" stroke="#f87171" stroke-width="2.5" fill="none"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>`
+    ? `<svg viewBox="0 0 24 24" width="22" height="22" stroke="#f87171" stroke-width="2.5" fill="none"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>`
     : (type === 'delete' 
-      ? `<svg viewBox="0 0 24 24" width="20" height="20" stroke="#f87171" stroke-width="2" fill="none"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>`
-      : `<svg viewBox="0 0 24 24" width="20" height="20" stroke="#34d399" stroke-width="2.5" fill="none"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>`);
+      ? `<svg viewBox="0 0 24 24" width="22" height="22" stroke="#f87171" stroke-width="2" fill="none"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>`
+      : `<svg viewBox="0 0 24 24" width="22" height="22" stroke="#34d399" stroke-width="2.5" fill="none"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>`);
 
-  const titleText = type === 'error' ? 'Error' : (type === 'delete' ? 'Deleted' : 'Success');
+  const titleText = type === 'error' ? 'Notice' : (type === 'delete' ? 'Removed' : 'Success');
 
   toast.innerHTML = `
     <div class="toast-icon-wrap">${iconSvg}</div>
@@ -46,27 +46,23 @@ function showToast(message, type = "success") {
   const closeBtn = toast.querySelector(".toast-close-btn");
   if (closeBtn) {
     closeBtn.addEventListener("click", () => {
-      toast.classList.remove("toast-show");
-      toast.classList.add("toast-hide");
+      toast.style.opacity = "0";
+      toast.style.transform = "translateY(-15px) scale(0.9)";
       setTimeout(() => { if (toast.parentNode) toast.parentNode.removeChild(toast); }, 250);
     });
   }
 
   container.appendChild(toast);
 
-  requestAnimationFrame(() => {
-    toast.classList.add("toast-show");
-  });
-
   setTimeout(() => {
     if (toast.parentNode) {
-      toast.classList.remove("toast-show");
-      toast.classList.add("toast-hide");
+      toast.style.opacity = "0";
+      toast.style.transform = "translateY(-15px) scale(0.9)";
       setTimeout(() => {
         if (toast.parentNode) toast.parentNode.removeChild(toast);
       }, 350);
     }
-  }, 4000);
+  }, 4500);
 }
 
 function flashButtonSuccess(btn, successText = "✓ Saved Successfully!") {
@@ -449,7 +445,7 @@ function renderProjectFilters() {
   container.innerHTML = `<button class="tech-filter-btn active" data-tag="All">All Projects (${projects.length})</button>`;
   
   techStacks.forEach(tech => {
-    const count = projects.filter(p => p.tags.some(tag => tag.toLowerCase() === tech.name.toLowerCase())).length;
+    const count = projects.filter(p => (Array.isArray(p.tags) ? p.tags : []).some(tag => tag && tag.toLowerCase() === tech.name.toLowerCase())).length;
     if (count > 0) {
       const btn = document.createElement("button");
       btn.className = "tech-filter-btn";
@@ -634,7 +630,7 @@ function renderProjectsGrid(projectsList = null) {
         <h3>${proj.title}</h3>
         <div class="project-desc">${formatFormattedDescription(proj.description)}</div>
         <div class="project-tech-list">
-          ${proj.tags.map(tag => `<span class="project-tech-tag">${tag}</span>`).join("")}
+          ${(Array.isArray(proj.tags) ? proj.tags : []).map(tag => `<span class="project-tech-tag">${tag}</span>`).join("")}
         </div>
         <div class="project-links">
           <a href="${proj.githubUrl || '#'}" target="_blank" class="project-link" onclick="event.stopPropagation()">
@@ -667,7 +663,7 @@ function filterProjects() {
                           proj.description.toLowerCase().includes(searchVal);
                           
     const matchesTag = activeProjectFilter === "All" || 
-                       proj.tags.some(t => t.toLowerCase() === activeProjectFilter.toLowerCase());
+                       (Array.isArray(proj.tags) ? proj.tags : []).some(t => t && t.toLowerCase() === activeProjectFilter.toLowerCase());
 
     return matchesSearch && matchesTag;
   });
@@ -713,7 +709,7 @@ function openProjectModal(project) {
 
     <h3 style="margin-bottom: 10px;">Tech Stack Employed</h3>
     <div style="display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 30px;">
-      ${project.tags.map(tag => `<span class="badge" style="background: rgba(99,102,241,0.1); border-color: rgba(99,102,241,0.25); color: var(--text-primary);">${tag}</span>`).join("")}
+      ${(Array.isArray(project.tags) ? project.tags : []).map(tag => `<span class="badge" style="background: rgba(99,102,241,0.1); border-color: rgba(99,102,241,0.25); color: var(--text-primary);">${tag}</span>`).join("")}
     </div>
 
     <div style="display: flex; gap: 16px;">
@@ -1440,7 +1436,7 @@ function renderAdminProjectList() {
     el.innerHTML = `
       <div class="admin-list-info">
         <h4>${p.title}</h4>
-        <p>${p.category} — Tags: ${p.tags.join(", ") || "None"}</p>
+        <p>${p.category} — Tags: ${(Array.isArray(p.tags) ? p.tags : []).join(", ") || "None"}</p>
       </div>
       <div class="admin-list-actions">
         <button class="action-btn edit" data-id="${p.id}" title="Edit details">
@@ -1475,8 +1471,9 @@ function renderAdminProjectList() {
 
       // Check linked tags checkboxes
       const checkboxes = document.querySelectorAll('input[name="proj-tags"]');
+      const safeTags = Array.isArray(p.tags) ? p.tags : [];
       checkboxes.forEach(cb => {
-        cb.checked = p.tags.includes(cb.value);
+        cb.checked = safeTags.includes(cb.value);
       });
 
       submitProjBtn.textContent = "Update Project Details";
@@ -2660,7 +2657,7 @@ function renderBlogGrid() {
         <h3 class="blog-card-title">${art.title}</h3>
         <p class="blog-card-summary">${art.summary}</p>
         <div class="blog-tags">
-          ${art.tags.map(t => `<span class="blog-tag">${t}</span>`).join("")}
+          ${(Array.isArray(art.tags) ? art.tags : []).map(t => `<span class="blog-tag">${t}</span>`).join("")}
         </div>
       </div>
     `;
@@ -2679,7 +2676,7 @@ function openBlogModal(art) {
     year: "numeric", month: "long", day: "numeric"
   });
 
-  const formattedBody = art.content
+  const formattedBody = (art.content || "")
     .replace(/\n/g, "<br/>")
     .replace(/###\s(.*?)(<br\/>|$)/g, '<h4 style="font-size: 1.25rem; margin-top: 20px; margin-bottom: 8px; color: var(--accent-cyan);">$1</h4>')
     .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
@@ -2689,7 +2686,7 @@ function openBlogModal(art) {
 
   modalContent.innerHTML = `
     <h2 style="font-size: 2rem; margin-bottom: 8px;">${art.title}</h2>
-    <p style="font-size: 0.85rem; color: var(--text-dimmed); margin-bottom: 24px;">Published on ${dateStr} &bull; Tags: ${art.tags.join(", ")}</p>
+    <p style="font-size: 0.85rem; color: var(--text-dimmed); margin-bottom: 24px;">Published on ${dateStr} &bull; Tags: ${(Array.isArray(art.tags) ? art.tags : []).join(", ")}</p>
     
     <div style="font-size: 1rem; line-height: 1.7; color: var(--text-muted); margin-bottom: 30px;">
       ${formattedBody}
@@ -2895,7 +2892,7 @@ function renderAdminBlogList() {
     el.innerHTML = `
       <div class="admin-list-info">
         <h4>${art.title}</h4>
-        <p>${art.date} &bull; Tags: ${art.tags.join(", ")}</p>
+        <p>${art.date || "Recent"} &bull; Tags: ${(Array.isArray(art.tags) ? art.tags : []).join(", ") || "None"}</p>
       </div>
       <div class="admin-list-actions">
         <button class="action-btn edit" title="Edit article">
@@ -2911,8 +2908,8 @@ function renderAdminBlogList() {
       document.getElementById("admin-blog-id").value = art.id;
       document.getElementById("admin-blog-title").value = art.title;
       document.getElementById("admin-blog-summary").value = art.summary;
-      document.getElementById("admin-blog-tags").value = art.tags.join(", ");
-      document.getElementById("admin-blog-content").value = art.content;
+      document.getElementById("admin-blog-tags").value = (Array.isArray(art.tags) ? art.tags : []).join(", ");
+      document.getElementById("admin-blog-content").value = art.content || "";
 
       document.getElementById("admin-blog-submit-btn").textContent = "Update Article";
       document.getElementById("admin-blog-cancel-btn").style.display = "inline-block";
@@ -2921,8 +2918,9 @@ function renderAdminBlogList() {
 
     el.querySelector(".delete").addEventListener("click", () => {
       Database.deleteArticle(art.id);
+      showToast(`Deleted article "${art.title}".`, "delete");
       renderAdminBlogList();
-      renderBlogGrid();
+      refreshAllPublicViews();
     });
 
     container.appendChild(el);
@@ -3116,7 +3114,7 @@ function generatePrintLayout(type) {
                 </div>
               </div>
               <p class="project-desc">${proj.description}</p>
-              <div class="project-tech"><strong>Technologies:</strong> ${proj.tags.join(", ")}</div>
+              <div class="project-tech"><strong>Technologies:</strong> ${(Array.isArray(proj.tags) ? proj.tags : []).join(", ")}</div>
             </div>
       `;
     });
