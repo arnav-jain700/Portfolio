@@ -1179,7 +1179,9 @@ cancelTechEdit.addEventListener("click", resetTechForm);
 function resetTechForm() {
   techForm.reset();
   document.getElementById("admin-tech-id").value = "";
-  submitTechBtn.textContent = "Add Technology";
+  if (!submitTechBtn.classList.contains("btn-success-flash")) {
+    submitTechBtn.textContent = "Add Technology";
+  }
   cancelTechEdit.style.display = "none";
   document.getElementById("admin-tech-custom-category-group").style.display = "none";
   document.getElementById("admin-tech-custom-category").required = false;
@@ -1415,7 +1417,9 @@ cancelProjEdit.addEventListener("click", resetProjectForm);
 function resetProjectForm() {
   projectForm.reset();
   document.getElementById("admin-project-id").value = "";
-  submitProjBtn.textContent = "Save Project";
+  if (!submitProjBtn.classList.contains("btn-success-flash")) {
+    submitProjBtn.textContent = "Save Project";
+  }
   cancelProjEdit.style.display = "none";
   hideProjPreview();
 }
@@ -2252,79 +2256,83 @@ function setupAdminCertFormOnce() {
     });
 
     cancelBtn.addEventListener("click", resetCertForm);
+}
+
+function resetCertForm() {
+  const form = document.getElementById("admin-certificate-form");
+  if (form) form.reset();
+  document.getElementById("admin-certificate-id").value = "";
+  const submitBtn = document.getElementById("admin-cert-submit-btn");
+  if (submitBtn && !submitBtn.classList.contains("btn-success-flash")) {
+    submitBtn.textContent = "Add Certificate";
+  }
+  const cancelBtn = document.getElementById("admin-cert-cancel-btn");
+  if (cancelBtn) cancelBtn.style.display = "none";
+  hideCertPreview();
+}
+
+function renderAdminCertList() {
+  const container = document.getElementById("admin-certificate-list");
+  if (!container) return;
+  const certs = Database.getCertificates();
+
+  container.innerHTML = "";
+  if (certs.length === 0) {
+    container.innerHTML = `<div style="text-align: center; color: var(--text-dimmed); padding: 20px;">No certificates.</div>`;
+    return;
   }
 
-  function resetCertForm() {
-    const form = document.getElementById("admin-certificate-form");
-    if (form) form.reset();
-    document.getElementById("admin-certificate-id").value = "";
-    document.getElementById("admin-cert-submit-btn").textContent = "Add Certificate";
-    document.getElementById("admin-cert-cancel-btn").style.display = "none";
-    hideCertPreview();
-  }
+  certs.forEach(cert => {
+    const el = document.createElement("div");
+    el.className = "admin-list-item";
+    el.innerHTML = `
+      <div class="admin-list-info">
+        <h4>${cert.title}</h4>
+        <p>${cert.issuer} &bull; ${cert.date}</p>
+      </div>
+      <div class="admin-list-actions">
+        <button class="action-btn edit" title="Edit certificate">
+          <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 1 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+        </button>
+        <button class="action-btn delete" title="Delete certificate">
+          <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><line x1="10" y1="11" x2="10" y2="17"/><line x1="14" y1="11" x2="14" y2="17"/></svg>
+        </button>
+      </div>
+    `;
 
-  function renderAdminCertList() {
-    const container = document.getElementById("admin-certificate-list");
-    if (!container) return;
-    const certs = Database.getCertificates();
-
-    container.innerHTML = "";
-    if (certs.length === 0) {
-      container.innerHTML = `<div style="text-align: center; color: var(--text-dimmed); padding: 20px;">No certificates.</div>`;
-      return;
-    }
-
-    certs.forEach(cert => {
-      const el = document.createElement("div");
-      el.className = "admin-list-item";
-      el.innerHTML = `
-        <div class="admin-list-info">
-          <h4>${cert.title}</h4>
-          <p>${cert.issuer} &bull; ${cert.date}</p>
-        </div>
-        <div class="admin-list-actions">
-          <button class="action-btn edit" title="Edit certificate">
-            <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 1 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
-          </button>
-          <button class="action-btn delete" title="Delete certificate">
-            <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><line x1="10" y1="11" x2="10" y2="17"/><line x1="14" y1="11" x2="14" y2="17"/></svg>
-          </button>
-        </div>
-      `;
-
-      el.querySelector(".edit").addEventListener("click", () => {
-        document.getElementById("admin-certificate-id").value = cert.id;
-        document.getElementById("admin-cert-title").value = cert.title;
-        document.getElementById("admin-cert-issuer").value = cert.issuer;
-        document.getElementById("admin-cert-date").value = cert.date;
-        document.getElementById("admin-cert-url").value = cert.url || "";
-        document.getElementById("admin-cert-skills").value = cert.skills || "";
-        
-        currentUploadedCertImage = cert.image || "";
-        if (currentUploadedCertImage) {
-          showCertPreview(currentUploadedCertImage);
-          if (!currentUploadedCertImage.startsWith("data:")) {
-            document.getElementById("admin-cert-image-url").value = currentUploadedCertImage;
-          }
-        } else {
-          hideCertPreview();
+    el.querySelector(".edit").addEventListener("click", () => {
+      document.getElementById("admin-certificate-id").value = cert.id;
+      document.getElementById("admin-cert-title").value = cert.title;
+      document.getElementById("admin-cert-issuer").value = cert.issuer;
+      document.getElementById("admin-cert-date").value = cert.date;
+      document.getElementById("admin-cert-url").value = cert.url || "";
+      document.getElementById("admin-cert-skills").value = cert.skills || "";
+      
+      currentUploadedCertImage = cert.image || "";
+      if (currentUploadedCertImage) {
+        showCertPreview(currentUploadedCertImage);
+        if (!currentUploadedCertImage.startsWith("data:")) {
+          document.getElementById("admin-cert-image-url").value = currentUploadedCertImage;
         }
+      } else {
+        hideCertPreview();
+      }
 
-        document.getElementById("admin-cert-submit-btn").textContent = "Update Certificate";
-        document.getElementById("admin-cert-cancel-btn").style.display = "inline-block";
-        document.getElementById("admin-certificate-form").scrollIntoView({ behavior: "smooth" });
-      });
-
-      el.querySelector(".delete").addEventListener("click", () => {
-        Database.deleteCertificate(cert.id);
-        showToast(`Deleted certificate "${cert.title}".`, "delete");
-        renderAdminCertList();
-        renderCertificatesGrid();
-      });
-
-      container.appendChild(el);
+      document.getElementById("admin-cert-submit-btn").textContent = "Update Certificate";
+      document.getElementById("admin-cert-cancel-btn").style.display = "inline-block";
+      document.getElementById("admin-certificate-form").scrollIntoView({ behavior: "smooth" });
     });
-  }
+
+    el.querySelector(".delete").addEventListener("click", () => {
+      Database.deleteCertificate(cert.id);
+      showToast(`Deleted certificate "${cert.title}".`, "delete");
+      renderAdminCertList();
+      refreshAllPublicViews();
+    });
+
+    container.appendChild(el);
+  });
+}
 
 // ----------------------------------------------------
 // DYNAMIC HACKATHONS SHOWCASE RENDERING
@@ -2546,7 +2554,9 @@ function resetHackForm() {
   document.getElementById("admin-hackathon-id").value = "";
   const submitBtn = document.getElementById("admin-hack-submit-btn");
   const cancelBtn = document.getElementById("admin-hack-cancel-btn");
-  if (submitBtn) submitBtn.textContent = "Add Hackathon";
+  if (submitBtn && !submitBtn.classList.contains("btn-success-flash")) {
+    submitBtn.textContent = "Add Hackathon";
+  }
   if (cancelBtn) cancelBtn.style.display = "none";
   hideHackPreview();
 }
@@ -2735,8 +2745,12 @@ function resetTimelineForm() {
   const form = document.getElementById("admin-timeline-form");
   if (form) form.reset();
   document.getElementById("admin-timeline-id").value = "";
-  document.getElementById("admin-timeline-submit-btn").textContent = "Save Entry";
-  document.getElementById("admin-timeline-cancel-btn").style.display = "none";
+  const submitBtn = document.getElementById("admin-timeline-submit-btn");
+  if (submitBtn && !submitBtn.classList.contains("btn-success-flash")) {
+    submitBtn.textContent = "Save Entry";
+  }
+  const cancelBtn = document.getElementById("admin-timeline-cancel-btn");
+  if (cancelBtn) cancelBtn.style.display = "none";
 }
 
 function renderAdminTimelineList() {
@@ -2856,8 +2870,12 @@ function resetBlogForm() {
   const form = document.getElementById("admin-blog-form");
   if (form) form.reset();
   document.getElementById("admin-blog-id").value = "";
-  document.getElementById("admin-blog-submit-btn").textContent = "Publish Article";
-  document.getElementById("admin-blog-cancel-btn").style.display = "none";
+  const submitBtn = document.getElementById("admin-blog-submit-btn");
+  if (submitBtn && !submitBtn.classList.contains("btn-success-flash")) {
+    submitBtn.textContent = "Publish Article";
+  }
+  const cancelBtn = document.getElementById("admin-blog-cancel-btn");
+  if (cancelBtn) cancelBtn.style.display = "none";
 }
 
 function renderAdminBlogList() {
