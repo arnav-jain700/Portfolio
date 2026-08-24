@@ -631,15 +631,18 @@
 
               <!-- PANE D: SETTINGS -->
               <div id="admin-pane-settings" class="admin-pane">
-                <h3 style="margin-bottom: 8px;">AI & Co-Pilot configuration</h3>
-                <p style="color: var(--text-muted); font-size: 0.85rem; margin-bottom: 24px;">Link Gemini API credentials and customize site metadata.</p>
+                <h3 style="margin-bottom: 8px;">AI & Co-Pilot Configuration</h3>
+                <p style="color: var(--text-muted); font-size: 0.85rem; margin-bottom: 24px;">Link your free Groq API key (Llama 3.3 70B) and customize site metadata.</p>
                 
                 <div class="form-group" style="margin-bottom: 20px;">
-                  <label class="form-label">Gemini API Key</label>
-                  <input type="password" id="admin-settings-key" class="glass-input" placeholder="Enter your GEMINI_API_KEY..." />
+                  <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+                    <label class="form-label" style="margin-bottom: 0;">Groq API Key (Free Llama 3.3 70B)</label>
+                    <a href="https://console.groq.com/keys" target="_blank" rel="noopener noreferrer" style="color: var(--accent-cyan); font-size: 0.75rem; text-decoration: underline;">Get free key at console.groq.com ↗</a>
+                  </div>
+                  <input type="password" id="admin-settings-key" class="glass-input" placeholder="gsk_..." />
                   <div id="api-status-badge" class="api-badge disconnected">Disconnected: Sandbox Fallback Active</div>
                   <p style="color: var(--text-dimmed); font-size: 0.75rem; margin-top: 6px;">
-                    Your key is saved <strong>exclusively in local storage</strong> on this browser. It is never transmitted to other servers, only directly to Google's API endpoint.
+                    100% Free • Ultra-fast 600+ tok/s • No credit card required. Your key is stored securely in your browser and used directly.
                   </p>
                 </div>
 

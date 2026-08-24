@@ -28,47 +28,75 @@ export default async function handler(req, res) {
     return res.status(405).json({ error: 'Method not allowed' });
   }
 
-  const apiKey = process.env.GEMINI_API_KEY;
-  if (!apiKey) {
-    return res.status(500).json({ error: 'Gemini API key is not configured on the server. Please add GEMINI_API_KEY in Vercel settings.' });
-  }
+  const groqApiKey = process.env.GROQ_API_KEY || req.headers['x-groq-key'];
+  const geminiApiKey = process.env.GEMINI_API_KEY || req.headers['x-gemini-key'];
 
-  const { action, payload } = req.body;
-  if (!payload) {
-    return res.status(400).json({ error: 'Missing payload in request body.' });
-  }
+  const { messages, payload, model, temperature, max_tokens, json } = req.body || {};
 
-  const customModel = payload.model || "gemini-1.5-flash";
-  const models = [customModel, "gemini-1.5-flash-latest", "gemini-2.0-flash", "gemini-2.5-flash"];
-  const versions = ["v1", "v1beta"];
-  
-  const urls = [];
-  versions.forEach(ver => {
-    models.forEach(mod => {
-      urls.push(`https://generativelanguage.googleapis.com/${ver}/models/${mod}:generateContent?key=${apiKey}`);
-    });
-  });
-
-  let lastError = null;
-  for (const url of urls) {
+  // 1. Try Groq (Primary High-Speed LPU Engine)
+  if (groqApiKey) {
     try {
-      const response = await fetch(url, {
+      const groqModel = model || "llama-3.3-70b-versatile";
+      const groqMessages = messages || (payload ? [
+        ...(payload.systemInstruction ? [{ role: "system", content: payload.systemInstruction.parts?.[0]?.text || "" }] : []),
+        ...(payload.contents || []).map(c => ({
+          role: c.role === "model" ? "assistant" : "user",
+          content: c.parts?.[0]?.text || ""
+        }))
+      ] : [{ role: "user", content: "Hello" }]);
+
+      const groqRes = await fetch("https://api.groq.com/openai/v1/chat/completions", {
         method: "POST",
         headers: {
+          "Authorization": `Bearer ${groqApiKey}`,
           "Content-Type": "application/json"
         },
-        body: JSON.stringify(payload)
+        body: JSON.stringify({
+          model: groqModel,
+          messages: groqMessages,
+          temperature: temperature !== undefined ? temperature : 0.7,
+          max_tokens: max_tokens || 500,
+          response_format: json ? { type: "json_object" } : undefined
+        })
       });
-      if (response.ok) {
-        const data = await response.json();
-        return res.status(200).json(data);
+
+      if (groqRes.ok) {
+        const groqData = await groqRes.json();
+        const outputText = groqData.choices?.[0]?.message?.content || "";
+        return res.status(200).json({ text: outputText, raw: groqData });
       }
-      const errText = await response.text();
-      lastError = new Error(`Gemini API Error: ${response.status} ${errText} at ${url}`);
+      const errText = await groqRes.text();
+      console.warn("Groq API error in proxy:", errText);
     } catch (e) {
-      lastError = e;
+      console.warn("Groq fetch failed:", e);
     }
   }
 
-  return res.status(500).json({ error: lastError?.message || 'All Gemini API endpoints failed.' });
+  // 2. Try Gemini (Fallback)
+  if (geminiApiKey && payload) {
+    const customModel = payload.model || "gemini-1.5-flash";
+    const models = [customModel, "gemini-1.5-flash-latest", "gemini-2.0-flash"];
+    const versions = ["v1", "v1beta"];
+    
+    for (const ver of versions) {
+      for (const mod of models) {
+        try {
+          const geminiRes = await fetch(`https://generativelanguage.googleapis.com/${ver}/models/${mod}:generateContent?key=${geminiApiKey}`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(payload)
+          });
+          if (geminiRes.ok) {
+            const data = await geminiRes.json();
+            const outputText = data.candidates?.[0]?.content?.parts?.[0]?.text || "";
+            return res.status(200).json({ text: outputText, raw: data });
+          }
+        } catch (e) {}
+      }
+    }
+  }
+
+  return res.status(500).json({ 
+    error: 'No valid AI API key is configured. Please provide your free Groq API key in the Admin Console or set GROQ_API_KEY in Vercel environment variables.' 
+  });
 }

@@ -221,10 +221,10 @@ function renderHomeStats() {
   const aiStateEl = document.getElementById("stat-ai-mode");
   const subStatusEl = document.getElementById("chat-sub-status");
   
-  if (settings.geminiKey || isServerLive) {
-    aiStateEl.textContent = "Gemini API";
+  if (settings.groqKey || settings.geminiKey || isServerLive) {
+    aiStateEl.textContent = "Groq Llama 3.3";
     aiStateEl.style.color = "var(--accent-cyan)";
-    subStatusEl.textContent = "Gemini AI Agent";
+    subStatusEl.textContent = "Groq AI Agent (Llama 3.3 70B)";
   } else {
     aiStateEl.textContent = "Sandbox Mode";
     aiStateEl.style.color = "var(--text-muted)";
@@ -1631,7 +1631,7 @@ function loadAdminSettings() {
   const keyInput = document.getElementById("admin-settings-key");
   const bioInput = document.getElementById("admin-settings-bio");
 
-  keyInput.value = settings.geminiKey || "";
+  keyInput.value = settings.groqKey || settings.geminiKey || "";
   bioInput.value = settings.ownerBio || "";
 
   // Set new settings input values
@@ -1643,13 +1643,13 @@ function loadAdminSettings() {
   document.getElementById("admin-settings-codolio").value = settings.codolio || "";
   document.getElementById("admin-settings-medium").value = settings.medium || "";
 
-  updateApiBadge(settings.geminiKey);
+  updateApiBadge(settings.groqKey || settings.geminiKey);
 }
 
 function updateApiBadge(key) {
   const statusBadge = document.getElementById("api-status-badge");
   if (key) {
-    statusBadge.textContent = "Gemini Key Saved: Connected to Live AI Services";
+    statusBadge.textContent = "Groq Key Saved: Connected to Llama 3.3 70B (High-Speed LPU)";
     statusBadge.className = "api-badge connected";
   } else {
     statusBadge.textContent = "Disconnected: Rule-based Simulation Sandbox Mode Active";
@@ -1658,7 +1658,7 @@ function updateApiBadge(key) {
 }
 
 document.getElementById("admin-settings-save").addEventListener("click", () => {
-  const geminiKey = document.getElementById("admin-settings-key").value.trim();
+  const groqKey = document.getElementById("admin-settings-key").value.trim();
   const ownerBio = document.getElementById("admin-settings-bio").value.trim();
   const ownerName = document.getElementById("admin-settings-name").value.trim();
   const email = document.getElementById("admin-settings-email").value.trim();
@@ -1669,7 +1669,8 @@ document.getElementById("admin-settings-save").addEventListener("click", () => {
   const medium = document.getElementById("admin-settings-medium").value.trim();
 
   Database.saveSettings({ 
-    geminiKey, 
+    groqKey,
+    geminiKey: groqKey, 
     ownerBio, 
     ownerName, 
     email, 
@@ -1679,11 +1680,11 @@ document.getElementById("admin-settings-save").addEventListener("click", () => {
     codolio, 
     medium 
   });
-  updateApiBadge(geminiKey);
+  updateApiBadge(groqKey);
   
   const saveBtn = document.getElementById("admin-settings-save");
   flashButtonSuccess(saveBtn, "✓ Settings Saved & Synced!");
-  showToast("Platform profile and AI Co-Pilot settings saved!");
+  showToast("Platform profile and Groq AI Co-Pilot settings saved!");
   refreshAllPublicViews();
 });
 

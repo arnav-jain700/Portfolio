@@ -42,63 +42,66 @@ SKILLS & TECH STACK:
   return context;
 }
 
-// Robust Gemini API HTTP POST caller trying multiple endpoints (v1 and v1beta) to handle 404 deprecations
-async function callGeminiApi(apiKey, payload, customModel = "gemini-1.5-flash") {
-  if (!apiKey) {
-    // Call serverless proxy on Vercel
+// High-Performance Groq API Caller using Llama 3.3 70B
+async function callGroqApi(messages, options = {}) {
+  const settings = Database.getSettings();
+  const apiKey = settings.groqKey || settings.geminiKey || "";
+
+  const bodyPayload = {
+    model: options.model || "llama-3.3-70b-versatile",
+    messages: messages,
+    temperature: options.temperature !== undefined ? options.temperature : 0.7,
+    max_tokens: options.max_tokens || 500,
+    json: options.json || false
+  };
+
+  // 1. Direct client call to Groq if key is present
+  if (apiKey) {
+    try {
+      const response = await fetch("https://api.groq.com/openai/v1/chat/completions", {
+        method: "POST",
+        headers: {
+          "Authorization": `Bearer ${apiKey}`,
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+          model: bodyPayload.model,
+          messages: messages,
+          temperature: bodyPayload.temperature,
+          max_tokens: bodyPayload.max_tokens,
+          response_format: options.json ? { type: "json_object" } : undefined
+        })
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        return data.choices?.[0]?.message?.content || "";
+      }
+    } catch (e) {
+      console.warn("Direct Groq API call error:", e);
+    }
+  }
+
+  // 2. Serverless proxy fallback
+  try {
     const response = await fetch("/api/gemini", {
       method: "POST",
       headers: {
-        "Content-Type": "application/json"
+        "Content-Type": "application/json",
+        ...(apiKey ? { "x-groq-key": apiKey } : {})
       },
-      body: JSON.stringify({ action: "generate", payload })
+      body: JSON.stringify(bodyPayload)
     });
+
     if (response.ok) {
-      return response;
+      const data = await response.json();
+      return data.text || "";
     }
-    const errText = await response.text();
-    throw new Error(`Serverless Proxy Error: ${errText}`);
+  } catch (e) {
+    console.warn("Serverless AI proxy error:", e);
   }
 
-  // Otherwise, call Google Gemini directly from client side
-  const models = [customModel, "gemini-1.5-flash-latest", "gemini-2.0-flash", "gemini-2.5-flash"];
-  const versions = ["v1", "v1beta"];
-  
-  const urls = [];
-  versions.forEach(ver => {
-    models.forEach(mod => {
-      urls.push(`https://generativelanguage.googleapis.com/${ver}/models/${mod}:generateContent?key=${apiKey}`);
-    });
-  });
-
-  let lastError = null;
-  for (const url of urls) {
-    try {
-      const response = await fetch(url, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json"
-        },
-        body: JSON.stringify(payload)
-      });
-      if (response.ok) {
-        return response;
-      }
-      lastError = new Error(`Gemini API Error: ${response.status} ${response.statusText} at ${url}`);
-    } catch (e) {
-      lastError = e;
-    }
-  }
-  throw lastError || new Error("All Gemini API endpoints failed.");
-}
-
-// Helper to execute request using client key or serverless proxy
-async function executeGeminiRequest(payload, customModel = "gemini-1.5-flash") {
-  const settings = Database.getSettings();
-  const apiKey = settings.geminiKey;
-  const response = await callGeminiApi(apiKey, payload, customModel);
-  const data = await response.json();
-  return data;
+  throw new Error("Groq API offline / unconfigured.");
 }
 
 // Simulated rule-based AI engine for offline fallback
@@ -110,22 +113,22 @@ function getSimulatedResponse(message) {
 
   // Basic greeting
   if (msg.includes("hello") || msg.includes("hi ") || msg.includes("hey")) {
-    return "Hello! I am the virtual assistant for this portfolio. I can tell you about the owner's skills, projects, or how to contact them. (Tip: Configure a Gemini API Key in the Admin panel for fully dynamic AI chat!)";
+    return "Hello! I am the virtual assistant for this portfolio. I can tell you about the owner's skills, projects, or how to contact them. (Tip: Configure your free Groq API Key in the Admin panel for live high-speed AI responses!)";
   }
 
   // Who are you / bio
   if (msg.includes("who are you") || msg.includes("about") || msg.includes("yourself") || msg.includes("bio")) {
-    return `The portfolio owner is a developer. Here is their bio: "${settings.ownerBio}". Would you like to check out their tech stack or projects?`;
+    return `The portfolio owner is ${settings.ownerName || "Arnav Jain"}. Here is their bio: "${settings.ownerBio}". Would you like to check out their tech stack or projects?`;
   }
 
   // Projects inquiry
   if (msg.includes("project") || msg.includes("built") || msg.includes("portfolio")) {
     if (projects.length === 0) {
-      return "The owner hasn't listed any projects yet! You can add some in the Admin panel.";
+      return "No projects have been added yet! You can add some in the Admin panel.";
     }
     let response = "Here are the projects the owner has built:\n\n";
     projects.forEach(p => {
-      response += `• **${p.title}**: ${p.description} (${p.tags.join(", ")})\n`;
+      response += `• **${p.title}**: ${p.description} (${(Array.isArray(p.tags) ? p.tags : []).join(", ")})\n`;
     });
     return response;
   }
@@ -152,7 +155,7 @@ function getSimulatedResponse(message) {
   for (const tech of techStacks) {
     if (msg.includes(tech.name.toLowerCase())) {
       const matchingProjects = projects.filter(p => 
-        p.tags.some(tag => tag.toLowerCase() === tech.name.toLowerCase())
+        (Array.isArray(p.tags) ? p.tags : []).some(tag => tag.toLowerCase() === tech.name.toLowerCase())
       );
       
       let response = `The owner is proficient in **${tech.name}** (level: ${tech.level}%). `;
@@ -167,52 +170,43 @@ function getSimulatedResponse(message) {
 
   // Contact info
   if (msg.includes("contact") || msg.includes("hire") || msg.includes("email") || msg.includes("message")) {
-    return `You can get in touch with Arnav by filling out the Contact Form on the **Contact** page, or email him directly at **${settings.email || "arnavjain1905@gmail.com"}**. You can also view contact logs in the Admin Dashboard.`;
+    return `You can get in touch by filling out the Contact Form on the **Contact** page, or email directly at **${settings.email || "arnavjain1905@gmail.com"}**.`;
   }
 
   // Default response
-  return "That's an interesting question! I am running in Offline Sandbox Mode. To get a fully intelligent, open-ended response from a real Gemini AI model, please navigate to the **Admin** tab and enter a Google Gemini API Key. (It will be saved only in your local browser's storage).";
+  return "That's an interesting question! I am running in Offline Sandbox Mode. To get a fully dynamic response from Llama 3.3 70B, please navigate to the **Admin** tab -> **Settings** and enter your free Groq API Key.";
 }
 
 export const AI = {
-  // Chat with Gemini API
+  // Chat with Groq Llama 3.3 70B
   async askAI(message, conversationHistory = []) {
     try {
       const portfolioContext = compilePortfolioContext();
       
       const systemInstruction = `You are the Virtual AI Representative of a software developer.
 Your job is to interact with visitors of this portfolio website, answering questions about the developer's experience, technologies, and projects.
-Be professional, elegant, helpful, and concise. Make the developer look good! Do not make up facts; refer strictly to the provided context. If you don't know something, tell them and guide them to the Contact page.
+Be professional, elegant, helpful, and concise. Make the developer look good! Do not make up facts; refer strictly to the provided context. If you don't know something, guide them to the Contact page.
 
 PORTFOLIO CONTEXT:
 ${portfolioContext}`;
 
-      const contents = [];
-      conversationHistory.forEach(msg => {
-        contents.push({
-          role: msg.sender === "visitor" ? "user" : "model",
-          parts: [{ text: msg.text }]
-        });
-      });
-      contents.push({
-        role: "user",
-        parts: [{ text: message }]
+      const messages = [
+        { role: "system", content: systemInstruction },
+        ...conversationHistory.map(msg => ({
+          role: msg.sender === "visitor" ? "user" : "assistant",
+          content: msg.text
+        })),
+        { role: "user", content: message }
+      ];
+
+      const text = await callGroqApi(messages, {
+        temperature: 0.7,
+        max_tokens: 350
       });
 
-      const data = await executeGeminiRequest({
-        contents: contents,
-        systemInstruction: {
-          parts: [{ text: systemInstruction }]
-        },
-        generationConfig: {
-          temperature: 0.7,
-          maxOutputTokens: 350
-        }
-      });
-
-      return data.candidates[0].content.parts[0].text;
+      return text;
     } catch (error) {
-      console.warn("AI chat failed (falling back to sandbox):", error);
+      console.warn("Groq AI chat failed (falling back to sandbox):", error);
       return getSimulatedResponse(message);
     }
   },
@@ -220,26 +214,29 @@ ${portfolioContext}`;
   // Generate a project description based on title and tags
   async generateProjectDescription(title, tags) {
     try {
-      const data = await executeGeminiRequest({
-        contents: [
-          {
-            role: "user",
-            parts: [{ text: `Generate a professional, high-impact 2-sentence project description for a developer portfolio.
+      const messages = [
+        {
+          role: "system",
+          content: "You are an expert technical resume and portfolio copywriter. Keep responses brief, punchy, and action-oriented."
+        },
+        {
+          role: "user",
+          content: `Generate a professional, high-impact 2-sentence project description for a developer portfolio.
 Project Title: ${title}
-Technologies Used: ${tags.join(", ")}
-Keep it brief and starting with an action-oriented tone.` }]
-          }
-        ],
-        generationConfig: {
-          temperature: 0.8,
-          maxOutputTokens: 100
+Technologies Used: ${(Array.isArray(tags) ? tags : []).join(", ")}
+Start directly with action verbs.`
         }
+      ];
+
+      const text = await callGroqApi(messages, {
+        temperature: 0.8,
+        max_tokens: 120
       });
 
-      return data.candidates[0].content.parts[0].text.trim();
+      return text.trim();
     } catch (error) {
-      console.warn("AI description generator failed:", error);
-      return `A powerful client-side ${title} application designed to stream workflows and boost productivity, built leveraging ${tags.join(", ") || "modern web frameworks"}.`;
+      console.warn("Groq description generator fallback:", error);
+      return `A scalable ${title} application built leveraging ${(Array.isArray(tags) ? tags : []).join(", ") || "modern tech stacks"}.`;
     }
   },
 
@@ -249,26 +246,29 @@ Keep it brief and starting with an action-oriented tone.` }]
     const ownerName = settings.ownerName || "Arnav Jain";
 
     try {
-      const data = await executeGeminiRequest({
-        contents: [
-          {
-            role: "user",
-            parts: [{ text: `Draft a friendly, professional 1-paragraph email response to an inquiry.
+      const messages = [
+        {
+          role: "system",
+          content: `You are drafting an email reply on behalf of ${ownerName}. Keep it professional, friendly, and concise.`
+        },
+        {
+          role: "user",
+          content: `Draft a friendly, professional 1-paragraph email response to an inquiry.
 Sender: ${senderName}
 Inquiry Message: "${messageText}"
-Sign off as ${ownerName}. Keep it elegant.` }]
-          }
-        ],
-        generationConfig: {
-          temperature: 0.7,
-          maxOutputTokens: 200
+Sign off as ${ownerName}.`
         }
+      ];
+
+      const text = await callGroqApi(messages, {
+        temperature: 0.7,
+        max_tokens: 200
       });
 
-      return data.candidates[0].content.parts[0].text.trim();
+      return text.trim();
     } catch (error) {
-      console.warn("AI email drafting failed:", error);
-      return `Hi ${senderName},\n\nThank you for reaching out! I appreciate you contacting me regarding: "${messageText.substring(0, 40)}...". I will review this and get back to you within 24 hours.\n\nBest regards,\n${ownerName}`;
+      console.warn("Groq email drafting fallback:", error);
+      return `Hi ${senderName},\n\nThank you for reaching out! I appreciate you contacting me regarding: "${messageText.substring(0, 40)}...". I will review this and get back to you shortly.\n\nBest regards,\n${ownerName}`;
     }
   },
 
@@ -277,38 +277,33 @@ Sign off as ${ownerName}. Keep it elegant.` }]
     try {
       const portfolioContext = compilePortfolioContext();
       
-      const systemInstruction = `You are a professional HR recruiter assistant evaluating a candidate named Arnav Jain.
-You will evaluate if Arnav fits the user's provided job description.
-You MUST respond with a valid JSON object only. Do not wrap in markdown code blocks or add text outside the JSON. The JSON structure must match:
+      const systemInstruction = `You are a senior technical recruiter evaluating a developer named Arnav Jain.
+Evaluate if Arnav fits the provided job description.
+You MUST output ONLY a valid JSON object matching this schema:
 {
   "score": 85,
-  "summary": "Arnav has strong experience with React, Node.js and client-side AI integration which align well with the job. However, there is a minor gap in direct C# experience.",
-  "strengths": ["Excellent frontend skills with React and Javascript", "Direct experience in Gemini AI integration"],
-  "gaps": ["No direct reference to containerization or Kubernetes in the JD context"],
-  "projects": ["NeuroPlan: AI Task Agent", "SyncChat: Socket Hub"]
+  "summary": "Arnav has strong experience with C++, Python and modern web frameworks which align well with the position.",
+  "strengths": ["Strong foundational programming skills", "Practical project and full-stack development experience"],
+  "gaps": ["No direct reference to specialized proprietary cloud tools in the JD context"],
+  "projects": ["Global Nav Plexus"]
 }
-Limit summary to 2-3 sentences. Limit strengths/gaps/projects lists to 2-3 bullet items.`;
+Keep summary to 2 sentences. Limit strengths/gaps/projects lists to 2-3 bullet items.`;
 
-      const data = await executeGeminiRequest({
-        contents: [
-          {
-            role: "user",
-            parts: [{ text: `Evaluate this job description: \n"${jobDescription}"\n\nCandidate portfolio context:\n${portfolioContext}` }]
-          }
-        ],
-        systemInstruction: {
-          parts: [{ text: systemInstruction }]
-        },
-        generationConfig: {
-          temperature: 0.2,
-          responseMimeType: "application/json"
-        }
+      const messages = [
+        { role: "system", content: systemInstruction },
+        { role: "user", content: `Evaluate this job description:\n"${jobDescription}"\n\nCandidate portfolio context:\n${portfolioContext}` }
+      ];
+
+      const text = await callGroqApi(messages, {
+        temperature: 0.2,
+        max_tokens: 400,
+        json: true
       });
 
-      const text = data.candidates[0].content.parts[0].text;
-      return JSON.parse(text);
+      const parsed = JSON.parse(text);
+      return parsed;
     } catch (error) {
-      console.warn("AI job-fit analysis failed:", error);
+      console.warn("Groq job-fit analysis failed:", error);
       return this.analyzeJobFitOffline(jobDescription);
     }
   },
@@ -316,18 +311,26 @@ Limit summary to 2-3 sentences. Limit strengths/gaps/projects lists to 2-3 bulle
   // Generate blog article outline
   async generateBlogOutline(title) {
     try {
-      const data = await executeGeminiRequest({
-        contents: [{
+      const messages = [
+        {
+          role: "system",
+          content: "You are a senior technical writer. Output structured markdown outlines with ### headers and bullet points."
+        },
+        {
           role: "user",
-          parts: [{ text: `Create a brief professional article outline for the blog title: "${title}". Use markdown headers (###) and bullet lists. Keep it compact.` }]
-        }],
-        generationConfig: { temperature: 0.7, maxOutputTokens: 200 }
+          content: `Create a brief professional article outline for the blog title: "${title}". Keep it compact.`
+        }
+      ];
+
+      const text = await callGroqApi(messages, {
+        temperature: 0.7,
+        max_tokens: 250
       });
 
-      return data.candidates[0].content.parts[0].text;
+      return text;
     } catch (error) {
-      console.warn("AI blog outline generation failed:", error);
-      return `### 1. Introduction to ${title}\n- Brief definition and context\n- Key motivations for builders\n\n### 2. Core Principles\n- Practical tips and design systems\n- Best practice benchmarks\n\n### 3. Step-by-Step Implementation\n- Code patterns and hooks\n- Testing and optimization\n\n### 4. Summary & Conclusions`;
+      console.warn("Groq blog outline generation fallback:", error);
+      return `### 1. Introduction to ${title}\n- Core concepts and motivation\n\n### 2. Architecture & Design\n- Technical patterns and benchmarks\n\n### 3. Implementation Steps\n- Best practices and code structure\n\n### 4. Conclusion & Key Takeaways`;
     }
   },
 
