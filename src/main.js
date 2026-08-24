@@ -1776,6 +1776,25 @@ if (restoreApplyBtn && restoreTextarea) {
   });
 }
 
+const wipeCacheBtn = document.getElementById("admin-settings-wipe-btn");
+if (wipeCacheBtn) {
+  wipeCacheBtn.addEventListener("click", () => {
+    if (confirm("Are you sure you want to clear your local cache? This will wipe out all temporary cached entries and reset to a clean state.")) {
+      localStorage.removeItem("portfolio_projects");
+      localStorage.removeItem("portfolio_tech_stacks");
+      localStorage.removeItem("portfolio_timeline");
+      localStorage.removeItem("portfolio_certificates");
+      localStorage.removeItem("portfolio_hackathons");
+      localStorage.removeItem("portfolio_blog");
+      
+      showToast("Local cache cleared. Reloading...", "delete");
+      setTimeout(() => {
+        window.location.reload();
+      }, 800);
+    }
+  });
+}
+
 // Secure SHA-256 hash helper
 async function sha256(message) {
   const msgBuffer = new TextEncoder().encode(message);
