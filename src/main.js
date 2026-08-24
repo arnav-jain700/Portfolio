@@ -1687,6 +1687,25 @@ document.getElementById("admin-settings-save").addEventListener("click", () => {
   refreshAllPublicViews();
 });
 
+const forceSyncBtn = document.getElementById("admin-settings-force-sync");
+if (forceSyncBtn) {
+  forceSyncBtn.addEventListener("click", async () => {
+    forceSyncBtn.disabled = true;
+    const origHtml = forceSyncBtn.innerHTML;
+    forceSyncBtn.textContent = "Uploading Data to Cloud...";
+    const ok = await Database.syncWithCloud();
+    forceSyncBtn.disabled = false;
+    forceSyncBtn.innerHTML = origHtml;
+    if (ok) {
+      flashButtonSuccess(forceSyncBtn, "✓ Cloud Synced!");
+      showToast("All local data uploaded to Supabase Cloud! Visible on all devices.");
+      refreshAllPublicViews();
+    } else {
+      showToast("Cloud sync encountered an issue. Check Supabase connection.", "error");
+    }
+  });
+}
+
 const exportDbBtn = document.getElementById("admin-settings-export-db");
 if (exportDbBtn) {
   exportDbBtn.addEventListener("click", () => {
@@ -1696,7 +1715,8 @@ if (exportDbBtn) {
       projects: Database.getProjects(),
       timeline: Database.getTimeline(),
       blog: Database.getArticles(),
-      certificates: Database.getCertificates()
+      certificates: Database.getCertificates(),
+      hackathons: Database.getHackathons()
     };
     navigator.clipboard.writeText(JSON.stringify(backup, null, 2)).then(() => {
       const toast = document.getElementById("export-db-toast");
@@ -1706,8 +1726,9 @@ if (exportDbBtn) {
           toast.style.display = "none";
         }, 3000);
       }
+      showToast("Database backup copied to clipboard!");
     }).catch(err => {
-      alert("Failed to copy database: " + err);
+      showToast("Failed to copy database: " + err, "error");
     });
   });
 }
@@ -3559,7 +3580,7 @@ async function initApp() {
     await Database.syncWithCloud();
   }
 
-  renderHomeStats();
+  refreshAllPublicViews();
   initSlider();
   switchPage("home");
   checkServerStatus(); // Query Vercel serverless state
