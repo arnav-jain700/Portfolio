@@ -1733,6 +1733,49 @@ if (exportDbBtn) {
   });
 }
 
+const restoreToggleBtn = document.getElementById("admin-settings-restore-toggle-btn");
+const restoreBox = document.getElementById("admin-restore-box");
+const restoreApplyBtn = document.getElementById("admin-restore-apply-btn");
+const restoreTextarea = document.getElementById("admin-restore-json");
+
+if (restoreToggleBtn && restoreBox) {
+  restoreToggleBtn.addEventListener("click", () => {
+    restoreBox.style.display = restoreBox.style.display === "none" ? "block" : "none";
+  });
+}
+
+if (restoreApplyBtn && restoreTextarea) {
+  restoreApplyBtn.addEventListener("click", async () => {
+    const raw = restoreTextarea.value.trim();
+    if (!raw) {
+      showToast("Please paste your JSON database backup.", "error");
+      return;
+    }
+    try {
+      const parsed = JSON.parse(raw);
+      if (parsed.settings) localStorage.setItem("portfolio_settings", JSON.stringify(parsed.settings));
+      if (Array.isArray(parsed.techStacks)) localStorage.setItem("portfolio_tech_stacks", JSON.stringify(parsed.techStacks));
+      if (Array.isArray(parsed.projects)) localStorage.setItem("portfolio_projects", JSON.stringify(parsed.projects));
+      if (Array.isArray(parsed.timeline)) localStorage.setItem("portfolio_timeline", JSON.stringify(parsed.timeline));
+      if (Array.isArray(parsed.blog)) localStorage.setItem("portfolio_blog", JSON.stringify(parsed.blog));
+      if (Array.isArray(parsed.certificates)) localStorage.setItem("portfolio_certificates", JSON.stringify(parsed.certificates));
+      if (Array.isArray(parsed.hackathons)) localStorage.setItem("portfolio_hackathons", JSON.stringify(parsed.hackathons));
+
+      flashButtonSuccess(restoreApplyBtn, "✓ Restored & Synced!");
+      showToast("Database backup imported successfully! Syncing with cloud...");
+      restoreTextarea.value = "";
+      restoreBox.style.display = "none";
+
+      refreshAllPublicViews();
+      if (isCloudActive) {
+        await Database.syncWithCloud();
+      }
+    } catch (e) {
+      showToast("Invalid JSON backup: " + e.message, "error");
+    }
+  });
+}
+
 // Secure SHA-256 hash helper
 async function sha256(message) {
   const msgBuffer = new TextEncoder().encode(message);

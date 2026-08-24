@@ -179,11 +179,23 @@ export const Database = {
           const itemMap = new Map();
           
           localList.forEach(item => {
-            if (item && item.id) itemMap.set(item.id, item);
+            if (item && item.id) {
+              if (tableName === "portfolio_certificates") {
+                item.url = item.url || item.credentialUrl || "";
+                item.credentialUrl = item.credentialUrl || item.url || "";
+              }
+              itemMap.set(item.id, item);
+            }
           });
 
           cloudList.forEach(item => {
-            if (item && item.id) itemMap.set(item.id, item);
+            if (item && item.id) {
+              if (tableName === "portfolio_certificates") {
+                item.url = item.url || item.credentialUrl || "";
+                item.credentialUrl = item.credentialUrl || item.url || "";
+              }
+              itemMap.set(item.id, item);
+            }
           });
 
           const mergedList = Array.from(itemMap.values());
@@ -196,7 +208,18 @@ export const Database = {
           if (missingInCloud.length > 0) {
             console.log(`Syncing ${missingInCloud.length} local items to Supabase '${tableName}'...`);
             for (const item of missingInCloud) {
-              await supabase.from(tableName).upsert(item).catch(err => console.warn(`Upload failed for item ${item.id}:`, err));
+              const payload = tableName === "portfolio_certificates" 
+                ? { 
+                    id: item.id, 
+                    title: item.title || "", 
+                    issuer: item.issuer || "", 
+                    date: item.date || "", 
+                    credentialUrl: item.url || item.credentialUrl || "", 
+                    skills: item.skills || "", 
+                    image: item.image || "" 
+                  }
+                : item;
+              await supabase.from(tableName).upsert(payload).catch(err => console.warn(`Upload failed for item ${item.id}:`, err));
             }
           }
         } catch (err) {
@@ -567,7 +590,8 @@ export const Database = {
         title: c.title || "",
         issuer: c.issuer || "",
         date: c.date || "",
-        url: c.url || "",
+        url: c.url || c.credentialUrl || "",
+        credentialUrl: c.credentialUrl || c.url || "",
         skills: c.skills || "",
         image: c.image || ""
       }));
@@ -579,6 +603,8 @@ export const Database = {
   saveCertificate(cert) {
     try {
       const certs = this.getCertificates();
+      cert.url = cert.url || cert.credentialUrl || "";
+      cert.credentialUrl = cert.credentialUrl || cert.url || "";
       if (cert.id) {
         const index = certs.findIndex(c => c.id === cert.id);
         if (index !== -1) {
@@ -593,7 +619,16 @@ export const Database = {
       localStorage.setItem("portfolio_certificates", JSON.stringify(certs));
       
       if (isCloudActive && supabase) {
-        supabase.from("portfolio_certificates").upsert(cert).catch(err => console.warn("Supabase certificate save failed:", err));
+        const cloudPayload = {
+          id: cert.id,
+          title: cert.title || "",
+          issuer: cert.issuer || "",
+          date: cert.date || "",
+          credentialUrl: cert.url || cert.credentialUrl || "",
+          skills: cert.skills || "",
+          image: cert.image || ""
+        };
+        supabase.from("portfolio_certificates").upsert(cloudPayload).catch(err => console.warn("Supabase certificate save failed:", err));
       }
     } catch (err) {
       console.error("Local save certificate error:", err);

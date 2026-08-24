@@ -692,14 +692,20 @@
                 <button id="admin-settings-save" class="btn btn-primary">Save Settings</button>
 
                 <div style="margin-top: 40px; padding-top: 24px; border-top: 1px solid var(--border-light);">
-                  <h4 style="margin-bottom: 8px; color: var(--accent-cyan); font-size: 1.1rem;">Export Content for Permanent Seeding</h4>
+                  <h4 style="margin-bottom: 8px; color: var(--accent-cyan); font-size: 1.1rem;">Cloud Sync & Database Backup</h4>
                   <p style="color: var(--text-dimmed); font-size: 0.8rem; margin-bottom: 16px; line-height: 1.5;">
-                    To make your uploaded content visible to everyone (including on mobile devices and other browsers), click below to copy your database backup. Paste it in our chat, and I will hardcode it as your site's default data!
+                    Sync your changes across all devices via Supabase Cloud, or copy/restore a complete JSON backup.
                   </p>
-                  <div style="display: flex; align-items: center; gap: 12px; flex-wrap: wrap;">
+                  <div style="display: flex; align-items: center; gap: 12px; flex-wrap: wrap; margin-bottom: 16px;">
                     <button type="button" id="admin-settings-force-sync" class="btn btn-primary">Sync Local Data to Cloud Now ☁️</button>
                     <button type="button" id="admin-settings-export-db" class="btn btn-secondary">Copy Database Backup</button>
+                    <button type="button" id="admin-settings-restore-toggle-btn" class="btn btn-secondary">Restore from Backup JSON</button>
                     <span id="export-db-toast" style="color: var(--accent-cyan); font-size: 0.85rem; display: none;">✓ Copied to clipboard!</span>
+                  </div>
+                  <div id="admin-restore-box" style="display: none; margin-top: 12px; padding: 16px; background: rgba(0,0,0,0.25); border: 1px dashed var(--border-light); border-radius: var(--radius-sm);">
+                    <label class="form-label" style="margin-bottom: 6px;">Paste Exported JSON Backup</label>
+                    <textarea id="admin-restore-json" class="glass-input" placeholder='{"settings": {...}, "projects": [...], ...}' style="min-height: 100px; font-family: monospace; font-size: 0.8rem; margin-bottom: 10px;"></textarea>
+                    <button type="button" id="admin-restore-apply-btn" class="btn btn-primary" style="font-size: 0.85rem;">Import & Apply to Portfolio</button>
                   </div>
                 </div>
               </div>
