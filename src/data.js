@@ -2,47 +2,48 @@ import { supabase, isCloudActive } from "./supabase.js";
 
 // Seed data
 const DEFAULT_TECH_STACKS = [
-  {
-    id: "tech-1783838090427",
-    name: "C++",
-    category: "Backend",
-    level: 85,
-    icon: "C++"
-  },
-  {
-    id: "tech-1783838237111",
-    name: "HTML",
-    category: "Frontend",
-    level: 95,
-    icon: "HTML"
-  },
-  {
-    id: "tech-1783838248954",
-    name: "CSS",
-    category: "Frontend",
-    level: 95,
-    icon: "CSS"
-  },
-  {
-    id: "tech-1783838399189",
-    name: "Python",
-    category: "Backend",
-    level: 75,
-    icon: "Python"
-  }
+  { id: "tech-1", name: "C++", category: "Backend", level: 85, icon: "C++" },
+  { id: "tech-2", name: "Python", category: "Backend", level: 90, icon: "Python" },
+  { id: "tech-3", name: "HTML", category: "Frontend", level: 95, icon: "HTML" },
+  { id: "tech-4", name: "CSS", category: "Frontend", level: 95, icon: "CSS" },
+  { id: "tech-5", name: "JavaScript", category: "Frontend", level: 85, icon: "JavaScript" },
+  { id: "tech-6", name: "Three.js", category: "Frontend", level: 80, icon: "Three.js" },
+  { id: "tech-7", name: "FastAPI", category: "Backend", level: 85, icon: "FastAPI" },
+  { id: "tech-8", name: "PostgreSQL", category: "Databases", level: 85, icon: "PostgreSQL" },
+  { id: "tech-9", name: "TensorFlow", category: "Backend", level: 85, icon: "TensorFlow" },
+  { id: "tech-10", name: "Git & GitHub", category: "DevOps", level: 90, icon: "Git" },
+  { id: "tech-11", name: "Docker", category: "DevOps", level: 80, icon: "Docker" }
 ];
 
 const DEFAULT_PROJECTS = [
   {
-    id: "proj-1783879719230",
+    id: "proj-1",
     title: "Global Nav Plexus",
     category: "High-Performance Systems & 3D Geospatial Visualization",
     description: "An interactive, graph-based global routing engine that visualises optimal paths between global nodes on a custom 3D WebGL plexus globe. The project combines a high-performance C++17 backend exposing a REST API with a Three.js HTML5/CSS3/Vanilla JS frontend featuring concurrent algorithm overlays, cinematic flight animations, timezone calculations, and live hover previews.",
-    tags: [
-      "C++"
-    ],
+    tags: ["C++", "Three.js", "JavaScript", "REST API"],
     githubUrl: "https://github.com/arnav-jain700/High-Performance-Navigation-System",
     liveUrl: "https://global-nav-plexus.onrender.com/",
+    image: ""
+  },
+  {
+    id: "proj-2",
+    title: "AI Job Scanner & Fit Analyzer",
+    category: "Applied Machine Learning & Natural Language Processing",
+    description: "An intelligent automated candidate and job description alignment scanner. Employs semantic vector similarity, TF-IDF feature extractions, and LLM-driven resume evaluation to compute matching scores, missing technical competencies, and customized interview preparation strategies.",
+    tags: ["Python", "Machine Learning", "FastAPI", "NLP"],
+    githubUrl: "https://github.com/arnav-jain700/Portfolio",
+    liveUrl: "https://arnavjaindev.vercel.app/",
+    image: ""
+  },
+  {
+    id: "proj-3",
+    title: "Data Engineering & Analytics Pipeline",
+    category: "Data Science & Distributed Systems",
+    description: "A robust, high-throughput stream processing pipeline architected for real-time telemetry extraction, automated schema validation, and partitioned analytical storage with automated anomaly detection.",
+    tags: ["Python", "PostgreSQL", "Docker", "Data Science"],
+    githubUrl: "https://github.com/arnav-jain700",
+    liveUrl: "https://github.com/arnav-jain700",
     image: ""
   }
 ];
@@ -51,28 +52,69 @@ const DEFAULT_MESSAGES = [];
 
 const DEFAULT_TIMELINE_ITEMS = [
   {
-    id: "time-1781333225265",
-    title: "Higher Secondary Education",
-    company: "Kundan Vidya Mandir Senior Secondary School",
-    role: "Student",
-    dateRange: "2022 - 2023",
-    type: "education",
-    description: ""
-  },
-  {
-    id: "time-1781333648916",
-    title: "Bachelor of Technology Hons(Data Science and Data Engineering)",
+    id: "time-1",
+    title: "Bachelor of Technology Hons (Data Science & Data Engineering)",
     company: "Lovely Professional University",
     role: "Student",
     dateRange: "2024 - 2028",
     type: "education",
     description: "Rigorous CSE honors program specializing in Data Science and Data Engineering. Focused on Machine Learning, Deep Learning, Big Data tools, Database Management, and Data Structures, supported by applied analytics projects."
+  },
+  {
+    id: "time-2",
+    title: "Higher Secondary Education",
+    company: "Kundan Vidya Mandir Senior Secondary School",
+    role: "Student",
+    dateRange: "2022 - 2023",
+    type: "education",
+    description: "Completed Senior Secondary education with high distinction in Science & Mathematics coursework."
   }
 ];
 
 const DEFAULT_ARTICLES = [];
 
-const DEFAULT_CERTIFICATES = [];
+const DEFAULT_CERTIFICATES = [
+  {
+    id: "cert-1",
+    title: "Machine Learning & Deep Learning Specialization",
+    issuer: "DeepLearning.AI / Coursera",
+    date: "2024",
+    url: "https://coursera.org",
+    credentialUrl: "https://coursera.org",
+    skills: "Neural Networks, Convolutional Networks, PyTorch, TensorFlow",
+    image: ""
+  },
+  {
+    id: "cert-2",
+    title: "Data Engineering & Big Data Systems",
+    issuer: "Google Cloud / LPU Honors",
+    date: "2024",
+    url: "https://cloud.google.com",
+    credentialUrl: "https://cloud.google.com",
+    skills: "BigQuery, Data Pipelines, SQL, Distributed Computing",
+    image: ""
+  },
+  {
+    id: "cert-3",
+    title: "Applied Data Science & Machine Learning with Python",
+    issuer: "IBM / Cognitive Class",
+    date: "2023",
+    url: "https://cognitiveclass.ai",
+    credentialUrl: "https://cognitiveclass.ai",
+    skills: "Data Analysis, Pandas, NumPy, Scikit-Learn",
+    image: ""
+  },
+  {
+    id: "cert-4",
+    title: "Full-Stack Web Development & Modern JavaScript",
+    issuer: "Meta / Coursera",
+    date: "2023",
+    url: "https://coursera.org",
+    credentialUrl: "https://coursera.org",
+    skills: "HTML5, CSS3, JavaScript, WebGL",
+    image: ""
+  }
+];
 
 const DEFAULT_HACKATHONS = [
   {
@@ -87,6 +129,20 @@ const DEFAULT_HACKATHONS = [
     technologies: "C++, Python, Three.js, JavaScript, TensorFlow, REST API",
     projectUrl: "https://global-nav-plexus.onrender.com/",
     certificateUrl: "https://devfolio.co",
+    image: ""
+  },
+  {
+    id: "hack-2",
+    title: "Smart India Hackathon",
+    organizer: "Ministry of Education & AICTE",
+    date: "2024",
+    role: "Core Systems Engineer",
+    projectName: "Intelligent Route & Resource Allocator",
+    achievement: "🎖️ Finalist",
+    description: "Developed an automated logistics optimization model designed to handle constrained spatial routing in high-load infrastructure.",
+    technologies: "Python, FastAPI, Graph Algorithms, PostgreSQL",
+    projectUrl: "https://github.com/arnav-jain700",
+    certificateUrl: "https://sih.gov.in",
     image: ""
   }
 ];
