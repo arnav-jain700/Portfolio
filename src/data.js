@@ -1,58 +1,46 @@
 import { supabase, isCloudActive } from "./supabase.js";
 
-// Seed data
-const DEFAULT_TECH_STACKS = [
-  { id: "tech-1", name: "C++", category: "Backend", level: 85, icon: "C++" },
-  { id: "tech-2", name: "HTML", category: "Frontend", level: 95, icon: "HTML" },
-  { id: "tech-3", name: "CSS", category: "Frontend", level: 95, icon: "CSS" },
-  { id: "tech-4", name: "Python", category: "Backend", level: 80, icon: "Python" }
-];
-
-const DEFAULT_PROJECTS = [
-  {
-    id: "proj-1",
-    title: "Global Nav Plexus",
-    category: "High-Performance Systems & 3D Geospatial Visualization",
-    description: "An interactive, graph-based global routing engine that visualises optimal paths between global nodes on a custom 3D WebGL plexus globe. The project combines a high-performance C++17 backend exposing a REST API with a Three.js HTML5/CSS3/Vanilla JS frontend featuring concurrent algorithm overlays, cinematic flight animations, timezone calculations, and live hover previews.",
-    tags: ["C++", "Three.js", "JavaScript", "REST API"],
-    githubUrl: "https://github.com/arnav-jain700/High-Performance-Navigation-System",
-    liveUrl: "https://global-nav-plexus.onrender.com/",
-    image: ""
+// One-time automatic cache purge to wipe any previous mock/cached entries
+if (typeof window !== "undefined" && window.localStorage) {
+  if (localStorage.getItem("portfolio_clean_reset_v3") !== "true") {
+    localStorage.removeItem("portfolio_projects");
+    localStorage.removeItem("portfolio_tech_stacks");
+    localStorage.removeItem("portfolio_timeline");
+    localStorage.removeItem("portfolio_certificates");
+    localStorage.removeItem("portfolio_hackathons");
+    localStorage.removeItem("portfolio_blog");
+    localStorage.removeItem("portfolio_messages");
+    localStorage.setItem("portfolio_clean_reset_v3", "true");
   }
-];
+}
 
+// Clean Default Seeds (All empty)
+const DEFAULT_TECH_STACKS = [];
+const DEFAULT_PROJECTS = [];
 const DEFAULT_MESSAGES = [];
-
-const DEFAULT_TIMELINE_ITEMS = [
-  {
-    id: "time-1",
-    title: "Bachelor of Technology Hons (Data Science and Data Engineering)",
-    company: "Lovely Professional University",
-    role: "Student",
-    dateRange: "2024 - 2028",
-    type: "education",
-    description: "Rigorous CSE honors program specializing in Data Science and Data Engineering. Focused on Machine Learning, Deep Learning, Big Data tools, Database Management, and Data Structures, supported by applied analytics projects."
-  },
-  {
-    id: "time-2",
-    title: "Higher Secondary Education",
-    company: "Kundan Vidya Mandir Senior Secondary School",
-    role: "Student",
-    dateRange: "2022 - 2023",
-    type: "education",
-    description: "Completed Senior Secondary education with high distinction in Science & Mathematics coursework."
-  }
-];
-
+const DEFAULT_TIMELINE_ITEMS = [];
 const DEFAULT_ARTICLES = [];
 const DEFAULT_CERTIFICATES = [];
 const DEFAULT_HACKATHONS = [];
+
+const DEFAULT_SETTINGS = {
+  ownerName: "Arnav Jain",
+  ownerBio: "Data Science and AI Developer dedicated to forging robust data architectures and breathing life into complex systems through generative, intelligent models.",
+  email: "arnavjain1905@gmail.com",
+  location: "Ludhiana, Punjab, India",
+  linkedin: "https://www.linkedin.com/in/arnav-jain007/",
+  github: "https://github.com/arnav-jain700",
+  codolio: "https://codolio.com/profile/Jarnav",
+  medium: "https://medium.com/@arnav4334",
+  geminiKey: "",
+  categories: ["Frontend", "Backend", "Databases", "DevOps", "Version Control"]
+};
 
 // Initialize Storage
 function initStorage() {
   const getOrSeed = (key, defaultData) => {
     const existing = localStorage.getItem(key);
-    if (!existing || (existing === "[]" && defaultData.length > 0)) {
+    if (!existing) {
       localStorage.setItem(key, JSON.stringify(defaultData));
     }
   };
@@ -67,61 +55,49 @@ function initStorage() {
 
   const currentSettings = localStorage.getItem("portfolio_settings");
   if (!currentSettings) {
-    localStorage.setItem("portfolio_settings", JSON.stringify({
-      ownerName: "Arnav Jain",
-      ownerBio: "I am a Data Science and AI Developer dedicated to forging robust data architectures and breathing life into complex systems through generative, intelligent models.",
-      email: "arnavjain1905@gmail.com",
-      location: "Ludhiana, Punjab, India",
-      linkedin: "https://www.linkedin.com/in/arnav-jain007/",
-      github: "https://github.com/arnav-jain700",
-      codolio: "https://codolio.com/profile/Jarnav",
-      medium: "https://medium.com/@arnav4334",
-      geminiKey: "",
-      categories: ["Frontend", "Backend", "Databases", "DevOps", "Version Control"]
-    }));
+    localStorage.setItem("portfolio_settings", JSON.stringify(DEFAULT_SETTINGS));
   } else {
-    const parsed = JSON.parse(currentSettings);
-    const updated = {
-      ownerName: parsed.ownerName || "Arnav Jain",
-      ownerBio: parsed.ownerBio || "I am a Data Science and AI Developer dedicated to forging robust data architectures and breathing life into complex systems through generative, intelligent models.",
-      email: parsed.email || "arnavjain1905@gmail.com",
-      location: parsed.location || "Ludhiana, Punjab, India",
-      linkedin: parsed.linkedin || "https://www.linkedin.com/in/arnav-jain007/",
-      github: parsed.github || "https://github.com/arnav-jain700",
-      codolio: parsed.codolio || "https://codolio.com/profile/Jarnav",
-      medium: parsed.medium || "https://medium.com/@arnav4334",
-      geminiKey: parsed.geminiKey || "",
-      categories: parsed.categories || ["Frontend", "Backend", "Databases", "DevOps", "Version Control"]
-    };
-    localStorage.setItem("portfolio_settings", JSON.stringify(updated));
+    try {
+      const parsed = JSON.parse(currentSettings);
+      const updated = {
+        ...DEFAULT_SETTINGS,
+        ...parsed,
+        categories: parsed.categories && parsed.categories.length > 0 ? parsed.categories : DEFAULT_SETTINGS.categories
+      };
+      localStorage.setItem("portfolio_settings", JSON.stringify(updated));
+    } catch (e) {
+      localStorage.setItem("portfolio_settings", JSON.stringify(DEFAULT_SETTINGS));
+    }
   }
 }
 
 initStorage();
 
 export const Database = {
-  // Cloud Database Sync
+  // Global Cloud Database Sync (Cloud is the primary source of truth)
   async syncWithCloud() {
     if (!isCloudActive || !supabase) return false;
     try {
-      console.log("Syncing database with Supabase Cloud...");
+      console.log("Fetching global portfolio data from Supabase Cloud...");
       
-      // Sync settings
+      // 1. Sync Settings
       try {
-        const { data: settingsData } = await supabase.from("portfolio_settings").select("*").eq("id", "main_settings").maybeSingle();
-        const localSettings = JSON.parse(localStorage.getItem("portfolio_settings") || "{}");
-        if (!settingsData && localSettings && localSettings.ownerName) {
-          console.log("Cloud settings empty. Uploading local settings cache...");
-          await supabase.from("portfolio_settings").upsert({ id: "main_settings", ...localSettings });
-        } else if (settingsData) {
+        const { data: settingsData, error } = await supabase.from("portfolio_settings").select("*").eq("id", "main_settings").maybeSingle();
+        if (!error && settingsData) {
           const { id, ...cleanSettings } = settingsData;
+          const localSettings = JSON.parse(localStorage.getItem("portfolio_settings") || "{}");
           localStorage.setItem("portfolio_settings", JSON.stringify({ ...localSettings, ...cleanSettings }));
+        } else if (!settingsData) {
+          const localSettings = JSON.parse(localStorage.getItem("portfolio_settings") || "{}");
+          if (localSettings && localSettings.ownerName) {
+            await supabase.from("portfolio_settings").upsert({ id: "main_settings", ...localSettings });
+          }
         }
       } catch (err) {
-        console.warn("Supabase settings read failed:", err);
+        console.warn("Supabase settings sync error:", err);
       }
 
-      // Helper to fetch collection and merge with localStorage safely without overwriting new local entries
+      // 2. Helper to fetch any table from cloud and update local fast-read cache
       const syncTable = async (tableName, storageKey) => {
         try {
           const { data: cloudItems, error } = await supabase.from(tableName).select("*");
@@ -129,58 +105,27 @@ export const Database = {
             console.warn(`Supabase read error for '${tableName}':`, error);
             return;
           }
-          const localList = JSON.parse(localStorage.getItem(storageKey) || "[]");
-          const cloudList = cloudItems || [];
-
-          // Map by ID to merge local and cloud items without data loss
-          const itemMap = new Map();
-          
-          localList.forEach(item => {
-            if (item && item.id) {
+          if (Array.isArray(cloudItems)) {
+            const cleaned = cloudItems.map(item => {
               if (tableName === "portfolio_certificates") {
-                item.url = item.url || item.credentialUrl || "";
-                item.credentialUrl = item.credentialUrl || item.url || "";
+                return {
+                  ...item,
+                  url: item.url || item.credentialUrl || "",
+                  credentialUrl: item.credentialUrl || item.url || ""
+                };
               }
-              itemMap.set(item.id, item);
-            }
-          });
-
-          cloudList.forEach(item => {
-            if (item && item.id) {
-              if (tableName === "portfolio_certificates") {
-                item.url = item.url || item.credentialUrl || "";
-                item.credentialUrl = item.credentialUrl || item.url || "";
+              if (tableName === "portfolio_projects") {
+                return {
+                  ...item,
+                  tags: Array.isArray(item.tags) ? item.tags : (typeof item.tags === "string" ? item.tags.split(",").map(t => t.trim()).filter(Boolean) : [])
+                };
               }
-              itemMap.set(item.id, item);
-            }
-          });
-
-          const mergedList = Array.from(itemMap.values());
-          localStorage.setItem(storageKey, JSON.stringify(mergedList));
-
-          // Upload any local items missing from cloud
-          const cloudIds = new Set(cloudList.map(i => i.id));
-          const missingInCloud = localList.filter(i => i && i.id && !cloudIds.has(i.id));
-
-          if (missingInCloud.length > 0) {
-            console.log(`Syncing ${missingInCloud.length} local items to Supabase '${tableName}'...`);
-            for (const item of missingInCloud) {
-              const payload = tableName === "portfolio_certificates" 
-                ? { 
-                    id: item.id, 
-                    title: item.title || "", 
-                    issuer: item.issuer || "", 
-                    date: item.date || "", 
-                    credentialUrl: item.url || item.credentialUrl || "", 
-                    skills: item.skills || "", 
-                    image: item.image || "" 
-                  }
-                : item;
-              await supabase.from(tableName).upsert(payload).catch(err => console.warn(`Upload failed for item ${item.id}:`, err));
-            }
+              return item;
+            });
+            localStorage.setItem(storageKey, JSON.stringify(cleaned));
           }
         } catch (err) {
-          console.warn(`Supabase table sync failed for '${tableName}':`, err);
+          console.warn(`Supabase table sync error for '${tableName}':`, err);
         }
       };
 
@@ -194,15 +139,15 @@ export const Database = {
         syncTable("portfolio_messages", "portfolio_messages")
       ]);
 
-      console.log("Supabase Cloud sync complete. Cache updated.");
+      console.log("Global cloud synchronization complete. Cache updated.");
       return true;
     } catch (e) {
-      console.error("Supabase Cloud sync failed, using cached local data:", e);
+      console.error("Cloud synchronization failed:", e);
       return false;
     }
   },
 
-  // Projects CRUD
+  // Projects CRUD (Global & Local)
   getProjects() {
     try {
       const items = JSON.parse(localStorage.getItem("portfolio_projects") || "[]");
@@ -245,7 +190,7 @@ export const Database = {
         supabase.from("portfolio_projects").upsert(project).catch(err => console.warn("Supabase project save failed:", err));
       }
     } catch (err) {
-      console.error("Local save project error:", err);
+      console.error("Save project error:", err);
     }
     return project;
   },
@@ -260,11 +205,11 @@ export const Database = {
         supabase.from("portfolio_projects").delete().eq("id", id).catch(err => console.warn("Supabase project delete failed:", err));
       }
     } catch (err) {
-      console.error("Local delete project error:", err);
+      console.error("Delete project error:", err);
     }
   },
 
-  // Tech Stacks CRUD
+  // Tech Stacks CRUD (Global & Local)
   getTechStacks() {
     try {
       const items = JSON.parse(localStorage.getItem("portfolio_tech_stacks") || "[]");
@@ -302,7 +247,7 @@ export const Database = {
         supabase.from("portfolio_tech_stacks").upsert(stack).catch(err => console.warn("Supabase skill save failed:", err));
       }
     } catch (err) {
-      console.error("Local save skill error:", err);
+      console.error("Save skill error:", err);
     }
     return stack;
   },
@@ -317,7 +262,7 @@ export const Database = {
         supabase.from("portfolio_tech_stacks").delete().eq("id", id).catch(err => console.warn("Supabase skill delete failed:", err));
       }
     } catch (err) {
-      console.error("Local delete skill error:", err);
+      console.error("Delete skill error:", err);
     }
   },
 
@@ -344,7 +289,7 @@ export const Database = {
         supabase.from("portfolio_messages").upsert(msg).catch(err => console.warn("Supabase message save failed:", err));
       }
     } catch (err) {
-      console.error("Local save message error:", err);
+      console.error("Save message error:", err);
     }
     return msg;
   },
@@ -359,7 +304,7 @@ export const Database = {
         supabase.from("portfolio_messages").delete().eq("id", id).catch(err => console.warn("Supabase message delete failed:", err));
       }
     } catch (err) {
-      console.error("Local delete message error:", err);
+      console.error("Delete message error:", err);
     }
   },
 
@@ -376,7 +321,7 @@ export const Database = {
         }
       }
     } catch (err) {
-      console.error("Local message read error:", err);
+      console.error("Message read error:", err);
     }
   },
 
@@ -393,16 +338,16 @@ export const Database = {
         }
       }
     } catch (err) {
-      console.error("Local message toggle error:", err);
+      console.error("Message toggle error:", err);
     }
   },
 
-  // Settings & Bio
+  // Settings & Bio (Global & Local)
   getSettings() {
     try {
       return JSON.parse(localStorage.getItem("portfolio_settings") || "{}");
     } catch (e) {
-      return {};
+      return DEFAULT_SETTINGS;
     }
   },
   
@@ -417,12 +362,12 @@ export const Database = {
       }
       return updated;
     } catch (err) {
-      console.error("Local save settings error:", err);
+      console.error("Save settings error:", err);
       return settings;
     }
   },
 
-  // Timeline CRUD
+  // Timeline CRUD (Global & Local)
   getTimeline() {
     try {
       const items = JSON.parse(localStorage.getItem("portfolio_timeline") || "[]");
@@ -460,7 +405,7 @@ export const Database = {
         supabase.from("portfolio_timeline").upsert(item).catch(err => console.warn("Supabase timeline save failed:", err));
       }
     } catch (err) {
-      console.error("Local save timeline error:", err);
+      console.error("Save timeline error:", err);
     }
     return item;
   },
@@ -475,11 +420,11 @@ export const Database = {
         supabase.from("portfolio_timeline").delete().eq("id", id).catch(err => console.warn("Supabase timeline delete failed:", err));
       }
     } catch (err) {
-      console.error("Local delete timeline error:", err);
+      console.error("Delete timeline error:", err);
     }
   },
 
-  // Blog CRUD
+  // Blog CRUD (Global & Local)
   getArticles() {
     try {
       const items = JSON.parse(localStorage.getItem("portfolio_blog") || "[]");
@@ -519,7 +464,7 @@ export const Database = {
         supabase.from("portfolio_blog").upsert(article).catch(err => console.warn("Supabase article save failed:", err));
       }
     } catch (err) {
-      console.error("Local save article error:", err);
+      console.error("Save article error:", err);
     }
     return article;
   },
@@ -534,11 +479,11 @@ export const Database = {
         supabase.from("portfolio_blog").delete().eq("id", id).catch(err => console.warn("Supabase article delete failed:", err));
       }
     } catch (err) {
-      console.error("Local delete article error:", err);
+      console.error("Delete article error:", err);
     }
   },
 
-  // Certificates CRUD
+  // Certificates CRUD (Global & Local)
   getCertificates() {
     try {
       const items = JSON.parse(localStorage.getItem("portfolio_certificates") || "[]");
@@ -588,7 +533,7 @@ export const Database = {
         supabase.from("portfolio_certificates").upsert(cloudPayload).catch(err => console.warn("Supabase certificate save failed:", err));
       }
     } catch (err) {
-      console.error("Local save certificate error:", err);
+      console.error("Save certificate error:", err);
     }
     return cert;
   },
@@ -603,11 +548,11 @@ export const Database = {
         supabase.from("portfolio_certificates").delete().eq("id", id).catch(err => console.warn("Supabase certificate delete failed:", err));
       }
     } catch (err) {
-      console.error("Local delete certificate error:", err);
+      console.error("Delete certificate error:", err);
     }
   },
 
-  // Hackathons CRUD
+  // Hackathons CRUD (Global & Local)
   getHackathons() {
     try {
       const items = JSON.parse(localStorage.getItem("portfolio_hackathons") || "[]");
@@ -650,7 +595,7 @@ export const Database = {
         supabase.from("portfolio_hackathons").upsert(hackathon).catch(err => console.warn("Supabase hackathon save failed:", err));
       }
     } catch (err) {
-      console.error("Local save hackathon error:", err);
+      console.error("Save hackathon error:", err);
     }
     return hackathon;
   },
@@ -665,7 +610,7 @@ export const Database = {
         supabase.from("portfolio_hackathons").delete().eq("id", id).catch(err => console.warn("Supabase hackathon delete failed:", err));
       }
     } catch (err) {
-      console.error("Local delete hackathon error:", err);
+      console.error("Delete hackathon error:", err);
     }
   }
 };
