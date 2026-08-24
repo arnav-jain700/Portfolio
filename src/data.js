@@ -97,7 +97,7 @@ export const Database = {
         console.warn("Supabase settings sync error:", err);
       }
 
-      // 2. Helper to fetch any table from cloud and update local fast-read cache
+      // 2. Helper to fetch any table from cloud and update local fast-read cache, or upload local if cloud is empty
       const syncTable = async (tableName, storageKey) => {
         try {
           const { data: cloudItems, error } = await supabase.from(tableName).select("*");
@@ -105,8 +105,11 @@ export const Database = {
             console.warn(`Supabase read error for '${tableName}':`, error);
             return;
           }
-          if (Array.isArray(cloudItems)) {
-            const cleaned = cloudItems.map(item => {
+          const localItems = JSON.parse(localStorage.getItem(storageKey) || "[]");
+          const cloudList = Array.isArray(cloudItems) ? cloudItems : [];
+
+          if (cloudList.length > 0) {
+            const cleaned = cloudList.map(item => {
               if (tableName === "portfolio_certificates") {
                 return {
                   ...item,
@@ -123,6 +126,22 @@ export const Database = {
               return item;
             });
             localStorage.setItem(storageKey, JSON.stringify(cleaned));
+          } else if (localItems.length > 0) {
+            console.log(`Cloud '${tableName}' has 0 rows. Uploading ${localItems.length} local items to Cloud...`);
+            for (const item of localItems) {
+              const payload = tableName === "portfolio_certificates" 
+                ? { 
+                    id: item.id, 
+                    title: item.title || "", 
+                    issuer: item.issuer || "", 
+                    date: item.date || "", 
+                    credentialUrl: item.url || item.credentialUrl || "", 
+                    skills: item.skills || "", 
+                    image: item.image || "" 
+                  }
+                : item;
+              await supabase.from(tableName).upsert(payload).catch(err => console.warn(`Auto-upload failed for ${tableName}:`, err));
+            }
           }
         } catch (err) {
           console.warn(`Supabase table sync error for '${tableName}':`, err);
@@ -147,6 +166,51 @@ export const Database = {
     }
   },
 
+  // Direct upload of all local records to Supabase Cloud
+  async uploadAllLocalToCloud() {
+    if (!isCloudActive || !supabase) return false;
+    try {
+      console.log("Pushing all local database tables to Supabase Cloud...");
+      
+      const settings = this.getSettings();
+      if (settings && settings.ownerName) {
+        await supabase.from("portfolio_settings").upsert({ id: "main_settings", ...settings });
+      }
+
+      const uploadTable = async (tableName, items, transform) => {
+        if (!Array.isArray(items) || items.length === 0) return;
+        for (const it of items) {
+          const payload = transform ? transform(it) : it;
+          const { error } = await supabase.from(tableName).upsert(payload);
+          if (error) console.warn(`Error uploading item ${it.id} to ${tableName}:`, error);
+        }
+      };
+
+      await Promise.all([
+        uploadTable("portfolio_projects", this.getProjects()),
+        uploadTable("portfolio_tech_stacks", this.getTechStacks()),
+        uploadTable("portfolio_timeline", this.getTimeline()),
+        uploadTable("portfolio_blog", this.getArticles()),
+        uploadTable("portfolio_certificates", this.getCertificates(), c => ({
+          id: c.id,
+          title: c.title || "",
+          issuer: c.issuer || "",
+          date: c.date || "",
+          credentialUrl: c.url || c.credentialUrl || "",
+          skills: c.skills || "",
+          image: c.image || ""
+        })),
+        uploadTable("portfolio_hackathons", this.getHackathons())
+      ]);
+
+      console.log("All local items successfully uploaded to Supabase Cloud!");
+      return true;
+    } catch (e) {
+      console.error("uploadAllLocalToCloud error:", e);
+      return false;
+    }
+  },
+
   // Projects CRUD (Global & Local)
   getProjects() {
     try {
@@ -167,7 +231,7 @@ export const Database = {
     }
   },
   
-  saveProject(project) {
+  async saveProject(project) {
     try {
       const projects = this.getProjects();
       if (!Array.isArray(project.tags)) {
@@ -187,7 +251,8 @@ export const Database = {
       localStorage.setItem("portfolio_projects", JSON.stringify(projects));
       
       if (isCloudActive && supabase) {
-        supabase.from("portfolio_projects").upsert(project).catch(err => console.warn("Supabase project save failed:", err));
+        const { error } = await supabase.from("portfolio_projects").upsert(project);
+        if (error) console.error("Supabase project save error:", error);
       }
     } catch (err) {
       console.error("Save project error:", err);
@@ -195,14 +260,15 @@ export const Database = {
     return project;
   },
   
-  deleteProject(id) {
+  async deleteProject(id) {
     try {
       const projects = this.getProjects();
       const filtered = projects.filter(p => p.id !== id);
       localStorage.setItem("portfolio_projects", JSON.stringify(filtered));
       
       if (isCloudActive && supabase) {
-        supabase.from("portfolio_projects").delete().eq("id", id).catch(err => console.warn("Supabase project delete failed:", err));
+        const { error } = await supabase.from("portfolio_projects").delete().eq("id", id);
+        if (error) console.error("Supabase project delete error:", error);
       }
     } catch (err) {
       console.error("Delete project error:", err);
@@ -226,7 +292,7 @@ export const Database = {
     }
   },
   
-  saveTechStack(stack) {
+  async saveTechStack(stack) {
     try {
       const stacks = this.getTechStacks();
       stack.level = Number(stack.level) || 80;
@@ -244,7 +310,8 @@ export const Database = {
       localStorage.setItem("portfolio_tech_stacks", JSON.stringify(stacks));
       
       if (isCloudActive && supabase) {
-        supabase.from("portfolio_tech_stacks").upsert(stack).catch(err => console.warn("Supabase skill save failed:", err));
+        const { error } = await supabase.from("portfolio_tech_stacks").upsert(stack);
+        if (error) console.error("Supabase skill save error:", error);
       }
     } catch (err) {
       console.error("Save skill error:", err);
@@ -252,14 +319,15 @@ export const Database = {
     return stack;
   },
   
-  deleteTechStack(id) {
+  async deleteTechStack(id) {
     try {
       const stacks = this.getTechStacks();
       const filtered = stacks.filter(s => s.id !== id);
       localStorage.setItem("portfolio_tech_stacks", JSON.stringify(filtered));
       
       if (isCloudActive && supabase) {
-        supabase.from("portfolio_tech_stacks").delete().eq("id", id).catch(err => console.warn("Supabase skill delete failed:", err));
+        const { error } = await supabase.from("portfolio_tech_stacks").delete().eq("id", id);
+        if (error) console.error("Supabase skill delete error:", error);
       }
     } catch (err) {
       console.error("Delete skill error:", err);
@@ -276,7 +344,7 @@ export const Database = {
     }
   },
   
-  saveMessage(msg) {
+  async saveMessage(msg) {
     try {
       const messages = this.getMessages();
       msg.id = msg.id || "msg-" + Date.now();
@@ -286,7 +354,8 @@ export const Database = {
       localStorage.setItem("portfolio_messages", JSON.stringify(messages));
       
       if (isCloudActive && supabase) {
-        supabase.from("portfolio_messages").upsert(msg).catch(err => console.warn("Supabase message save failed:", err));
+        const { error } = await supabase.from("portfolio_messages").upsert(msg);
+        if (error) console.error("Supabase message save error:", error);
       }
     } catch (err) {
       console.error("Save message error:", err);
@@ -294,21 +363,22 @@ export const Database = {
     return msg;
   },
   
-  deleteMessage(id) {
+  async deleteMessage(id) {
     try {
       const messages = this.getMessages();
       const filtered = messages.filter(m => m.id !== id);
       localStorage.setItem("portfolio_messages", JSON.stringify(filtered));
       
       if (isCloudActive && supabase) {
-        supabase.from("portfolio_messages").delete().eq("id", id).catch(err => console.warn("Supabase message delete failed:", err));
+        const { error } = await supabase.from("portfolio_messages").delete().eq("id", id);
+        if (error) console.error("Supabase message delete error:", error);
       }
     } catch (err) {
       console.error("Delete message error:", err);
     }
   },
 
-  markMessageAsRead(id) {
+  async markMessageAsRead(id) {
     try {
       const messages = this.getMessages();
       const index = messages.findIndex(m => m.id === id);
@@ -317,7 +387,7 @@ export const Database = {
         localStorage.setItem("portfolio_messages", JSON.stringify(messages));
         
         if (isCloudActive && supabase) {
-          supabase.from("portfolio_messages").upsert(messages[index]).catch(err => console.warn("Supabase message read update failed:", err));
+          await supabase.from("portfolio_messages").upsert(messages[index]);
         }
       }
     } catch (err) {
@@ -325,7 +395,7 @@ export const Database = {
     }
   },
 
-  toggleMessageRead(id) {
+  async toggleMessageRead(id) {
     try {
       const messages = this.getMessages();
       const index = messages.findIndex(m => m.id === id);
@@ -334,7 +404,7 @@ export const Database = {
         localStorage.setItem("portfolio_messages", JSON.stringify(messages));
         
         if (isCloudActive && supabase) {
-          supabase.from("portfolio_messages").upsert(messages[index]).catch(err => console.warn("Supabase message read toggle failed:", err));
+          await supabase.from("portfolio_messages").upsert(messages[index]);
         }
       }
     } catch (err) {
@@ -351,14 +421,15 @@ export const Database = {
     }
   },
   
-  saveSettings(settings) {
+  async saveSettings(settings) {
     try {
       const current = this.getSettings();
       const updated = { ...current, ...settings };
       localStorage.setItem("portfolio_settings", JSON.stringify(updated));
       
       if (isCloudActive && supabase) {
-        supabase.from("portfolio_settings").upsert({ id: "main_settings", ...updated }).catch(err => console.warn("Supabase settings save failed:", err));
+        const { error } = await supabase.from("portfolio_settings").upsert({ id: "main_settings", ...updated });
+        if (error) console.error("Supabase settings save error:", error);
       }
       return updated;
     } catch (err) {
@@ -385,7 +456,7 @@ export const Database = {
     }
   },
 
-  saveTimelineItem(item) {
+  async saveTimelineItem(item) {
     try {
       const timeline = this.getTimeline();
       if (item.id) {
@@ -402,7 +473,9 @@ export const Database = {
       localStorage.setItem("portfolio_timeline", JSON.stringify(timeline));
       
       if (isCloudActive && supabase) {
-        supabase.from("portfolio_timeline").upsert(item).catch(err => console.warn("Supabase timeline save failed:", err));
+        const { error } = await supabase.from("portfolio_timeline").upsert(item);
+        if (error) console.error("Supabase timeline save error:", error);
+        else console.log("Timeline item synced to Supabase Cloud:", item.id);
       }
     } catch (err) {
       console.error("Save timeline error:", err);
@@ -410,14 +483,15 @@ export const Database = {
     return item;
   },
 
-  deleteTimelineItem(id) {
+  async deleteTimelineItem(id) {
     try {
       const timeline = this.getTimeline();
       const filtered = timeline.filter(t => t.id !== id);
       localStorage.setItem("portfolio_timeline", JSON.stringify(filtered));
       
       if (isCloudActive && supabase) {
-        supabase.from("portfolio_timeline").delete().eq("id", id).catch(err => console.warn("Supabase timeline delete failed:", err));
+        const { error } = await supabase.from("portfolio_timeline").delete().eq("id", id);
+        if (error) console.error("Supabase timeline delete error:", error);
       }
     } catch (err) {
       console.error("Delete timeline error:", err);
@@ -441,7 +515,7 @@ export const Database = {
     }
   },
 
-  saveArticle(article) {
+  async saveArticle(article) {
     try {
       const articles = this.getArticles();
       if (!Array.isArray(article.tags)) {
@@ -461,7 +535,8 @@ export const Database = {
       localStorage.setItem("portfolio_blog", JSON.stringify(articles));
       
       if (isCloudActive && supabase) {
-        supabase.from("portfolio_blog").upsert(article).catch(err => console.warn("Supabase article save failed:", err));
+        const { error } = await supabase.from("portfolio_blog").upsert(article);
+        if (error) console.error("Supabase blog save error:", error);
       }
     } catch (err) {
       console.error("Save article error:", err);
@@ -469,14 +544,15 @@ export const Database = {
     return article;
   },
 
-  deleteArticle(id) {
+  async deleteArticle(id) {
     try {
       const articles = this.getArticles();
       const filtered = articles.filter(a => a.id !== id);
       localStorage.setItem("portfolio_blog", JSON.stringify(filtered));
       
       if (isCloudActive && supabase) {
-        supabase.from("portfolio_blog").delete().eq("id", id).catch(err => console.warn("Supabase article delete failed:", err));
+        const { error } = await supabase.from("portfolio_blog").delete().eq("id", id);
+        if (error) console.error("Supabase blog delete error:", error);
       }
     } catch (err) {
       console.error("Delete article error:", err);
@@ -502,7 +578,7 @@ export const Database = {
     }
   },
 
-  saveCertificate(cert) {
+  async saveCertificate(cert) {
     try {
       const certs = this.getCertificates();
       cert.url = cert.url || cert.credentialUrl || "";
@@ -530,7 +606,8 @@ export const Database = {
           skills: cert.skills || "",
           image: cert.image || ""
         };
-        supabase.from("portfolio_certificates").upsert(cloudPayload).catch(err => console.warn("Supabase certificate save failed:", err));
+        const { error } = await supabase.from("portfolio_certificates").upsert(cloudPayload);
+        if (error) console.error("Supabase certificate save error:", error);
       }
     } catch (err) {
       console.error("Save certificate error:", err);
@@ -538,14 +615,15 @@ export const Database = {
     return cert;
   },
 
-  deleteCertificate(id) {
+  async deleteCertificate(id) {
     try {
       const certs = this.getCertificates();
       const filtered = certs.filter(c => c.id !== id);
       localStorage.setItem("portfolio_certificates", JSON.stringify(filtered));
       
       if (isCloudActive && supabase) {
-        supabase.from("portfolio_certificates").delete().eq("id", id).catch(err => console.warn("Supabase certificate delete failed:", err));
+        const { error } = await supabase.from("portfolio_certificates").delete().eq("id", id);
+        if (error) console.error("Supabase certificate delete error:", error);
       }
     } catch (err) {
       console.error("Delete certificate error:", err);
@@ -575,7 +653,7 @@ export const Database = {
     }
   },
 
-  saveHackathon(hackathon) {
+  async saveHackathon(hackathon) {
     try {
       const hackathons = this.getHackathons();
       if (hackathon.id) {
@@ -592,7 +670,8 @@ export const Database = {
       localStorage.setItem("portfolio_hackathons", JSON.stringify(hackathons));
       
       if (isCloudActive && supabase) {
-        supabase.from("portfolio_hackathons").upsert(hackathon).catch(err => console.warn("Supabase hackathon save failed:", err));
+        const { error } = await supabase.from("portfolio_hackathons").upsert(hackathon);
+        if (error) console.error("Supabase hackathon save error:", error);
       }
     } catch (err) {
       console.error("Save hackathon error:", err);
@@ -600,14 +679,15 @@ export const Database = {
     return hackathon;
   },
 
-  deleteHackathon(id) {
+  async deleteHackathon(id) {
     try {
       const hackathons = this.getHackathons();
       const filtered = hackathons.filter(h => h.id !== id);
       localStorage.setItem("portfolio_hackathons", JSON.stringify(filtered));
       
       if (isCloudActive && supabase) {
-        supabase.from("portfolio_hackathons").delete().eq("id", id).catch(err => console.warn("Supabase hackathon delete failed:", err));
+        const { error } = await supabase.from("portfolio_hackathons").delete().eq("id", id);
+        if (error) console.error("Supabase hackathon delete error:", error);
       }
     } catch (err) {
       console.error("Delete hackathon error:", err);

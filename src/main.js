@@ -1137,7 +1137,7 @@ const techForm = document.getElementById("admin-tech-form");
 const cancelTechEdit = document.getElementById("admin-tech-cancel-btn");
 const submitTechBtn = document.getElementById("admin-tech-submit-btn");
 
-techForm.addEventListener("submit", (e) => {
+techForm.addEventListener("submit", async (e) => {
   e.preventDefault();
   const id = document.getElementById("admin-tech-id").value;
   const name = document.getElementById("admin-tech-name").value.trim();
@@ -1157,11 +1157,11 @@ techForm.addEventListener("submit", (e) => {
     const categories = settings.categories || ["Frontend", "Backend", "Databases", "DevOps"];
     if (!categories.includes(category)) {
       categories.push(category);
-      Database.saveSettings({ categories });
+      await Database.saveSettings({ categories });
     }
   }
 
-  Database.saveTechStack({ id: id || undefined, name, category, level, icon: name });
+  await Database.saveTechStack({ id: id || undefined, name, category, level, icon: name });
   flashButtonSuccess(submitTechBtn, id ? "✓ Updated!" : "✓ Added to Toolkit!");
   showToast(id ? `Updated technology "${name}"` : `Added "${name}" to toolkit!`);
   resetTechForm();
@@ -1378,7 +1378,7 @@ document.getElementById("admin-project-ai-suggest").addEventListener("click", as
   btn.disabled = false;
 });
 
-projectForm.addEventListener("submit", (e) => {
+projectForm.addEventListener("submit", async (e) => {
   e.preventDefault();
   const id = document.getElementById("admin-project-id").value;
   const title = document.getElementById("admin-project-title").value.trim();
@@ -1390,7 +1390,7 @@ projectForm.addEventListener("submit", (e) => {
   const checkboxes = document.querySelectorAll('input[name="proj-tags"]:checked');
   const tags = Array.from(checkboxes).map(cb => cb.value);
 
-  Database.saveProject({
+  await Database.saveProject({
     id: id || undefined,
     title,
     category,
@@ -1693,13 +1693,14 @@ if (forceSyncBtn) {
   forceSyncBtn.addEventListener("click", async () => {
     forceSyncBtn.disabled = true;
     const origHtml = forceSyncBtn.innerHTML;
-    forceSyncBtn.textContent = "Uploading Data to Cloud...";
-    const ok = await Database.syncWithCloud();
+    forceSyncBtn.textContent = "Uploading All Data to Cloud...";
+    const okUpload = await Database.uploadAllLocalToCloud();
+    const okSync = await Database.syncWithCloud();
     forceSyncBtn.disabled = false;
     forceSyncBtn.innerHTML = origHtml;
-    if (ok) {
+    if (okUpload || okSync) {
       flashButtonSuccess(forceSyncBtn, "✓ Cloud Synced!");
-      showToast("All local data uploaded to Supabase Cloud! Visible on all devices.");
+      showToast("All local journey, project, skill, and credential records uploaded to Supabase Cloud!");
       refreshAllPublicViews();
     } else {
       showToast("Cloud sync encountered an issue. Check Supabase connection.", "error");
@@ -2309,7 +2310,7 @@ function setupAdminCertFormOnce() {
     hideCertPreview();
   });
 
-    form.addEventListener("submit", (e) => {
+    form.addEventListener("submit", async (e) => {
       e.preventDefault();
       const id = document.getElementById("admin-certificate-id").value;
       const title = document.getElementById("admin-cert-title").value.trim();
@@ -2318,7 +2319,7 @@ function setupAdminCertFormOnce() {
       const url = document.getElementById("admin-cert-url").value.trim();
       const skills = document.getElementById("admin-cert-skills").value.trim();
 
-      Database.saveCertificate({
+      await Database.saveCertificate({
         id: id || undefined,
         title,
         issuer,
@@ -2587,7 +2588,7 @@ function setupAdminHackathonFormOnce() {
     });
   }
 
-  form.addEventListener("submit", (e) => {
+  form.addEventListener("submit", async (e) => {
     e.preventDefault();
     const id = document.getElementById("admin-hackathon-id").value;
     const title = document.getElementById("admin-hack-title").value.trim();
@@ -2601,7 +2602,7 @@ function setupAdminHackathonFormOnce() {
     const projectUrl = document.getElementById("admin-hack-project-url").value.trim();
     const certificateUrl = document.getElementById("admin-hack-cert-url").value.trim();
 
-    Database.saveHackathon({
+    await Database.saveHackathon({
       id: id || undefined,
       title,
       organizer,
@@ -2618,7 +2619,7 @@ function setupAdminHackathonFormOnce() {
 
     const submitBtn = document.getElementById("admin-hack-submit-btn");
     flashButtonSuccess(submitBtn, id ? "✓ Hackathon Updated!" : "✓ Hackathon Saved!");
-    showToast(id ? `Updated hackathon "${title}"` : `Hackathon "${title}" saved successfully!`);
+    showToast(id ? `Updated hackathon "${title}"` : `Hackathon "${title}" saved!`);
     resetHackForm();
     renderAdminHackathonList();
     refreshAllPublicViews();
@@ -2793,7 +2794,7 @@ function setupAdminTimelineFormOnce() {
 
   if (!form) return;
 
-  form.addEventListener("submit", (e) => {
+  form.addEventListener("submit", async (e) => {
     e.preventDefault();
     const id = document.getElementById("admin-timeline-id").value;
     const title = document.getElementById("admin-timeline-title").value.trim();
@@ -2802,7 +2803,7 @@ function setupAdminTimelineFormOnce() {
     const type = document.getElementById("admin-timeline-type").value;
     const description = document.getElementById("admin-timeline-desc").value.trim();
 
-    Database.saveTimelineItem({
+    await Database.saveTimelineItem({
       id: id || undefined,
       title,
       company,
@@ -2813,7 +2814,7 @@ function setupAdminTimelineFormOnce() {
     });
 
     flashButtonSuccess(submitBtn, id ? "✓ Entry Updated!" : "✓ Entry Saved!");
-    showToast(id ? `Updated journey entry "${title}"` : `Journey entry "${title}" saved!`);
+    showToast(id ? `Updated journey entry "${title}"` : `Journey entry "${title}" saved & synced!`);
     resetTimelineForm();
     renderAdminTimelineList();
     refreshAllPublicViews();
@@ -2876,8 +2877,8 @@ function renderAdminTimelineList() {
       document.getElementById("admin-timeline-form").scrollIntoView({ behavior: "smooth" });
     });
 
-    el.querySelector(".delete").addEventListener("click", () => {
-      Database.deleteTimelineItem(item.id);
+    el.querySelector(".delete").addEventListener("click", async () => {
+      await Database.deleteTimelineItem(item.id);
       renderAdminTimelineList();
       renderTimeline();
     });
@@ -2901,7 +2902,7 @@ function setupAdminBlogFormOnce() {
 
   if (!form) return;
 
-  form.addEventListener("submit", (e) => {
+  form.addEventListener("submit", async (e) => {
     e.preventDefault();
     const id = document.getElementById("admin-blog-id").value;
     const title = document.getElementById("admin-blog-title").value.trim();
@@ -2911,7 +2912,7 @@ function setupAdminBlogFormOnce() {
 
     const tags = tagsStr.split(",").map(t => t.trim()).filter(t => t !== "");
 
-    Database.saveArticle({
+    await Database.saveArticle({
       id: id || undefined,
       title,
       summary,
