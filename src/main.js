@@ -213,23 +213,18 @@ document.getElementById("cta-contact").addEventListener("click", () => {
 function renderHomeStats() {
   const projects = Database.getProjects();
   const tech = Database.getTechStacks();
+  const certs = Database.getCertificates();
   const settings = Database.getSettings();
 
-  document.getElementById("stat-projects-count").textContent = projects.length;
-  document.getElementById("stat-skills-count").textContent = tech.length;
-  
-  const aiStateEl = document.getElementById("stat-ai-mode");
+  const projEl = document.getElementById("stat-projects-count");
+  const skillsEl = document.getElementById("stat-skills-count");
+  const certsEl = document.getElementById("stat-credentials-count");
   const subStatusEl = document.getElementById("chat-sub-status");
-  
-  if (settings.groqKey || settings.geminiKey || isServerLive) {
-    aiStateEl.textContent = "Groq Llama 3.3";
-    aiStateEl.style.color = "var(--accent-cyan)";
-    subStatusEl.textContent = "Groq AI Agent (Llama 3.3 70B)";
-  } else {
-    aiStateEl.textContent = "Sandbox Mode";
-    aiStateEl.style.color = "var(--text-muted)";
-    subStatusEl.textContent = "Offline Sandboxed Agent";
-  }
+
+  if (projEl) projEl.textContent = projects.length;
+  if (skillsEl) skillsEl.textContent = tech.length;
+  if (certsEl) certsEl.textContent = certs.length;
+  if (subStatusEl) subStatusEl.textContent = "Virtual Representative";
 
   document.getElementById("owner-name-display").textContent = settings.ownerName || "Arnav Jain";
   document.getElementById("owner-bio-display").textContent = settings.ownerBio || "";

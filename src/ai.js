@@ -113,7 +113,7 @@ function getSimulatedResponse(message) {
 
   // Basic greeting
   if (msg.includes("hello") || msg.includes("hi ") || msg.includes("hey")) {
-    return "Hello! I am the virtual assistant for this portfolio. I can tell you about the owner's skills, projects, or how to contact them. (Tip: Configure your free Groq API Key in the Admin panel for live high-speed AI responses!)";
+    return `Hello! I am the virtual representative for ${settings.ownerName || "Arnav Jain"}'s portfolio. Feel free to ask me about their technical skills, projects, or background!`;
   }
 
   // Who are you / bio
@@ -174,7 +174,7 @@ function getSimulatedResponse(message) {
   }
 
   // Default response
-  return "That's an interesting question! I am running in Offline Sandbox Mode. To get a fully dynamic response from Llama 3.3 70B, please navigate to the **Admin** tab -> **Settings** and enter your free Groq API Key.";
+  return `I am here to help you learn more about ${settings.ownerName || "Arnav"}'s engineering projects, technical stack, credentials, and experience. Feel free to ask about any specific skill or visit the Contact page to reach out!`;
 }
 
 export const AI = {
@@ -403,7 +403,7 @@ Keep summary to 2 sentences. Limit strengths/gaps/projects lists to 2-3 bullet i
 
     return {
       score: score,
-      summary: `Evaluated alignment at ${score}% using sandbox matching. Arnav's expertise in ${matchedTech.map(m => m.name).join(", ") || "web engineering"} makes them a solid fit for this role.`,
+      summary: `Candidate profile matches ${score}% of the required competencies. Strong background in ${matchedTech.map(m => m.name).join(", ") || "software development and data engineering"} provides relevant alignment for this role.`,
       strengths: strengths,
       gaps: gaps,
       projects: recommendedProjects
