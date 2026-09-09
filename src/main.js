@@ -2061,9 +2061,6 @@ function renderRadarChart() {
       <button class="solar-view-btn ${currentToolkitView === 'radar' ? 'active' : ''}" id="solar-toggle-radar">
         <span>📊</span> Radar Matrix
       </button>
-      <button class="solar-view-btn" id="solar-toggle-pause">
-        <span>${isSolarOrbitPaused ? '▶️' : '⏸️'}</span> ${isSolarOrbitPaused ? 'Resume Orbit' : 'Pause Orbit'}
-      </button>
     </div>
   `;
 
@@ -2245,7 +2242,6 @@ function bindSolarSystemEvents(data) {
   // View Toggle: Orbit vs Radar
   const btnOrbit = document.getElementById("solar-toggle-orbit");
   const btnRadar = document.getElementById("solar-toggle-radar");
-  const btnPause = document.getElementById("solar-toggle-pause");
 
   if (btnOrbit) {
     btnOrbit.addEventListener("click", () => {
@@ -2258,17 +2254,6 @@ function bindSolarSystemEvents(data) {
     btnRadar.addEventListener("click", () => {
       currentToolkitView = "radar";
       renderRadarChart();
-    });
-  }
-
-  if (btnPause) {
-    btnPause.addEventListener("click", () => {
-      isSolarOrbitPaused = !isSolarOrbitPaused;
-      const stage = document.getElementById("solar-viewport-stage");
-      if (stage) {
-        stage.classList.toggle("paused", isSolarOrbitPaused);
-      }
-      btnPause.innerHTML = `<span>${isSolarOrbitPaused ? '▶️' : '⏸️'}</span> ${isSolarOrbitPaused ? 'Resume Orbit' : 'Pause Orbit'}`;
     });
   }
 

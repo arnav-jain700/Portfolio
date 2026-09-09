@@ -443,7 +443,8 @@ export const Database = {
   // Settings & Bio (Global & Local)
   getSettings() {
     try {
-      return JSON.parse(localStorage.getItem("portfolio_settings") || "{}");
+      const saved = JSON.parse(localStorage.getItem("portfolio_settings") || "{}");
+      return { ...DEFAULT_SETTINGS, ...(saved || {}) };
     } catch (e) {
       return DEFAULT_SETTINGS;
     }
