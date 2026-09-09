@@ -3661,6 +3661,21 @@ function initVisualEngine() {
   const orb = document.getElementById('cursor-orb');
   const dot = document.getElementById('cursor-dot');
 
+  const getDelhiTime = () => {
+    try {
+      return new Intl.DateTimeFormat('en-IN', {
+        timeZone: 'Asia/Kolkata',
+        hour: '2-digit',
+        minute: '2-digit',
+        second: '2-digit',
+        hour12: false
+      }).format(new Date()) + ' IST';
+    } catch {
+      const d = new Date(Date.now() + (5.5 * 3600 * 1000));
+      return `${d.getUTCHours().toString().padStart(2, '0')}:${d.getUTCMinutes().toString().padStart(2, '0')}:${d.getUTCSeconds().toString().padStart(2, '0')} IST`;
+    }
+  };
+
   const updateTelemetry = () => {
     const projects = Database.getProjects().length;
     const skills = Database.getTechStacks().length;
@@ -3672,11 +3687,11 @@ function initVisualEngine() {
       const max = document.documentElement.scrollHeight - window.innerHeight;
       progress.style.width = `${max > 0 ? (window.scrollY / max) * 100 : 0}%`;
     }
-    if (clock) clock.textContent = `${new Date().toISOString().slice(11, 19)} UTC`;
+    if (clock) clock.textContent = getDelhiTime();
   };
   updateTelemetry();
   window.addEventListener('scroll', updateTelemetry, { passive: true });
-  window.setInterval(() => { if (clock) clock.textContent = `${new Date().toISOString().slice(11, 19)} UTC`; }, 1000);
+  window.setInterval(() => { if (clock) clock.textContent = getDelhiTime(); }, 1000);
 
   const revealObserver = new IntersectionObserver(entries => entries.forEach(entry => {
     if (entry.isIntersecting) entry.target.classList.add('is-revealed');
