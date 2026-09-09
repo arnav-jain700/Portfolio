@@ -3640,6 +3640,7 @@ async function initApp() {
   }
 
   refreshAllPublicViews();
+  initVisualEngine();
   initSlider();
   switchPage("home");
   checkServerStatus(); // Query Vercel serverless state
@@ -3647,3 +3648,102 @@ async function initApp() {
 }
 
 window.addEventListener("DOMContentLoaded", initApp);
+
+
+// ====================================================
+// AWWWARDS VISUAL ENGINE — additive, data-layer agnostic
+// ====================================================
+function initVisualEngine() {
+  const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const progress = document.getElementById('scroll-progress');
+  const clock = document.getElementById('status-clock');
+  const canvas = document.getElementById('ambient-canvas');
+  const orb = document.getElementById('cursor-orb');
+  const dot = document.getElementById('cursor-dot');
+
+  const updateTelemetry = () => {
+    const projects = Database.getProjects().length;
+    const skills = Database.getTechStacks().length;
+    const projectCount = document.getElementById('bento-projects-count');
+    const skillCount = document.getElementById('bento-skills-count');
+    if (projectCount) projectCount.textContent = projects;
+    if (skillCount) skillCount.textContent = skills;
+    if (progress) {
+      const max = document.documentElement.scrollHeight - window.innerHeight;
+      progress.style.width = `${max > 0 ? (window.scrollY / max) * 100 : 0}%`;
+    }
+    if (clock) clock.textContent = `${new Date().toISOString().slice(11, 19)} UTC`;
+  };
+  updateTelemetry();
+  window.addEventListener('scroll', updateTelemetry, { passive: true });
+  window.setInterval(() => { if (clock) clock.textContent = `${new Date().toISOString().slice(11, 19)} UTC`; }, 1000);
+
+  const revealObserver = new IntersectionObserver(entries => entries.forEach(entry => {
+    if (entry.isIntersecting) entry.target.classList.add('is-revealed');
+  }), { threshold: .25 });
+  document.querySelectorAll('.reveal-text').forEach(el => revealObserver.observe(el));
+
+  if (!reducedMotion && window.matchMedia('(pointer: fine)').matches) {
+    let mouseX = innerWidth / 2, mouseY = innerHeight / 2, orbX = mouseX, orbY = mouseY;
+    document.addEventListener('pointermove', event => {
+      mouseX = event.clientX; mouseY = event.clientY;
+      document.body.classList.add('cursor-ready');
+      const target = event.target.closest('a, button, input, textarea, .tilt-card, .project-card');
+      document.body.classList.toggle('cursor-hover', Boolean(target));
+      const card = event.target.closest('.tilt-card, .project-card');
+      if (card) {
+        const rect = card.getBoundingClientRect();
+        const rx = ((event.clientY - rect.top) / rect.height - .5) * -7;
+        const ry = ((event.clientX - rect.left) / rect.width - .5) * 7;
+        card.style.transform = `perspective(900px) rotateX(${rx}deg) rotateY(${ry}deg) translateY(-3px)`;
+        card.style.setProperty('--shine-x', `${((event.clientX - rect.left) / rect.width) * 100}%`);
+        card.style.setProperty('--shine-y', `${((event.clientY - rect.top) / rect.height) * 100}%`);
+      }
+    }, { passive: true });
+    document.addEventListener('pointerout', event => {
+      const card = event.target.closest('.tilt-card, .project-card');
+      if (card && !card.contains(event.relatedTarget)) card.style.transform = '';
+    });
+    const animateCursor = () => {
+      orbX += (mouseX - orbX) * .13; orbY += (mouseY - orbY) * .13;
+      if (orb) { orb.style.left = `${orbX}px`; orb.style.top = `${orbY}px`; }
+      if (dot) { dot.style.left = `${mouseX}px`; dot.style.top = `${mouseY}px`; }
+      requestAnimationFrame(animateCursor);
+    };
+    animateCursor();
+  }
+
+  if (!reducedMotion && canvas) {
+    const ctx = canvas.getContext('2d', { alpha: true });
+    if (!ctx) return;
+    let width = 0, height = 0, particles = [], frame = 0;
+    const pointer = { x: -9999, y: -9999 };
+    const resize = () => {
+      const dpr = Math.min(window.devicePixelRatio || 1, 1.35);
+      width = innerWidth; height = innerHeight;
+      canvas.width = width * dpr; canvas.height = height * dpr; canvas.style.width = `${width}px`; canvas.style.height = `${height}px`;
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+      const count = width < 700 ? 34 : Math.min(86, Math.floor(width / 17));
+      particles = Array.from({ length: count }, (_, i) => ({ x: Math.random() * width, y: Math.random() * height, vx: 0, vy: 0, r: i % 5 === 0 ? 1.5 : .8 }));
+    };
+    resize(); window.addEventListener('resize', resize, { passive: true });
+    document.addEventListener('pointermove', e => { pointer.x = e.clientX; pointer.y = e.clientY; }, { passive: true });
+    const render = () => {
+      ctx.clearRect(0, 0, width, height); frame += 1;
+      particles.forEach(p => {
+        const dx = p.x - pointer.x, dy = p.y - pointer.y, dist = Math.hypot(dx, dy) || 1;
+        if (dist < 150) { const force = (150 - dist) / 150; p.vx += (dx / dist) * force * .22; p.vy += (dy / dist) * force * .22; }
+        p.vx += (width * .53 - p.x) * .000012; p.vy += (height * .35 - p.y) * .000012; p.vx *= .985; p.vy *= .985; p.x += p.vx; p.y += p.vy;
+        if (p.x < -10) p.x = width + 10; if (p.x > width + 10) p.x = -10; if (p.y < -10) p.y = height + 10; if (p.y > height + 10) p.y = -10;
+      });
+      ctx.lineWidth = .55;
+      for (let i = 0; i < particles.length; i += 1) for (let j = i + 1; j < particles.length; j += 1) {
+        const a = particles[i], b = particles[j], d = Math.hypot(a.x - b.x, a.y - b.y);
+        if (d < 112) { ctx.strokeStyle = `rgba(65, 170, 225, ${(.12 * (1 - d / 112)).toFixed(3)})`; ctx.beginPath(); ctx.moveTo(a.x, a.y); ctx.lineTo(b.x, b.y); ctx.stroke(); }
+      }
+      particles.forEach(p => { ctx.fillStyle = 'rgba(0, 240, 255, .58)'; ctx.beginPath(); ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2); ctx.fill(); });
+      requestAnimationFrame(render);
+    };
+    render();
+  }
+}

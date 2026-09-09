@@ -35,6 +35,10 @@
   </head>
   <body>
     <div id="app">
+      <div class="scroll-progress" id="scroll-progress" aria-hidden="true"></div>
+      <canvas id="ambient-canvas" aria-hidden="true"></canvas>
+      <div class="cursor-orb" id="cursor-orb" aria-hidden="true"></div>
+      <div class="cursor-dot" id="cursor-dot" aria-hidden="true"></div>
       <!-- Decorative background blooms -->
       <div class="bg-decor-1"></div>
       <div class="bg-decor-2"></div>
@@ -76,8 +80,8 @@
         <section id="home-page" class="page active">
           <div class="hero-section">
             <div class="hero-text">
-              <div class="hero-subtitle">WELCOME TO MY DIGITAL REALM</div>
-              <h1>Hi, I'm <span id="owner-name-display">Arnav Jain</span></h1>
+              <div class="hero-subtitle reveal-text">WELCOME TO MY DIGITAL REALM</div>
+              <h1 class="reveal-text">Hi, I'm <span id="owner-name-display">Arnav Jain</span></h1>
               <p class="hero-description" id="owner-bio-display">
                 I am a Data Science and AI Developer dedicated to forging robust data architectures and breathing life into complex systems through generative, intelligent models.
               </p>
@@ -96,6 +100,13 @@
                 </div>
               </div>
             </div>
+          </div>
+
+          <div class="hero-bento-grid" aria-label="Portfolio overview">
+            <article class="bento-tile bento-status tilt-card"><div class="tile-kicker"><span class="status-pulse"></span> CURRENT STATUS</div><strong>Available for work</strong><p>Open to data, AI, and frontend collaborations.</p><div class="status-clock" id="status-clock">--:--:-- UTC</div></article>
+            <article class="bento-tile bento-signal tilt-card"><div class="tile-kicker">SYSTEM SIGNAL</div><div class="signal-graph" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div><strong>Ideas → shipped systems</strong><p>Fast feedback loops, measurable outcomes.</p></article>
+            <article class="bento-tile bento-metric tilt-card"><div class="tile-kicker">TELEMETRY</div><div class="metric-row"><span id="bento-projects-count">0</span><small>projects</small></div><div class="metric-row"><span id="bento-skills-count">0</span><small>tools in orbit</small></div></article>
+            <article class="bento-tile bento-stack tilt-card"><div class="tile-kicker">TOOLKIT / 01</div><div class="tool-cloud"><span>Python</span><span>AI systems</span><span>WebGL</span><span>Data</span><span>JavaScript</span></div></article>
           </div>
 
           <!-- AI Job-Fit Scanner -->
@@ -196,7 +207,7 @@
 
         <!-- PAGE 2: TECH STACK -->
         <section id="tech-page" class="page">
-          <h2 class="section-title">My Technical Toolkit</h2>
+          <h2 class="section-title reveal-text">My Technical Toolkit</h2>
           <p class="section-subtitle">
             A comprehensive overview of language proficiencies, frameworks, database architectures, and engineering infrastructure.
           </p>
@@ -217,7 +228,7 @@
 
         <!-- PAGE 3: PROJECTS -->
         <section id="projects-page" class="page">
-          <h2 class="section-title">Featured Creations</h2>
+          <h2 class="section-title reveal-text">Featured Creations</h2>
           <p class="section-subtitle">
             A curated showcase of engineering builds ranging from custom AI planners to interactive web interfaces.
           </p>
@@ -236,7 +247,7 @@
 
         <!-- PAGE 3.5: BLOG -->
         <section id="blog-page" class="page">
-          <h2 class="section-title">The Developer Chronicle</h2>
+          <h2 class="section-title reveal-text">The Developer Chronicle</h2>
           <p class="section-subtitle">
             Sharing insights about front-end architecture, user experience design, and client-side AI paradigms.
           </p>
@@ -247,7 +258,7 @@
 
         <!-- PAGE 3.8: HACKATHONS -->
         <section id="hackathons-page" class="page">
-          <h2 class="section-title">Hackathons & Competitions</h2>
+          <h2 class="section-title reveal-text">Hackathons & Competitions</h2>
           <p class="section-subtitle">
             Showcasing live builds, hackathon projects, team achievements, and competitive programming milestones.
           </p>
@@ -258,7 +269,7 @@
 
         <!-- PAGE 4: CERTIFICATES -->
         <section id="certificates-page" class="page">
-          <h2 class="section-title">Certificates & Credentials</h2>
+          <h2 class="section-title reveal-text">Certificates & Credentials</h2>
           <p class="section-subtitle">
             Verified professional achievements, certifications, and licenses.
           </p>
@@ -269,7 +280,7 @@
 
         <!-- PAGE 5: CONTACT -->
         <section id="contact-page" class="page">
-          <h2 class="section-title">Initiate Contact</h2>
+          <h2 class="section-title reveal-text">Initiate Contact</h2>
           <p class="section-subtitle">
             Have a project in mind or interested in collaborating? Leave a message below, and my virtual assistant will process it immediately.
           </p>
