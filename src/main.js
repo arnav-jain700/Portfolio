@@ -335,13 +335,34 @@ function resetSliderTimer() {
 // ----------------------------------------------------
 let activeTechFilter = "All";
 
+function getAllCategories() {
+  const settings = Database.getSettings();
+  const defaultCats = ["Frontend", "Backend", "Databases", "DevOps", "Version Control", "Data Science"];
+  const settingsCats = Array.isArray(settings.categories) ? settings.categories : [];
+  const techStacks = Database.getTechStacks();
+  const techCats = techStacks.map(t => t.category).filter(Boolean);
+
+  const uniqueMap = new Map();
+  [...settingsCats, ...techCats, ...defaultCats].forEach(cat => {
+    if (cat && typeof cat === 'string') {
+      const trimmed = cat.trim();
+      const key = trimmed.toLowerCase();
+      if (trimmed && !uniqueMap.has(key)) {
+        uniqueMap.set(key, trimmed);
+      }
+    }
+  });
+
+  return Array.from(uniqueMap.values());
+}
+
 function renderTechGrid(category) {
   const techGrid = document.getElementById("tech-grid-container");
   const techStacks = Database.getTechStacks();
   
   const filtered = category === "All" 
     ? techStacks 
-    : techStacks.filter(t => t.category === category);
+    : techStacks.filter(t => t.category && t.category.toLowerCase() === category.toLowerCase());
 
   techGrid.innerHTML = "";
 
@@ -366,7 +387,7 @@ function renderTechGrid(category) {
       iconSvg = `<svg viewBox="0 0 24 24" width="28" height="28" stroke="currentColor" stroke-width="2" fill="none"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>`;
     } else if (tech.name.toLowerCase().includes("db") || tech.name.toLowerCase().includes("mongo") || tech.name.toLowerCase().includes("sql")) {
       iconSvg = `<svg viewBox="0 0 24 24" width="28" height="28" stroke="currentColor" stroke-width="2" fill="none"><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5M3 12c0 1.66 4 3 9 3s9-1.34 9-3"/></svg>`;
-    } else if (tech.name.toLowerCase().includes("python")) {
+    } else if (tech.name.toLowerCase().includes("python") || tech.name.toLowerCase().includes("pandas") || tech.name.toLowerCase().includes("numpy")) {
       iconSvg = `<svg viewBox="0 0 24 24" width="28" height="28" stroke="currentColor" stroke-width="2" fill="none"><path d="M12 22a7 7 0 0 0 5-5h-3a4 4 0 0 1-4-4V7H5a7 7 0 0 0 7 15z"/><path d="M12 2a7 7 0 0 0-5 5h3a4 4 0 0 1 4 4v6h5a7 7 0 0 0-7-15z"/></svg>`;
     } else if (tech.name.toLowerCase().includes("docker")) {
       iconSvg = `<svg viewBox="0 0 24 24" width="28" height="28" stroke="currentColor" stroke-width="2" fill="none"><rect x="2" y="2" width="20" height="20" rx="4"/><path d="M6 6h4v4H6zm8 0h4v4h-4zm0 8h4v4h-4zm-8 0h4v4H6z"/></svg>`;
@@ -407,14 +428,15 @@ function renderTechGrid(category) {
 function renderTechCategoryFilters() {
   const container = document.getElementById("tech-category-filters");
   if (!container) return;
-  const settings = Database.getSettings();
-  const categories = settings.categories || ["Frontend", "Backend", "Databases", "DevOps"];
+  const categories = getAllCategories();
   const techStacks = Database.getTechStacks();
 
   container.innerHTML = `<button class="tech-filter-btn active" data-category="All">All Tech (${techStacks.length})</button>`;
   categories.forEach(cat => {
-    const count = techStacks.filter(t => t.category === cat).length;
-    container.innerHTML += `<button class="tech-filter-btn" data-category="${cat}">${cat} (${count})</button>`;
+    const count = techStacks.filter(t => t.category && t.category.toLowerCase() === cat.toLowerCase()).length;
+    if (count > 0 || (Database.getSettings().categories || []).map(c => c.toLowerCase()).includes(cat.toLowerCase())) {
+      container.innerHTML += `<button class="tech-filter-btn" data-category="${cat}">${cat} (${count})</button>`;
+    }
   });
 
   // Re-bind click events
@@ -1015,8 +1037,7 @@ function setupAdminCategoryFormOnce() {
 function populateAdminTechCategoriesDropdown() {
   const select = document.getElementById("admin-tech-category");
   if (!select) return;
-  const settings = Database.getSettings();
-  const categories = settings.categories || ["Frontend", "Backend", "Databases", "DevOps"];
+  const categories = getAllCategories();
 
   select.innerHTML = "";
   categories.forEach(cat => {
@@ -1971,28 +1992,36 @@ function renderRadarChart() {
   if (!container) return;
   
   const tech = Database.getTechStacks();
-  const settings = Database.getSettings();
-  const categories = settings.categories || ["Frontend", "Backend", "Databases", "DevOps"];
+  const allCats = getAllCategories();
 
   const data = [];
-  categories.forEach(cat => {
-    const items = tech.filter(t => t.category === cat);
+  allCats.forEach(cat => {
+    const items = tech.filter(t => t.category && t.category.toLowerCase() === cat.toLowerCase());
     if (items.length > 0) {
-      const avg = items.reduce((sum, item) => sum + item.level, 0) / items.length;
-      data.push({ name: cat, value: avg });
-    } else {
-      data.push({ name: cat, value: 30 }); // default placeholder
+      const avg = items.reduce((sum, item) => sum + (Number(item.level) || 50), 0) / items.length;
+      data.push({ name: cat, value: avg, count: items.length });
     }
   });
+
+  // If fewer than 3 categories have skills, add placeholders from allCats so polygon always renders
+  if (data.length < 3) {
+    allCats.forEach(cat => {
+      if (!data.some(d => d.name.toLowerCase() === cat.toLowerCase()) && data.length < 6) {
+        data.push({ name: cat, value: 45, count: 0 });
+      }
+    });
+  }
 
   if (data.length < 3) {
     container.innerHTML = `<div style="text-align: center; color: var(--text-muted); font-size: 0.9rem; padding: 20px;">Add at least 3 categories with skills to render the Radar Chart.</div>`;
     return;
   }
 
-  const size = 280;
-  const center = size / 2;
-  const radius = center - 40;
+  const width = 380;
+  const height = 320;
+  const centerX = width / 2;
+  const centerY = height / 2;
+  const radius = 95;
   const angleSlice = (Math.PI * 2) / data.length;
 
   // Grid rings
@@ -2002,9 +2031,9 @@ function renderRadarChart() {
     const r = radius * lvl;
     const points = [];
     for (let i = 0; i < data.length; i++) {
-      const x = center + r * Math.sin(angleSlice * i);
-      const y = center - r * Math.cos(angleSlice * i);
-      points.push(`${x},${y}`);
+      const x = centerX + r * Math.sin(angleSlice * i);
+      const y = centerY - r * Math.cos(angleSlice * i);
+      points.push(`${x.toFixed(1)},${y.toFixed(1)}`);
     }
     gridMarkup += `<polygon points="${points.join(" ")}" class="radar-grid-line" fill="none" />`;
   });
@@ -2017,26 +2046,34 @@ function renderRadarChart() {
 
   data.forEach((d, i) => {
     const angle = angleSlice * i;
-    const xOuter = center + radius * Math.sin(angle);
-    const yOuter = center - radius * Math.cos(angle);
-    axesMarkup += `<line x1="${center}" y1="${center}" x2="${xOuter}" y2="${yOuter}" class="radar-axis" />`;
+    const xOuter = centerX + radius * Math.sin(angle);
+    const yOuter = centerY - radius * Math.cos(angle);
+    axesMarkup += `<line x1="${centerX}" y1="${centerY}" x2="${xOuter.toFixed(1)}" y2="${yOuter.toFixed(1)}" class="radar-axis" />`;
 
-    const labelX = center + (radius + 22) * Math.sin(angle);
-    const labelY = center - (radius + 18) * Math.cos(angle) + 4;
-    labelsMarkup += `<text x="${labelX}" y="${labelY}" class="radar-axis-label">${d.name}</text>`;
+    // Dynamic label positioning with text-anchor
+    const labelRadius = radius + 22;
+    const labelX = centerX + labelRadius * Math.sin(angle);
+    const labelY = centerY - labelRadius * Math.cos(angle);
 
-    const valRadius = radius * (d.value / 100);
-    const xVal = center + valRadius * Math.sin(angle);
-    const yVal = center - valRadius * Math.cos(angle);
-    points.push(`${xVal},${yVal}`);
+    let anchor = "middle";
+    const sinVal = Math.sin(angle);
+    if (sinVal > 0.25) anchor = "start";
+    else if (sinVal < -0.25) anchor = "end";
+
+    labelsMarkup += `<text x="${labelX.toFixed(1)}" y="${labelY.toFixed(1)}" class="radar-axis-label" text-anchor="${anchor}" dominant-baseline="central">${d.name}</text>`;
+
+    const valRadius = radius * (Math.max(15, Math.min(100, d.value)) / 100);
+    const xVal = centerX + valRadius * Math.sin(angle);
+    const yVal = centerY - valRadius * Math.cos(angle);
+    points.push(`${xVal.toFixed(1)},${yVal.toFixed(1)}`);
     
-    dotsMarkup.push(`<circle cx="${xVal}" cy="${yVal}" class="radar-point"><title>${d.name}: ${Math.round(d.value)}%</title></circle>`);
+    dotsMarkup.push(`<circle cx="${xVal.toFixed(1)}" cy="${yVal.toFixed(1)}" class="radar-point"><title>${d.name}: ${Math.round(d.value)}% (${d.count} skills)</title></circle>`);
   });
 
   const polygonMarkup = `<polygon points="${points.join(" ")}" class="radar-polygon" />`;
 
   container.innerHTML = `
-    <svg width="${size}" height="${size}" viewBox="0 0 ${size} ${size}" style="max-width: 100%; height: auto; display: block; margin: 0 auto;">
+    <svg width="100%" height="${height}" viewBox="0 0 ${width} ${height}" style="max-width: 440px; height: auto; display: block; margin: 0 auto; overflow: visible;">
       ${gridMarkup}
       ${axesMarkup}
       ${polygonMarkup}

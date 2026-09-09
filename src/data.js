@@ -33,7 +33,7 @@ const DEFAULT_SETTINGS = {
   codolio: "https://codolio.com/profile/Jarnav",
   medium: "https://medium.com/@arnav4334",
   geminiKey: "",
-  categories: ["Frontend", "Backend", "Databases", "DevOps", "Version Control"]
+  categories: ["Frontend", "Backend", "Databases", "DevOps", "Version Control", "Data Science"]
 };
 
 // Initialize Storage
