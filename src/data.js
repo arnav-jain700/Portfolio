@@ -14,11 +14,39 @@ if (typeof window !== "undefined" && window.localStorage) {
   }
 }
 
-// Clean Default Seeds (All empty)
+// Clean Default Seeds
 const DEFAULT_TECH_STACKS = [];
 const DEFAULT_PROJECTS = [];
 const DEFAULT_MESSAGES = [];
-const DEFAULT_TIMELINE_ITEMS = [];
+const DEFAULT_TIMELINE_ITEMS = [
+  {
+    id: "time-1",
+    title: "Bachelor of Technology (Hons) in Data Science & Data Engineering",
+    company: "Lovely Professional University",
+    role: "Undergraduate Scholar (CGPA: 9.12)",
+    dateRange: "Aug 2024 – Present",
+    type: "education",
+    description: "• Academic Orbit: Core Machine Learning, Data Structures & Algorithms, Systems Architecture, and Big Data Engineering.\n• Highlights: Maintained top-tier academic standing (9.12 CGPA) while spearheading generative AI initiatives and high-performance C++ algorithmic development."
+  },
+  {
+    id: "time-2",
+    title: "Data Structures, Algorithms & Competitive Programming",
+    company: "Lovely Professional University",
+    role: "Competitive Algorithmic Track",
+    dateRange: "Aug 2024 – Present",
+    type: "experience",
+    description: "• Implemented core algorithmic paradigms including Dynamic Programming, Graph Traversals (Dijkstra, BFS/DFS), Trees, and Spatial Hash Maps.\n• Solved 500+ problems across Codolio and LeetCode with sub-millisecond execution benchmarks, mastering computational complexity."
+  },
+  {
+    id: "time-3",
+    title: "Lead Systems & Data Architect",
+    company: "Autonomous Telemetry Builds",
+    role: "Lead Systems & Data Architect",
+    dateRange: "May 2026 – Present",
+    type: "experience",
+    description: "• Engineered high-throughput ETL data ingestion workflows using Python, Pandas, and PostgreSQL with Docker microservices.\n• Automated real-time anomaly detection with zero data loss and sub-second stream indexing across production endpoints."
+  }
+];
 const DEFAULT_ARTICLES = [];
 const DEFAULT_CERTIFICATES = [];
 const DEFAULT_HACKATHONS = [];
@@ -441,8 +469,11 @@ export const Database = {
   // Timeline CRUD (Global & Local)
   getTimeline() {
     try {
-      const items = JSON.parse(localStorage.getItem("portfolio_timeline") || "[]");
-      return (Array.isArray(items) ? items : []).map(t => ({
+      let items = JSON.parse(localStorage.getItem("portfolio_timeline") || "[]");
+      if (!Array.isArray(items) || items.length === 0) {
+        items = DEFAULT_TIMELINE_ITEMS;
+      }
+      return items.map(t => ({
         id: t.id || "time-" + Date.now(),
         title: t.title || "",
         company: t.company || "",
@@ -452,7 +483,7 @@ export const Database = {
         description: t.description || ""
       }));
     } catch (e) {
-      return [];
+      return DEFAULT_TIMELINE_ITEMS;
     }
   },
 

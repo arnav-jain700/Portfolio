@@ -153,6 +153,7 @@ function switchPage(pageId) {
   // Specific page initialization callbacks
   if (pageId === "home") {
     renderHomeStats();
+  } else if (pageId === "journey") {
     renderTimeline();
   } else if (pageId === "tech") {
     renderTechCategoryFilters();
@@ -1954,7 +1955,7 @@ function setMoonIcon(svgEl) {
 }
 
 // ----------------------------------------------------
-// EXPERIENCE TIMELINE RENDERER
+// EXPERIENCE TIMELINE RENDERER (CELESTIAL FLIGHT LOG)
 // ----------------------------------------------------
 function renderTimeline() {
   const container = document.getElementById("timeline-container");
@@ -1964,23 +1965,33 @@ function renderTimeline() {
 
   container.innerHTML = "";
   if (sorted.length === 0) {
-    container.innerHTML = `<div style="text-align: center; color: var(--text-dimmed); padding: 20px;">No journey details added yet. Add them in Admin!</div>`;
+    container.innerHTML = `<div style="text-align: center; color: var(--text-dimmed); padding: 40px; font-size: 0.95rem;">No flight logs recorded in the telemetry track yet. Add them in the Mission Control Admin!</div>`;
     return;
   }
 
-  sorted.forEach(item => {
+  sorted.forEach((item, index) => {
     const div = document.createElement("div");
-    div.className = "timeline-item";
+    div.className = "timeline-item cosmic-timeline-item";
+    
+    const isEducation = (item.type || "").toLowerCase() === "education" || (item.title || "").toLowerCase().includes("bachelor") || (item.company || "").toLowerCase().includes("university");
+    const badgeText = isEducation ? "✦ ACADEMIC ORBIT" : "✦ MISSION TELEMETRY";
+    const badgeColor = isEducation ? "var(--cyan-bright)" : "var(--accent-purple)";
+
     div.innerHTML = `
-      <div class="timeline-dot"></div>
+      <div class="timeline-dot cosmic-orbit-beacon">
+        <span class="beacon-glow-core"></span>
+      </div>
       <div class="timeline-header">
         <div class="timeline-title-group">
-          <h4>${item.title}</h4>
-          <p>${item.company} &bull; ${item.role}</p>
+          <div class="cosmic-timeline-kicker" style="color: ${badgeColor}; font-size: 0.72rem; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; margin-bottom: 4px;">
+            ${badgeText} • SECTOR 0${sorted.length - index}
+          </div>
+          <h3 class="timeline-title" style="font-size: 1.25rem; font-weight: 700; margin-bottom: 4px; color: var(--text-primary);">${item.title}</h3>
+          <p class="timeline-subtitle" style="color: var(--cyan-bright); font-weight: 600; font-size: 0.9rem;">${item.company} <span style="color: var(--text-dimmed); font-weight: normal;">&bull;</span> ${item.role}</p>
         </div>
-        <span class="timeline-meta">${item.dateRange}</span>
+        <span class="timeline-meta cosmic-meta-badge">${item.dateRange}</span>
       </div>
-      <div class="timeline-desc">${item.description.replace(/\n/g, "<br/>")}</div>
+      <div class="timeline-desc" style="margin-top: 14px;">${formatFormattedDescription(item.description)}</div>
     `;
     container.appendChild(div);
   });
@@ -4010,31 +4021,52 @@ function initVisualEngine() {
     const ctx = canvas.getContext('2d', { alpha: true });
     if (!ctx) return;
     let width = 0, height = 0, particles = [], frame = 0;
-    const pointer = { x: -9999, y: -9999 };
     const resize = () => {
       const dpr = Math.min(window.devicePixelRatio || 1, 1.35);
       width = innerWidth; height = innerHeight;
       canvas.width = width * dpr; canvas.height = height * dpr; canvas.style.width = `${width}px`; canvas.style.height = `${height}px`;
       ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-      const count = width < 700 ? 34 : Math.min(86, Math.floor(width / 17));
-      particles = Array.from({ length: count }, (_, i) => ({ x: Math.random() * width, y: Math.random() * height, vx: 0, vy: 0, r: i % 5 === 0 ? 1.5 : .8 }));
+      const count = width < 700 ? 50 : Math.min(130, Math.floor(width / 12));
+      particles = Array.from({ length: count }, (_, i) => ({
+        x: Math.random() * width,
+        y: Math.random() * height,
+        vx: (Math.random() - 0.5) * 0.22,
+        vy: (Math.random() - 0.5) * 0.22,
+        r: Math.random() < 0.18 ? Math.random() * 2.2 + 1.2 : Math.random() * 1.2 + 0.4,
+        twinkleSpeed: 0.015 + Math.random() * 0.035,
+        twinklePhase: Math.random() * Math.PI * 2,
+        colorPrefix: i % 4 === 0 ? "0, 240, 255" : (i % 4 === 1 ? "168, 85, 247" : (i % 4 === 2 ? "99, 102, 241" : "255, 255, 255"))
+      }));
     };
     resize(); window.addEventListener('resize', resize, { passive: true });
-    document.addEventListener('pointermove', e => { pointer.x = e.clientX; pointer.y = e.clientY; }, { passive: true });
+    
     const render = () => {
       ctx.clearRect(0, 0, width, height); frame += 1;
       particles.forEach(p => {
-        const dx = p.x - pointer.x, dy = p.y - pointer.y, dist = Math.hypot(dx, dy) || 1;
-        if (dist < 150) { const force = (150 - dist) / 150; p.vx += (dx / dist) * force * .22; p.vy += (dy / dist) * force * .22; }
-        p.vx += (width * .53 - p.x) * .000012; p.vy += (height * .35 - p.y) * .000012; p.vx *= .985; p.vy *= .985; p.x += p.vx; p.y += p.vy;
-        if (p.x < -10) p.x = width + 10; if (p.x > width + 10) p.x = -10; if (p.y < -10) p.y = height + 10; if (p.y > height + 10) p.y = -10;
+        // Slow celestial drift
+        p.x += p.vx;
+        p.y += p.vy;
+        if (p.x < -10) p.x = width + 10;
+        if (p.x > width + 10) p.x = -10;
+        if (p.y < -10) p.y = height + 10;
+        if (p.y > height + 10) p.y = -10;
+
+        // Twinkling luminosity
+        const alpha = 0.25 + 0.7 * (0.5 + 0.5 * Math.sin(frame * p.twinkleSpeed + p.twinklePhase));
+        
+        ctx.fillStyle = `rgba(${p.colorPrefix}, ${alpha.toFixed(3)})`;
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Stardust halo for prominent celestial stars
+        if (p.r > 1.6) {
+          ctx.fillStyle = `rgba(${p.colorPrefix}, ${(alpha * 0.25).toFixed(3)})`;
+          ctx.beginPath();
+          ctx.arc(p.x, p.y, p.r * 2.8, 0, Math.PI * 2);
+          ctx.fill();
+        }
       });
-      ctx.lineWidth = .55;
-      for (let i = 0; i < particles.length; i += 1) for (let j = i + 1; j < particles.length; j += 1) {
-        const a = particles[i], b = particles[j], d = Math.hypot(a.x - b.x, a.y - b.y);
-        if (d < 112) { ctx.strokeStyle = `rgba(65, 170, 225, ${(.12 * (1 - d / 112)).toFixed(3)})`; ctx.beginPath(); ctx.moveTo(a.x, a.y); ctx.lineTo(b.x, b.y); ctx.stroke(); }
-      }
-      particles.forEach(p => { ctx.fillStyle = 'rgba(0, 240, 255, .58)'; ctx.beginPath(); ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2); ctx.fill(); });
       requestAnimationFrame(render);
     };
     render();
