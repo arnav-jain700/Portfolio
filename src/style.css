@@ -2702,3 +2702,130 @@ body.light-theme .bento-tile { background: rgba(255,255,255,.76); border-color: 
 body.light-theme .bento-tile strong { color: #102037; }
 body.light-theme .bento-tile p, body.light-theme .metric-row small { color: #54708d; }
 body.light-theme .navbar { background: rgba(255,255,255,.78); }
+
+/* ====================================================
+   COSMIC & CELESTIAL STYLING SYSTEM
+   ==================================================== */
+.cosmic-deep-space {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  overflow: hidden;
+  z-index: -1;
+}
+
+.cosmic-meteor {
+  position: absolute;
+  width: 150px;
+  height: 2px;
+  background: linear-gradient(90deg, rgba(0, 240, 255, 0.9), rgba(59, 130, 246, 0.4), transparent);
+  border-radius: 999px;
+  opacity: 0;
+  transform: rotate(-35deg);
+  animation: meteorStreak 7s linear infinite;
+  box-shadow: 0 0 12px rgba(0, 240, 255, 0.8);
+}
+
+.cosmic-meteor.meteor-1 {
+  top: 12%;
+  left: 75%;
+  animation-delay: 0s;
+  animation-duration: 6.5s;
+}
+
+.cosmic-meteor.meteor-2 {
+  top: 38%;
+  left: 88%;
+  animation-delay: 2.8s;
+  animation-duration: 8s;
+  width: 200px;
+}
+
+.cosmic-meteor.meteor-3 {
+  top: 65%;
+  left: 60%;
+  animation-delay: 5s;
+  animation-duration: 7.2s;
+  width: 120px;
+}
+
+@keyframes meteorStreak {
+  0% {
+    opacity: 0;
+    transform: translate(0, 0) rotate(-35deg) scale(0.6);
+  }
+  10% {
+    opacity: 1;
+  }
+  30% {
+    opacity: 0;
+    transform: translate(-500px, 350px) rotate(-35deg) scale(1.2);
+  }
+  100% {
+    opacity: 0;
+    transform: translate(-500px, 350px) rotate(-35deg) scale(1.2);
+  }
+}
+
+.celestial-avatar-orbit {
+  position: relative;
+}
+
+.avatar-orbital-ring {
+  position: absolute;
+  inset: -14px;
+  border-radius: 50%;
+  border: 1px dashed rgba(0, 240, 255, 0.35);
+  animation: ringRotate 20s linear infinite;
+  pointer-events: none;
+}
+
+.avatar-orbital-satellite {
+  position: absolute;
+  top: -4px;
+  left: 50%;
+  width: 8px;
+  height: 8px;
+  background: var(--cyan-bright, #00f0ff);
+  border-radius: 50%;
+  box-shadow: 0 0 10px #00f0ff, 0 0 20px #00f0ff;
+  transform: translateX(-50%);
+}
+
+@keyframes ringRotate {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+.celestial-sparkle {
+  color: var(--cyan-bright, #00f0ff);
+  text-shadow: 0 0 8px rgba(0, 240, 255, 0.7);
+  display: inline-block;
+  animation: sparkleTwinkle 2.5s ease-in-out infinite alternate;
+}
+
+@keyframes sparkleTwinkle {
+  0% { transform: scale(0.85); opacity: 0.7; }
+  100% { transform: scale(1.2); opacity: 1; text-shadow: 0 0 14px rgba(0, 240, 255, 1); }
+}
+
+.celestial-logo-icon {
+  display: inline-block;
+  font-size: 1.15em;
+  filter: drop-shadow(0 0 8px rgba(0, 240, 255, 0.5));
+  animation: logoFloat 4s ease-in-out infinite alternate;
+}
+
+@keyframes logoFloat {
+  0% { transform: translateY(0px) rotate(0deg); }
+  100% { transform: translateY(-2px) rotate(6deg); }
+}
+
+.project-card:hover {
+  box-shadow: 0 20px 45px rgba(0, 0, 0, 0.4), 0 0 25px rgba(0, 240, 255, 0.15);
+}
+
+.hackathon-card:hover, .certificate-card:hover, .blog-card:hover {
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.35), 0 0 20px rgba(99, 102, 241, 0.2);
+}
+

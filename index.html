@@ -42,31 +42,62 @@
       <!-- Decorative background blooms -->
       <div class="bg-decor-1"></div>
       <div class="bg-decor-2"></div>
+      
+      <!-- Cosmic Space Elements: Meteor Streaks & Nebula Dust -->
+      <div class="cosmic-deep-space" aria-hidden="true">
+        <div class="cosmic-meteor meteor-1"></div>
+        <div class="cosmic-meteor meteor-2"></div>
+        <div class="cosmic-meteor meteor-3"></div>
+      </div>
 
       <!-- Navigation Header -->
       <header class="navbar glass-panel">
-        <div class="nav-brand" id="brand-logo">Persona.</div>
+        <div class="nav-brand" id="brand-logo"><span class="celestial-logo-icon">🪐</span> Persona.</div>
         <div style="display: flex; align-items: center; gap: 16px;">
           <ul class="nav-links" id="main-nav-links">
-            <li><span class="nav-link active" data-page="home">Home</span></li>
-            <li><span class="nav-link" data-page="tech">Tech Stack</span></li>
-            <li><span class="nav-link" data-page="projects">Projects</span></li>
-            <li><span class="nav-link" data-page="hackathons">Hackathons</span></li>
-            <li><span class="nav-link" data-page="certificates">Certificates</span></li>
-            <li><span class="nav-link" data-page="blog">Blog</span></li>
-            <li><span class="nav-link" data-page="contact">Contact</span></li>
-            <li id="nav-admin-li" style="display: none;"><span class="nav-link" data-page="admin">Admin</span></li>
+            <li><a href="#home" class="nav-link active" data-page="home">Home</a></li>
+            <li><a href="#journey" class="nav-link" data-page="journey">Journey</a></li>
+            <li><a href="#tech" class="nav-link" data-page="tech">Toolkit</a></li>
+            <li><a href="#projects" class="nav-link" data-page="projects">Projects</a></li>
+            <li><a href="#hackathons" class="nav-link" data-page="hackathons">Hackathons</a></li>
+            <li><a href="#certificates" class="nav-link" data-page="certificates">Credentials</a></li>
+            <li><a href="#blog" class="nav-link" data-page="blog">Chronicle</a></li>
+            <li><a href="#contact" class="nav-link" data-page="contact">Contact</a></li>
           </ul>
-          <button class="theme-toggle-btn" id="theme-toggle-btn" title="Toggle Theme">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" id="theme-icon">
-              <!-- Moon path by default -->
-              <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" />
+
+          <!-- Theme toggle -->
+          <button class="theme-toggle-btn" id="theme-toggle" title="Toggle Celestial Mode">
+            <!-- SVG Moon -->
+            <svg id="moon-icon" viewBox="0 0 24 24" width="20" height="20" stroke="currentColor" stroke-width="2" fill="none">
+              <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+            </svg>
+            <!-- SVG Sun -->
+            <svg id="sun-icon" viewBox="0 0 24 24" width="20" height="20" stroke="currentColor" stroke-width="2" fill="none" style="display: none;">
+              <circle cx="12" cy="12" r="5"></circle>
+              <line x1="12" y1="1" x2="12" y2="3"></line>
+              <line x1="12" y1="21" x2="12" y2="23"></line>
+              <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+              <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+              <line x1="1" y1="12" x2="3" y2="12"></line>
+              <line x1="21" y1="12" x2="23" y2="12"></line>
+              <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+              <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
             </svg>
           </button>
-          <button class="mobile-menu-toggle" id="mobile-menu-toggle" title="Toggle Navigation Menu" aria-label="Toggle Mobile Navigation">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="22" height="22">
-              <line x1="3" y1="6" x2="21" y2="6"/>
+
+          <!-- Admin Entrance Lock Icon Button -->
+          <button class="theme-toggle-btn" id="admin-entrance-btn" title="Admin Mission Control" style="margin-left: 2px;">
+            <svg viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round">
+              <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+              <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+            </svg>
+          </button>
+
+          <!-- Mobile hamburger -->
+          <button class="mobile-menu-btn" id="mobile-menu-toggle" title="Menu">
+            <svg viewBox="0 0 24 24" width="24" height="24" stroke="currentColor" stroke-width="2">
               <line x1="3" y1="12" x2="21" y2="12"/>
+              <line x1="3" y1="6" x2="21" y2="6"/>
               <line x1="3" y1="18" x2="21" y2="18"/>
             </svg>
           </button>
@@ -80,21 +111,25 @@
         <section id="home-page" class="page active">
           <div class="hero-section">
             <div class="hero-text">
-              <div class="hero-subtitle reveal-text">WELCOME TO MY DIGITAL REALM</div>
+              <div class="hero-subtitle reveal-text"><span class="celestial-sparkle">✦</span> EXPLORING THE DIGITAL COSMOS <span class="celestial-sparkle">✦</span></div>
               <h1 class="reveal-text">Hi, I'm <span id="owner-name-display">Arnav Jain</span></h1>
               <p class="hero-description" id="owner-bio-display">
                 I am a Data Science and AI Developer dedicated to forging robust data architectures and breathing life into complex systems through generative, intelligent models.
               </p>
               <div class="hero-actions">
-                <button class="btn btn-primary" id="cta-view-work">View Projects</button>
-                <button class="btn btn-secondary" id="cta-contact">Get In Touch</button>
+                <button class="btn btn-primary" id="cta-view-work"><span>🚀</span> Explore Creations</button>
+                <button class="btn btn-secondary" id="cta-contact"><span>📡</span> Establish Uplink</button>
               </div>
             </div>
             <div class="hero-visual">
-              <div class="avatar-container">
+              <div class="avatar-container celestial-avatar-orbit">
+                <div class="avatar-orbital-ring">
+                  <div class="avatar-orbital-satellite"></div>
+                </div>
                 <div class="avatar-inner">
-                  <!-- Vector visual icon -->
+                  <!-- Celestial Vector visual icon -->
                   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                    <circle cx="12" cy="12" r="6" stroke-dasharray="2 2"></circle>
                     <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5" stroke-linecap="round" stroke-linejoin="round"/>
                   </svg>
                 </div>
@@ -103,10 +138,10 @@
           </div>
 
           <div class="hero-bento-grid" aria-label="Portfolio overview">
-            <article class="bento-tile bento-status tilt-card"><div class="tile-kicker"><span class="status-pulse"></span> CURRENT STATUS</div><strong>Available for work</strong><p>Open to data, AI, and frontend collaborations.</p><div class="status-clock" id="status-clock">--:--:-- IST</div></article>
-            <article class="bento-tile bento-signal tilt-card"><div class="tile-kicker">SYSTEM SIGNAL</div><div class="signal-graph" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div><strong>Ideas → shipped systems</strong><p>Fast feedback loops, measurable outcomes.</p></article>
-            <article class="bento-tile bento-metric tilt-card"><div class="tile-kicker">TELEMETRY</div><div class="metric-row"><span id="bento-projects-count">0</span><small>projects</small></div><div class="metric-row"><span id="bento-skills-count">0</span><small>tools in orbit</small></div></article>
-            <article class="bento-tile bento-stack tilt-card"><div class="tile-kicker">TOOLKIT / 01</div><div class="tool-cloud"><span>Python</span><span>AI systems</span><span>WebGL</span><span>Data</span><span>JavaScript</span></div></article>
+            <article class="bento-tile bento-status tilt-card"><div class="tile-kicker"><span class="status-pulse"></span> ORBITAL BEACON</div><strong>Available for missions</strong><p>Open to data science, GenAI, and high-performance system builds.</p><div class="status-clock" id="status-clock">--:--:-- IST</div></article>
+            <article class="bento-tile bento-signal tilt-card"><div class="tile-kicker">COSMIC TELEMETRY</div><div class="signal-graph" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div><strong>Ideas → shipped systems</strong><p>Fast feedback loops, measurable orbital outcomes.</p></article>
+            <article class="bento-tile bento-metric tilt-card"><div class="tile-kicker">CONSTELLATIONS</div><div class="metric-row"><span id="bento-projects-count">0</span><small>fleet projects</small></div><div class="metric-row"><span id="bento-skills-count">0</span><small>tools in orbit</small></div></article>
+            <article class="bento-tile bento-stack tilt-card"><div class="tile-kicker">PAYLOAD / 01</div><div class="tool-cloud"><span>Python</span><span>AI Systems</span><span>WebGL</span><span>Data Science</span><span>C++</span></div></article>
           </div>
 
           <!-- AI Job-Fit Scanner -->
@@ -161,7 +196,7 @@
 
           <!-- Slider Section (Testimonials / Highlighted Items) -->
           <div class="slider-section">
-            <h2 class="section-title" style="margin-top: 40px; margin-bottom: 24px;">Key Philosophies</h2>
+            <h2 class="section-title" style="margin-top: 40px; margin-bottom: 24px;">Guiding Stellar Principles</h2>
             <div class="slider-container glass-panel">
               <div class="slider-track" id="philosophy-slider-track">
                 <div class="slide">
@@ -185,8 +220,8 @@
 
           <!-- Experience & Education Timeline -->
           <div class="timeline-section">
-            <h2 class="section-title" style="margin-top: 50px;">Professional Journey</h2>
-            <p class="section-subtitle">A chronological track of education and software engineering experience.</p>
+            <h2 class="section-title" style="margin-top: 50px;">Celestial Flight Log & Journey</h2>
+            <p class="section-subtitle">A chronological telemetry track of academic orbits and software engineering missions.</p>
             
             <div style="display: flex; justify-content: center; gap: 12px; margin-bottom: 32px; flex-wrap: wrap;">
               <button id="btn-download-resume" class="btn btn-secondary" style="padding: 10px 20px; font-size: 0.85rem; border-color: rgba(99, 102, 241, 0.25);">
@@ -207,9 +242,9 @@
 
         <!-- PAGE 2: TECH STACK -->
         <section id="tech-page" class="page">
-          <h2 class="section-title reveal-text">My Technical Toolkit</h2>
+          <h2 class="section-title reveal-text">Cosmic Toolkit & Planetary Orbits</h2>
           <p class="section-subtitle">
-            A comprehensive overview of language proficiencies, frameworks, database architectures, and engineering infrastructure.
+            An orbital galaxy of data science proficiencies, machine learning frameworks, backend architectures, and cloud infrastructure.
           </p>
 
           <!-- Skill Radar Chart -->
@@ -228,16 +263,16 @@
 
         <!-- PAGE 3: PROJECTS -->
         <section id="projects-page" class="page">
-          <h2 class="section-title reveal-text">Featured Creations</h2>
+          <h2 class="section-title reveal-text">Cosmic Shipyard & Creations</h2>
           <p class="section-subtitle">
-            A curated showcase of engineering builds ranging from custom AI planners to interactive web interfaces.
+            A curated fleet of engineering builds, autonomous navigation probes, and interactive celestial systems.
           </p>
 
           <div class="projects-header">
             <div class="tech-categories" id="project-tech-filters">
               <!-- Dynamically populated filtering buttons -->
             </div>
-            <input type="text" id="project-search-input" class="glass-input project-search" placeholder="Search projects..." />
+            <input type="text" id="project-search-input" class="glass-input project-search" placeholder="Search cosmic projects..." />
           </div>
 
           <div class="projects-grid" id="projects-grid-container">
@@ -247,9 +282,9 @@
 
         <!-- PAGE 3.5: BLOG -->
         <section id="blog-page" class="page">
-          <h2 class="section-title reveal-text">The Developer Chronicle</h2>
+          <h2 class="section-title reveal-text">The Cosmic Chronicle</h2>
           <p class="section-subtitle">
-            Sharing insights about front-end architecture, user experience design, and client-side AI paradigms.
+            Transmissions and technical insights on data architectures, WebGL shaders, and intelligent generative agents.
           </p>
           <div class="blog-grid" id="blog-grid-container">
             <!-- Dynamically populated articles -->
@@ -258,9 +293,9 @@
 
         <!-- PAGE 3.8: HACKATHONS -->
         <section id="hackathons-page" class="page">
-          <h2 class="section-title reveal-text">Hackathons & Competitions</h2>
+          <h2 class="section-title reveal-text">Expedition Honors & Competitions</h2>
           <p class="section-subtitle">
-            Showcasing live builds, hackathon projects, team achievements, and competitive programming milestones.
+            Rapid-deployment hackathon builds, speed-coding conquests, and competitive orbital trophies.
           </p>
           <div class="hackathons-grid" id="hackathons-grid-container" style="margin-top: 32px;">
             <!-- Dynamically populated hackathons -->
@@ -269,9 +304,9 @@
 
         <!-- PAGE 4: CERTIFICATES -->
         <section id="certificates-page" class="page">
-          <h2 class="section-title reveal-text">Certificates & Credentials</h2>
+          <h2 class="section-title reveal-text">Mission Clearances & Credentials</h2>
           <p class="section-subtitle">
-            Verified professional achievements, certifications, and licenses.
+            Verified flight authorizations, technical certifications, and engineering credentials.
           </p>
           <div class="certificates-grid" id="certificates-grid-container" style="margin-top: 32px;">
             <!-- Dynamically populated certificates -->
@@ -280,14 +315,14 @@
 
         <!-- PAGE 5: CONTACT -->
         <section id="contact-page" class="page">
-          <h2 class="section-title reveal-text">Initiate Contact</h2>
+          <h2 class="section-title reveal-text">Establish Quantum Uplink</h2>
           <p class="section-subtitle">
-            Have a project in mind or interested in collaborating? Leave a message below, and my virtual assistant will process it immediately.
+            Transmit a direct signal across the digital cosmos. Mission control will process and acknowledge your transmission immediately.
           </p>
 
           <div class="contact-grid">
             <div class="contact-info glass-panel" style="padding: 32px;">
-              <h3 style="margin-bottom: 20px;">Connection Hub</h3>
+              <h3 style="margin-bottom: 20px;">Deep Space Uplink Terminal</h3>
               <div class="contact-info-item">
                 <div class="contact-info-icon">
                   <svg viewBox="0 0 24 24" width="20" height="20" stroke="currentColor" stroke-width="2" fill="none"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
@@ -877,8 +912,8 @@
             <div class="chat-header-title">
               <div class="chat-status-dot"></div>
               <div>
-                <h4>Persona Bot</h4>
-                <p id="chat-sub-status">Virtual Representative</p>
+                <h4>Cosmic Co-Pilot</h4>
+                <p id="chat-sub-status">Autonomous Space Representative</p>
               </div>
             </div>
             <button class="chat-close-btn" id="chat-widget-close">
@@ -888,7 +923,7 @@
           
           <div class="chat-messages" id="chat-message-history">
             <div class="chat-message system">
-              Hi! I am the virtual representative. Ask me anything about my builder's skills, projects, and work experience!
+              Greetings, Traveler! 🚀 I am Arnav's autonomous Cosmic Co-Pilot. Ask me anything about his technical fleet, project telemetry, or how to transmit a direct uplink!
             </div>
           </div>
 
@@ -921,7 +956,7 @@
       </div>
 
       <footer style="text-align: center; color: var(--text-dimmed); font-size: 0.8rem; padding: 24px; margin-top: auto; border-top: 1px solid var(--border-light); display: flex; justify-content: center; align-items: center; gap: 8px;">
-        <span>&copy; 2026 Developer Portfolio. All rights reserved. Created in Pair Programming Sandbox.</span>
+        <span>&copy; 2026 Arnav Jain • Deep Space Fleet & Portfolio. All telemetry online. ✦</span>
         <button id="admin-lock-btn" style="background: none; border: none; color: var(--text-dimmed); cursor: pointer; display: none; align-items: center;" title="Admin Portal Control">
           <svg id="lock-icon" viewBox="0 0 24 24" width="12" height="12" stroke="currentColor" stroke-width="2.5" fill="none"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
         </button>

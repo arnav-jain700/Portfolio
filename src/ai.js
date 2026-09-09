@@ -113,22 +113,22 @@ function getSimulatedResponse(message) {
 
   // Basic greeting
   if (msg.includes("hello") || msg.includes("hi ") || msg.includes("hey")) {
-    return `Hello! I am the virtual representative for ${settings.ownerName || "Arnav Jain"}'s portfolio. Feel free to ask me about their technical skills, projects, or background!`;
+    return `Greetings, Spacefarer! 🚀 I am the autonomous Cosmic Co-Pilot for ${settings.ownerName || "Arnav Jain"}'s fleet. Ask me anything about his technical stack, ship designs, or expedition logs!`;
   }
 
   // Who are you / bio
   if (msg.includes("who are you") || msg.includes("about") || msg.includes("yourself") || msg.includes("bio")) {
-    return `The portfolio owner is ${settings.ownerName || "Arnav Jain"}. Here is their bio: "${settings.ownerBio}". Would you like to check out their tech stack or projects?`;
+    return `The commander of this ship is ${settings.ownerName || "Arnav Jain"}. Mission Briefing: "${settings.ownerBio}". Would you like to inspect his planetary tech stack or launch telemetry?`;
   }
 
   // Projects inquiry
   if (msg.includes("project") || msg.includes("built") || msg.includes("portfolio")) {
     if (projects.length === 0) {
-      return "No projects have been added yet! You can add some in the Admin panel.";
+      return "No missions logged in the shipyard yet! Add some from the Mission Control Admin.";
     }
-    let response = "Here are the projects the owner has built:\n\n";
+    let response = "Here are the orbital payloads & ships launched by Arnav:\n\n";
     projects.forEach(p => {
-      response += `• **${p.title}**: ${p.description} (${(Array.isArray(p.tags) ? p.tags : []).join(", ")})\n`;
+      response += `• 🛰️ **${p.title}**: ${p.description} (${(Array.isArray(p.tags) ? p.tags : []).join(", ")})\n`;
     });
     return response;
   }
@@ -136,7 +136,7 @@ function getSimulatedResponse(message) {
   // Tech stack inquiry
   if (msg.includes("skills") || msg.includes("tech") || msg.includes("stack") || msg.includes("know") || msg.includes("language")) {
     if (techStacks.length === 0) {
-      return "No skills have been listed yet! You can add them in the Admin panel.";
+      return "No planetary orbits calibrated yet! Add them from Mission Control.";
     }
     const categories = {};
     techStacks.forEach(t => {
@@ -144,9 +144,9 @@ function getSimulatedResponse(message) {
       categories[t.category].push(`${t.name} (${t.level}%)`);
     });
 
-    let response = "Here is the owner's technology stack:\n\n";
+    let response = "Here is Arnav's planetary technology constellation:\n\n";
     for (const [cat, items] of Object.entries(categories)) {
-      response += `**${cat}**: ${items.join(", ")}\n`;
+      response += `🪐 **${cat}**: ${items.join(", ")}\n`;
     }
     return response;
   }
@@ -158,11 +158,11 @@ function getSimulatedResponse(message) {
         (Array.isArray(p.tags) ? p.tags : []).some(tag => tag.toLowerCase() === tech.name.toLowerCase())
       );
       
-      let response = `The owner is proficient in **${tech.name}** (level: ${tech.level}%). `;
+      let response = `Arnav has strong mastery over **${tech.name}** (calibration level: ${tech.level}%). `;
       if (matchingProjects.length > 0) {
-        response += `They have used it in projects like: ${matchingProjects.map(p => p.title).join(", ")}.`;
+        response += `It powers deep-space builds like: ${matchingProjects.map(p => p.title).join(", ")}.`;
       } else {
-        response += "They haven't linked it to any specific projects in their portfolio list yet.";
+        response += "It is ready in his toolkit for future interstellar deployments.";
       }
       return response;
     }
@@ -170,11 +170,11 @@ function getSimulatedResponse(message) {
 
   // Contact info
   if (msg.includes("contact") || msg.includes("hire") || msg.includes("email") || msg.includes("message")) {
-    return `You can get in touch by filling out the Contact Form on the **Contact** page, or email directly at **${settings.email || "arnavjain1905@gmail.com"}**.`;
+    return `You can establish a direct quantum uplink via the **Contact** page terminal, or transmit directly to **${settings.email || "arnavjain1905@gmail.com"}** 📡.`;
   }
 
   // Default response
-  return `I am here to help you learn more about ${settings.ownerName || "Arnav"}'s engineering projects, technical stack, credentials, and experience. Feel free to ask about any specific skill or visit the Contact page to reach out!`;
+  return `I am here to guide you through ${settings.ownerName || "Arnav"}'s engineering ships, telemetry, certifications, and flight logs. Feel free to query any specific stack or transmit a direct uplink via the Contact station! ✦`;
 }
 
 export const AI = {
@@ -183,9 +183,9 @@ export const AI = {
     try {
       const portfolioContext = compilePortfolioContext();
       
-      const systemInstruction = `You are the Virtual AI Representative of a software developer.
-Your job is to interact with visitors of this portfolio website, answering questions about the developer's experience, technologies, and projects.
-Be professional, elegant, helpful, and concise. Make the developer look good! Do not make up facts; refer strictly to the provided context. If you don't know something, guide them to the Contact page.
+      const systemInstruction = `You are the Cosmic Co-Pilot & Autonomous AI Representative for software engineer and data scientist Arnav Jain.
+Your job is to interact with space travelers and recruiters visiting this cosmic portfolio website, answering questions about Arnav's experience, technologies, missions, and codebases.
+Maintain an elegant, sharp, welcoming, and slightly cosmic yet highly professional demeanor. Make the developer look stellar! Refer strictly to the provided context and avoid hallucinations. If something is unknown, direct them to the Contact uplink terminal.
 
 PORTFOLIO CONTEXT:
 ${portfolioContext}`;

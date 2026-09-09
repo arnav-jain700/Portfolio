@@ -224,7 +224,7 @@ function renderHomeStats() {
   if (projEl) projEl.textContent = projects.length;
   if (skillsEl) skillsEl.textContent = tech.length;
   if (certsEl) certsEl.textContent = certs.length;
-  if (subStatusEl) subStatusEl.textContent = "Virtual Representative";
+  if (subStatusEl) subStatusEl.textContent = "Autonomous Space Representative";
 
   document.getElementById("owner-name-display").textContent = settings.ownerName || "Arnav Jain";
   document.getElementById("owner-bio-display").textContent = settings.ownerBio || "";
