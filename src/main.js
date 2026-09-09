@@ -1985,8 +1985,27 @@ function renderTimeline() {
 }
 
 // ----------------------------------------------------
-// SVG RADAR SKILL CHART DRAWER
+// INTERACTIVE SKILLS SOLAR SYSTEM & CELESTIAL ENGINE
 // ----------------------------------------------------
+let currentToolkitView = "solar"; // "solar" | "radar"
+let isSolarOrbitPaused = false;
+
+const CELESTIAL_PALETTE = {
+  "data science": { color: "#10b981", light: "#6ee7b7", dark: "#047857", ring: true, size: 32, speed: 42 },
+  "frontend": { color: "#00f0ff", light: "#a5f3fc", dark: "#0891b2", ring: false, size: 28, speed: 28 },
+  "backend": { color: "#6366f1", light: "#c7d2fe", dark: "#4338ca", ring: true, size: 30, speed: 52 },
+  "databases": { color: "#f59e0b", light: "#fde68a", dark: "#b45309", ring: false, size: 26, speed: 64 },
+  "devops": { color: "#f43f5e", light: "#fecdd3", dark: "#be123c", ring: false, size: 27, speed: 76 },
+  "version control": { color: "#38bdf8", light: "#bae6fd", dark: "#0369a1", ring: true, size: 24, speed: 88 }
+};
+
+const EXTRA_COLORS = [
+  { color: "#d946ef", light: "#f5d0fe", dark: "#a21caf" },
+  { color: "#84cc16", light: "#d9f99d", dark: "#4d7c0f" },
+  { color: "#14b8a6", light: "#99f6e4", dark: "#0f766e" },
+  { color: "#ec4899", light: "#fbcfe8", dark: "#be185d" }
+];
+
 function renderRadarChart() {
   const container = document.getElementById("radar-chart-container");
   if (!container) return;
@@ -1994,27 +2013,155 @@ function renderRadarChart() {
   const tech = Database.getTechStacks();
   const allCats = getAllCategories();
 
+  // Gather categories data
   const data = [];
-  allCats.forEach(cat => {
+  allCats.forEach((cat, idx) => {
     const items = tech.filter(t => t.category && t.category.toLowerCase() === cat.toLowerCase());
-    if (items.length > 0) {
-      const avg = items.reduce((sum, item) => sum + (Number(item.level) || 50), 0) / items.length;
-      data.push({ name: cat, value: avg, count: items.length });
-    }
+    const count = items.length;
+    const avg = count > 0 
+      ? Math.round(items.reduce((sum, item) => sum + (Number(item.level) || 50), 0) / count)
+      : 40;
+    
+    const key = cat.toLowerCase();
+    const config = CELESTIAL_PALETTE[key] || EXTRA_COLORS[idx % EXTRA_COLORS.length];
+
+    data.push({
+      name: cat,
+      value: avg,
+      count: count,
+      items: items.map(i => `${i.name} (${i.level}%)`),
+      color: config.color,
+      light: config.light,
+      dark: config.dark,
+      ring: config.ring !== undefined ? config.ring : (idx % 2 === 0),
+      size: config.size || 28,
+      speed: config.speed || (30 + idx * 12)
+    });
   });
 
-  // If fewer than 3 categories have skills, add placeholders from allCats so polygon always renders
-  if (data.length < 3) {
-    allCats.forEach(cat => {
-      if (!data.some(d => d.name.toLowerCase() === cat.toLowerCase()) && data.length < 6) {
-        data.push({ name: cat, value: 45, count: 0 });
-      }
-    });
+  // Render Control Bar
+  let controlsHtml = `
+    <div class="solar-controls-bar">
+      <button class="solar-view-btn ${currentToolkitView === 'solar' ? 'active' : ''}" id="solar-toggle-orbit">
+        <span>🪐</span> Cosmic Orbit
+      </button>
+      <button class="solar-view-btn ${currentToolkitView === 'radar' ? 'active' : ''}" id="solar-toggle-radar">
+        <span>📊</span> Radar Matrix
+      </button>
+      <button class="solar-view-btn" id="solar-toggle-pause">
+        <span>${isSolarOrbitPaused ? '▶️' : '⏸️'}</span> ${isSolarOrbitPaused ? 'Resume Orbit' : 'Pause Orbit'}
+      </button>
+    </div>
+  `;
+
+  if (currentToolkitView === "radar") {
+    // Render Geometric Radar Matrix
+    container.innerHTML = `
+      <div class="solar-system-wrapper">
+        ${controlsHtml}
+        ${renderGeometricRadarSvg(data)}
+      </div>
+    `;
+  } else {
+    // Render Cosmic Skills Solar System
+    container.innerHTML = `
+      <div class="solar-system-wrapper">
+        ${controlsHtml}
+        <div class="solar-viewport ${isSolarOrbitPaused ? 'paused' : ''}" id="solar-viewport-stage">
+          <div class="solar-ambient-nebula"></div>
+          
+          <!-- Central Star (Sun) -->
+          <div class="solar-sun-anchor" id="solar-sun-button" title="Click to view all technologies (${tech.length} items)">
+            <div class="solar-sun-corona"></div>
+            <div class="solar-sun-core">
+              <span>CORE</span>
+              <span style="font-size: 0.55rem; opacity: 0.9;">STACK</span>
+            </div>
+          </div>
+
+          <!-- Planetary Orbits & Planets -->
+          ${renderPlanetaryBodies(data)}
+
+          <!-- Cosmic Telemetry HUD Card -->
+          <div class="solar-hud-card" id="solar-hud-card">
+            <div class="solar-hud-title" id="solar-hud-title">
+              <span>Category</span>
+              <span style="font-size: 0.75rem; opacity: 0.85;" id="solar-hud-count">0 skills</span>
+            </div>
+            <div class="solar-hud-stats" id="solar-hud-stats">Avg Mastery: 0%</div>
+            <div class="solar-hud-skills-list" id="solar-hud-skills"></div>
+          </div>
+        </div>
+      </div>
+    `;
   }
 
+  // Bind Switcher & Interactive Events
+  bindSolarSystemEvents(data);
+}
+
+function renderPlanetaryBodies(data) {
+  if (!data || data.length === 0) return "";
+
+  const total = data.length;
+  // Dynamic orbital radial step
+  const minRadius = 80;
+  const maxRadius = 265;
+  const step = total > 1 ? (maxRadius - minRadius) / (total - 1) : 0;
+
+  let markup = "";
+
+  data.forEach((p, i) => {
+    const orbitRadius = Math.round(minRadius + (i * step));
+    const orbitDiameter = orbitRadius * 2;
+    const duration = p.speed;
+
+    // Top 3 skills as orbiting moons
+    let moonsMarkup = "";
+    if (p.items && p.items.length > 0) {
+      const topItems = p.items.slice(0, 3);
+      topItems.forEach((skillStr, sIdx) => {
+        const moonOrbitSize = 44 + (sIdx * 10);
+        const moonSpeed = 7 + (sIdx * 3);
+        const skillName = skillStr.split(" ")[0];
+        moonsMarkup += `
+          <div class="solar-moon-track" style="--moon-orbit-size: ${moonOrbitSize}px; --moon-speed: ${moonSpeed}s;" title="${skillStr}">
+            <div class="solar-moon-node" data-skill="${skillStr}"></div>
+          </div>
+        `;
+      });
+    }
+
+    markup += `
+      <!-- Orbit Ring ${i + 1} -->
+      <div class="solar-orbit-ring" id="orbit-ring-${i}" style="width: ${orbitDiameter}px; height: ${orbitDiameter}px;"></div>
+
+      <!-- Planet ${p.name} Orbit Track -->
+      <div class="solar-planet-track" style="width: ${orbitDiameter}px; height: ${orbitDiameter}px; --orbit-duration: ${duration}s;" data-orbit-index="${i}">
+        <div class="solar-planet-body" data-category="${p.name}" data-index="${i}">
+          <div class="solar-planet-counter-rotator" style="--orbit-duration: ${duration}s;">
+            
+            <div class="solar-planet-sphere" style="--planet-size: ${p.size}px; --planet-color: ${p.color}; --planet-light: ${p.light}; --planet-dark: ${p.dark};">
+              ${p.ring ? `<div class="solar-planet-ring-disc" style="--planet-color: ${p.color};"></div>` : ''}
+              ${moonsMarkup}
+            </div>
+            
+            <div class="solar-planet-tag" style="--planet-color: ${p.color};">
+              ${p.name} <small style="opacity: 0.8;">(${p.count})</small>
+            </div>
+
+          </div>
+        </div>
+      </div>
+    `;
+  });
+
+  return markup;
+}
+
+function renderGeometricRadarSvg(data) {
   if (data.length < 3) {
-    container.innerHTML = `<div style="text-align: center; color: var(--text-muted); font-size: 0.9rem; padding: 20px;">Add at least 3 categories with skills to render the Radar Chart.</div>`;
-    return;
+    return `<div style="text-align: center; color: var(--text-muted); padding: 30px;">Add at least 3 categories with skills to render the geometric radar.</div>`;
   }
 
   const width = 380;
@@ -2038,7 +2185,6 @@ function renderRadarChart() {
     gridMarkup += `<polygon points="${points.join(" ")}" class="radar-grid-line" fill="none" />`;
   });
 
-  // Axes and labels
   let axesMarkup = "";
   let labelsMarkup = "";
   const points = [];
@@ -2050,7 +2196,6 @@ function renderRadarChart() {
     const yOuter = centerY - radius * Math.cos(angle);
     axesMarkup += `<line x1="${centerX}" y1="${centerY}" x2="${xOuter.toFixed(1)}" y2="${yOuter.toFixed(1)}" class="radar-axis" />`;
 
-    // Dynamic label positioning with text-anchor
     const labelRadius = radius + 22;
     const labelX = centerX + labelRadius * Math.sin(angle);
     const labelY = centerY - labelRadius * Math.cos(angle);
@@ -2072,7 +2217,7 @@ function renderRadarChart() {
 
   const polygonMarkup = `<polygon points="${points.join(" ")}" class="radar-polygon" />`;
 
-  container.innerHTML = `
+  return `
     <svg width="100%" height="${height}" viewBox="0 0 ${width} ${height}" style="max-width: 440px; height: auto; display: block; margin: 0 auto; overflow: visible;">
       ${gridMarkup}
       ${axesMarkup}
@@ -2081,6 +2226,100 @@ function renderRadarChart() {
       ${labelsMarkup}
     </svg>
   `;
+}
+
+function bindSolarSystemEvents(data) {
+  // View Toggle: Orbit vs Radar
+  const btnOrbit = document.getElementById("solar-toggle-orbit");
+  const btnRadar = document.getElementById("solar-toggle-radar");
+  const btnPause = document.getElementById("solar-toggle-pause");
+
+  if (btnOrbit) {
+    btnOrbit.addEventListener("click", () => {
+      currentToolkitView = "solar";
+      renderRadarChart();
+    });
+  }
+
+  if (btnRadar) {
+    btnRadar.addEventListener("click", () => {
+      currentToolkitView = "radar";
+      renderRadarChart();
+    });
+  }
+
+  if (btnPause) {
+    btnPause.addEventListener("click", () => {
+      isSolarOrbitPaused = !isSolarOrbitPaused;
+      const stage = document.getElementById("solar-viewport-stage");
+      if (stage) {
+        stage.classList.toggle("paused", isSolarOrbitPaused);
+      }
+      btnPause.innerHTML = `<span>${isSolarOrbitPaused ? '▶️' : '⏸️'}</span> ${isSolarOrbitPaused ? 'Resume Orbit' : 'Pause Orbit'}`;
+    });
+  }
+
+  // Sun Button: Reset to All
+  const sunBtn = document.getElementById("solar-sun-button");
+  if (sunBtn) {
+    sunBtn.addEventListener("click", () => {
+      const filters = document.getElementById("tech-category-filters");
+      if (filters) {
+        filters.querySelectorAll(".tech-filter-btn").forEach(b => b.classList.remove("active"));
+        const allBtn = filters.querySelector('[data-category="All"]');
+        if (allBtn) allBtn.classList.add("active");
+      }
+      renderTechGrid("All");
+      showToast("Displaying all core engineering skills");
+    });
+  }
+
+  // Planet Hover & Click Events
+  const hud = document.getElementById("solar-hud-card");
+  const hudTitle = document.getElementById("solar-hud-title");
+  const hudStats = document.getElementById("solar-hud-stats");
+  const hudSkills = document.getElementById("solar-hud-skills");
+
+  document.querySelectorAll(".solar-planet-body").forEach(planet => {
+    const catName = planet.dataset.category;
+    const index = planet.dataset.index;
+    const catData = data.find(d => d.name.toLowerCase() === catName.toLowerCase());
+    const ring = document.getElementById(`orbit-ring-${index}`);
+
+    planet.addEventListener("mouseenter", () => {
+      if (ring) ring.classList.add("active-highlight");
+      if (hud && catData) {
+        hudTitle.innerHTML = `<span>🪐 ${catData.name}</span><span style="font-size:0.75rem; color:var(--accent-cyan);">${catData.count} skills</span>`;
+        hudStats.textContent = `Average Mastery: ${catData.value}% • Click planet to filter`;
+        hudSkills.innerHTML = (catData.items && catData.items.length > 0)
+          ? catData.items.slice(0, 6).map(s => `<span class="solar-hud-chip">${s}</span>`).join("")
+          : `<span class="solar-hud-chip" style="opacity:0.6;">No skills listed</span>`;
+        hud.classList.add("visible");
+      }
+    });
+
+    planet.addEventListener("mouseleave", () => {
+      if (ring) ring.classList.remove("active-highlight");
+      if (hud) hud.classList.remove("visible");
+    });
+
+    planet.addEventListener("click", () => {
+      // Filter the grid below
+      const filters = document.getElementById("tech-category-filters");
+      if (filters) {
+        filters.querySelectorAll(".tech-filter-btn").forEach(b => {
+          b.classList.toggle("active", b.dataset.category.toLowerCase() === catName.toLowerCase());
+        });
+      }
+      renderTechGrid(catName);
+      showToast(`Filtered toolkit for: ${catName}`);
+      
+      const grid = document.getElementById("tech-grid-container");
+      if (grid) {
+        grid.scrollIntoView({ behavior: "smooth", block: "start" });
+      }
+    });
+  });
 }
 
 // ----------------------------------------------------
