@@ -266,7 +266,7 @@ function renderHomeStats() {
       let display = item.url.replace(/\/$/, "").split("/").pop();
       if (!display || display.includes(".com") || display.length < 2) display = "Profile Link";
       
-      link.innerHTML = `&bull; <strong>${item.name}</strong>: <span style="border-bottom: 1px dashed rgba(6, 182, 212, 0.4);">${display}</span>`;
+      link.innerHTML = `&bull; <strong>${item.name}</strong>: <span style="border-bottom: 1px dashed rgba(255, 255, 255, 0.35);">${display}</span>`;
       extraList.appendChild(link);
     }
   });
@@ -495,25 +495,25 @@ function getProjectSvgGraphic(proj) {
       <svg class="project-graphic-svg" viewBox="0 0 240 100" fill="none" stroke="currentColor">
         <defs>
           <linearGradient id="grad-plexus" x1="0%" y1="0%" x2="100%" y2="100%">
-            <stop offset="0%" stop-color="#06b6d4" />
-            <stop offset="100%" stop-color="#6366f1" />
+            <stop offset="0%" stop-color="#ffffff" />
+            <stop offset="100%" stop-color="#a1a1aa" />
           </linearGradient>
         </defs>
         <circle cx="120" cy="50" r="34" stroke="url(#grad-plexus)" stroke-width="1.5" stroke-dasharray="4 3" opacity="0.6"/>
         <ellipse cx="120" cy="50" rx="46" ry="18" stroke="url(#grad-plexus)" stroke-width="1" opacity="0.4" transform="rotate(-15 120 50)"/>
-        <path d="M40 75 Q120 15 200 75" stroke="#06b6d4" stroke-width="1.5" stroke-dasharray="6 4" opacity="0.7"/>
-        <path d="M60 25 Q120 85 180 25" stroke="#a855f7" stroke-width="1.5" opacity="0.5"/>
-        <circle cx="75" cy="45" r="4" fill="#06b6d4"/>
-        <circle cx="120" cy="22" r="5" fill="#6366f1"/>
-        <circle cx="165" cy="55" r="4.5" fill="#a855f7"/>
-        <circle cx="130" cy="72" r="3.5" fill="#38bdf8"/>
-        <circle cx="95" cy="65" r="3" fill="#818cf8"/>
-        <line x1="75" y1="45" x2="120" y2="22" stroke="#06b6d4" stroke-width="1.2" opacity="0.8"/>
-        <line x1="120" y1="22" x2="165" y2="55" stroke="#6366f1" stroke-width="1.2" opacity="0.8"/>
-        <line x1="165" y1="55" x2="130" y2="72" stroke="#a855f7" stroke-width="1.2" opacity="0.8"/>
-        <line x1="130" y1="72" x2="95" y2="65" stroke="#38bdf8" stroke-width="1.2" opacity="0.8"/>
-        <line x1="95" y1="65" x2="75" y2="45" stroke="#818cf8" stroke-width="1.2" opacity="0.8"/>
-        <line x1="75" y1="45" x2="165" y2="55" stroke="#06b6d4" stroke-width="0.8" opacity="0.4"/>
+        <path d="M40 75 Q120 15 200 75" stroke="#ffffff" stroke-width="1.5" stroke-dasharray="6 4" opacity="0.7"/>
+        <path d="M60 25 Q120 85 180 25" stroke="#d4d4d8" stroke-width="1.5" opacity="0.5"/>
+        <circle cx="75" cy="45" r="4" fill="#ffffff"/>
+        <circle cx="120" cy="22" r="5" fill="#f4f4f5"/>
+        <circle cx="165" cy="55" r="4.5" fill="#e4e4e7"/>
+        <circle cx="130" cy="72" r="3.5" fill="#d4d4d8"/>
+        <circle cx="95" cy="65" r="3" fill="#a1a1aa"/>
+        <line x1="75" y1="45" x2="120" y2="22" stroke="#ffffff" stroke-width="1.2" opacity="0.8"/>
+        <line x1="120" y1="22" x2="165" y2="55" stroke="#f4f4f5" stroke-width="1.2" opacity="0.8"/>
+        <line x1="165" y1="55" x2="130" y2="72" stroke="#e4e4e7" stroke-width="1.2" opacity="0.8"/>
+        <line x1="130" y1="72" x2="95" y2="65" stroke="#d4d4d8" stroke-width="1.2" opacity="0.8"/>
+        <line x1="95" y1="65" x2="75" y2="45" stroke="#a1a1aa" stroke-width="1.2" opacity="0.8"/>
+        <line x1="75" y1="45" x2="165" y2="55" stroke="#ffffff" stroke-width="0.8" opacity="0.4"/>
       </svg>
     `;
   }
@@ -524,18 +524,18 @@ function getProjectSvgGraphic(proj) {
       <svg class="project-graphic-svg" viewBox="0 0 240 100" fill="none" stroke="currentColor">
         <defs>
           <linearGradient id="grad-ai" x1="0%" y1="0%" x2="100%" y2="100%">
-            <stop offset="0%" stop-color="#a855f7" />
-            <stop offset="100%" stop-color="#06b6d4" />
+            <stop offset="0%" stop-color="#ffffff" />
+            <stop offset="100%" stop-color="#71717a" />
           </linearGradient>
         </defs>
-        <rect x="90" y="20" width="60" height="60" rx="12" stroke="url(#grad-ai)" stroke-width="2" fill="rgba(168, 85, 247, 0.08)"/>
-        <circle cx="120" cy="50" r="16" fill="none" stroke="#38bdf8" stroke-width="2"/>
-        <path d="M120 38 L120 62 M108 50 L132 50" stroke="#a855f7" stroke-width="2" stroke-linecap="round"/>
+        <rect x="90" y="20" width="60" height="60" rx="12" stroke="url(#grad-ai)" stroke-width="2" fill="rgba(255, 255, 255, 0.05)"/>
+        <circle cx="120" cy="50" r="16" fill="none" stroke="#ffffff" stroke-width="2"/>
+        <path d="M120 38 L120 62 M108 50 L132 50" stroke="#d4d4d8" stroke-width="2" stroke-linecap="round"/>
         <path d="M40 50 L90 50 M150 50 L200 50 M120 20 L120 8 M120 80 L120 92" stroke="url(#grad-ai)" stroke-width="1.5" stroke-dasharray="4 2"/>
-        <circle cx="40" cy="50" r="4" fill="#a855f7"/>
-        <circle cx="200" cy="50" r="4" fill="#06b6d4"/>
-        <circle cx="120" cy="8" r="3" fill="#38bdf8"/>
-        <circle cx="120" cy="92" r="3" fill="#c084fc"/>
+        <circle cx="40" cy="50" r="4" fill="#ffffff"/>
+        <circle cx="200" cy="50" r="4" fill="#ffffff"/>
+        <circle cx="120" cy="8" r="3" fill="#d4d4d8"/>
+        <circle cx="120" cy="92" r="3" fill="#a1a1aa"/>
       </svg>
     `;
   }
@@ -545,15 +545,15 @@ function getProjectSvgGraphic(proj) {
     <svg class="project-graphic-svg" viewBox="0 0 240 100" fill="none" stroke="currentColor">
       <defs>
         <linearGradient id="grad-code" x1="0%" y1="0%" x2="100%" y2="100%">
-          <stop offset="0%" stop-color="#6366f1" />
-          <stop offset="100%" stop-color="#38bdf8" />
+          <stop offset="0%" stop-color="#ffffff" />
+          <stop offset="100%" stop-color="#a1a1aa" />
         </linearGradient>
       </defs>
-      <rect x="50" y="15" width="140" height="70" rx="8" stroke="url(#grad-code)" stroke-width="1.5" fill="rgba(99, 102, 241, 0.06)"/>
-      <path d="M70 35 L85 50 L70 65" stroke="#06b6d4" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
-      <path d="M170 35 L155 50 L170 65" stroke="#6366f1" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
-      <line x1="125" y1="35" x2="115" y2="65" stroke="#a855f7" stroke-width="2.5" stroke-linecap="round"/>
-      <rect x="95" y="72" width="50" height="3" rx="1.5" fill="#38bdf8" opacity="0.6"/>
+      <rect x="50" y="15" width="140" height="70" rx="8" stroke="url(#grad-code)" stroke-width="1.5" fill="rgba(255, 255, 255, 0.04)"/>
+      <path d="M70 35 L85 50 L70 65" stroke="#ffffff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+      <path d="M170 35 L155 50 L170 65" stroke="#d4d4d8" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+      <line x1="125" y1="35" x2="115" y2="65" stroke="#a1a1aa" stroke-width="2.5" stroke-linecap="round"/>
+      <rect x="95" y="72" width="50" height="3" rx="1.5" fill="#ffffff" opacity="0.6"/>
     </svg>
   `;
 }
@@ -708,7 +708,7 @@ function openProjectModal(project) {
     `;
   } else {
     modalGraphicHeader = `
-      <div style="background: radial-gradient(circle at 50% 30%, rgba(99, 102, 241, 0.25), rgba(15, 23, 42, 0.95)); border: 1px solid var(--border-light); border-radius: var(--radius-md); padding: 24px; margin-bottom: 24px; text-align: center; position: relative; overflow: hidden; display: flex; align-items: center; justify-content: center; min-height: 140px;">
+      <div style="background: radial-gradient(circle at 50% 30%, rgba(255, 255, 255, 0.08), rgba(12, 12, 16, 0.95)); border: 1px solid var(--border-light); border-radius: var(--radius-md); padding: 24px; margin-bottom: 24px; text-align: center; position: relative; overflow: hidden; display: flex; align-items: center; justify-content: center; min-height: 140px;">
         ${getProjectSvgGraphic(project)}
       </div>
     `;
@@ -727,7 +727,7 @@ function openProjectModal(project) {
 
     <h3 style="margin-bottom: 10px;">Tech Stack Employed</h3>
     <div style="display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 30px;">
-      ${(Array.isArray(project.tags) ? project.tags : []).map(tag => `<span class="badge" style="background: rgba(99,102,241,0.1); border-color: rgba(99,102,241,0.25); color: var(--text-primary);">${tag}</span>`).join("")}
+      ${(Array.isArray(project.tags) ? project.tags : []).map(tag => `<span class="badge" style="background: rgba(255,255,255,0.06); border-color: rgba(255,255,255,0.15); color: var(--text-primary);">${tag}</span>`).join("")}
     </div>
 
     <div style="display: flex; gap: 16px;">
@@ -1563,7 +1563,7 @@ function renderAdminMessages() {
           <svg viewBox="0 0 24 24" width="14" height="14" stroke="currentColor" stroke-width="2" fill="none" style="vertical-align: middle; margin-right: 4px;"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
           Draft AI Response
         </button>
-        <div class="draft-reply-display" style="display: none; padding: 12px; background: rgba(6, 182, 212, 0.05); border: 1px dashed rgba(6, 182, 212, 0.3); border-radius: var(--radius-sm); font-size: 0.85rem; font-family: monospace; white-space: pre-wrap; color: var(--text-primary);"></div>
+        <div class="draft-reply-display" style="display: none; padding: 12px; background: rgba(255, 255, 255, 0.04); border: 1px dashed rgba(255, 255, 255, 0.25); border-radius: var(--radius-sm); font-size: 0.85rem; font-family: monospace; white-space: pre-wrap; color: var(--text-primary);"></div>
       </div>
     `;
 
@@ -1596,13 +1596,13 @@ function renderAdminMessages() {
       const responseDraftCRLF = responseDraft.replace(/\r?\n/g, "\r\n");
       
       displayEl.innerHTML = `
-        <textarea class="glass-input reply-textarea" style="min-height: 120px; font-family: inherit; font-size: 0.85rem; margin-bottom: 10px; width: 100%; border-color: rgba(6, 182, 212, 0.3); background: rgba(0,0,0,0.15); line-height: 1.4;">${responseDraft}</textarea>
+        <textarea class="glass-input reply-textarea" style="min-height: 120px; font-family: inherit; font-size: 0.85rem; margin-bottom: 10px; width: 100%; border-color: rgba(255, 255, 255, 0.25); background: rgba(0,0,0,0.25); line-height: 1.4;">${responseDraft}</textarea>
         <div style="display: flex; gap: 8px; flex-wrap: wrap;">
           <a class="btn btn-primary send-email-btn" href="https://mail.google.com/mail/?view=cm&tf=cm&fs=1&to=${encodeURIComponent(m.email)}&su=${encodeURIComponent("Reply: Portfolio Inquiry")}&body=${encodeURIComponent(responseDraftCRLF)}" target="_blank" style="padding: 6px 14px; font-size: 0.8rem; text-decoration: none;">
             <svg viewBox="0 0 24 24" width="12" height="12" stroke="currentColor" stroke-width="2" fill="none" style="vertical-align: middle; margin-right: 4px;"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
             Send via Gmail
           </a>
-          <a class="btn btn-secondary send-mailto-btn" href="mailto:${m.email}?subject=${encodeURIComponent("Reply: Portfolio Inquiry")}&body=${encodeURIComponent(responseDraftCRLF)}" style="padding: 6px 14px; font-size: 0.8rem; text-decoration: none; border-color: rgba(6, 182, 212, 0.25);">
+          <a class="btn btn-secondary send-mailto-btn" href="mailto:${m.email}?subject=${encodeURIComponent("Reply: Portfolio Inquiry")}&body=${encodeURIComponent(responseDraftCRLF)}" style="padding: 6px 14px; font-size: 0.8rem; text-decoration: none; border-color: rgba(255, 255, 255, 0.2);">
             <svg viewBox="0 0 24 24" width="12" height="12" stroke="currentColor" stroke-width="2" fill="none" style="vertical-align: middle; margin-right: 4px;"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
             Send via Mail Client
           </a>
@@ -2004,19 +2004,19 @@ let currentToolkitView = "solar"; // "solar" | "radar"
 let isSolarOrbitPaused = false;
 
 const CELESTIAL_PALETTE = {
-  "data science": { color: "#10b981", light: "#6ee7b7", dark: "#047857", ring: true, size: 32, speed: 42 },
-  "frontend": { color: "#00f0ff", light: "#a5f3fc", dark: "#0891b2", ring: false, size: 28, speed: 28 },
-  "backend": { color: "#6366f1", light: "#c7d2fe", dark: "#4338ca", ring: true, size: 30, speed: 52 },
-  "databases": { color: "#f59e0b", light: "#fde68a", dark: "#b45309", ring: false, size: 26, speed: 64 },
-  "devops": { color: "#f43f5e", light: "#fecdd3", dark: "#be123c", ring: false, size: 27, speed: 76 },
-  "version control": { color: "#38bdf8", light: "#bae6fd", dark: "#0369a1", ring: true, size: 24, speed: 88 }
+  "data science": { color: "#ffffff", light: "#ffffff", dark: "#71717a", ring: true, size: 32, speed: 42 },
+  "frontend": { color: "#f4f4f5", light: "#ffffff", dark: "#52525b", ring: false, size: 28, speed: 28 },
+  "backend": { color: "#e4e4e7", light: "#ffffff", dark: "#3f3f46", ring: true, size: 30, speed: 52 },
+  "databases": { color: "#d4d4d8", light: "#f4f4f5", dark: "#27272a", ring: false, size: 26, speed: 64 },
+  "devops": { color: "#a1a1aa", light: "#e4e4e7", dark: "#18181b", ring: false, size: 27, speed: 76 },
+  "version control": { color: "#cbd5e1", light: "#f8fafc", dark: "#334155", ring: true, size: 24, speed: 88 }
 };
 
 const EXTRA_COLORS = [
-  { color: "#d946ef", light: "#f5d0fe", dark: "#a21caf" },
-  { color: "#84cc16", light: "#d9f99d", dark: "#4d7c0f" },
-  { color: "#14b8a6", light: "#99f6e4", dark: "#0f766e" },
-  { color: "#ec4899", light: "#fbcfe8", dark: "#be185d" }
+  { color: "#e4e4e7", light: "#ffffff", dark: "#3f3f46" },
+  { color: "#d4d4d8", light: "#f4f4f5", dark: "#27272a" },
+  { color: "#a1a1aa", light: "#e4e4e7", dark: "#18181b" },
+  { color: "#cbd5e1", light: "#f8fafc", dark: "#334155" }
 ];
 
 function renderRadarChart() {
@@ -2728,7 +2728,7 @@ function renderHackathonsGrid() {
         <svg viewBox="0 0 24 24" width="12" height="12" stroke="currentColor" stroke-width="2" fill="none"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
       </a>` : '';
 
-    const certBtn = hack.certificateUrl ? `<a href="${hack.certificateUrl}" target="_blank" rel="noopener noreferrer" class="btn btn-secondary btn-sm" style="font-size: 0.8rem; padding: 6px 12px; border-radius: 4px; display: inline-flex; align-items: center; gap: 6px; border-color: rgba(99, 102, 241, 0.4); color: var(--accent-indigo);">
+    const certBtn = hack.certificateUrl ? `<a href="${hack.certificateUrl}" target="_blank" rel="noopener noreferrer" class="btn btn-secondary btn-sm" style="font-size: 0.8rem; padding: 6px 12px; border-radius: 4px; display: inline-flex; align-items: center; gap: 6px; border-color: rgba(255, 255, 255, 0.25); color: var(--text-primary);">
         Certificate / Proof
         <svg viewBox="0 0 24 24" width="12" height="12" stroke="currentColor" stroke-width="2" fill="none"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
       </a>` : '';
@@ -4035,7 +4035,7 @@ function initVisualEngine() {
         r: Math.random() < 0.18 ? Math.random() * 2.2 + 1.2 : Math.random() * 1.2 + 0.4,
         twinkleSpeed: 0.015 + Math.random() * 0.035,
         twinklePhase: Math.random() * Math.PI * 2,
-        colorPrefix: i % 4 === 0 ? "0, 240, 255" : (i % 4 === 1 ? "168, 85, 247" : (i % 4 === 2 ? "99, 102, 241" : "255, 255, 255"))
+        colorPrefix: i % 4 === 0 ? "255, 255, 255" : (i % 4 === 1 ? "244, 244, 245" : (i % 4 === 2 ? "212, 212, 216" : "161, 161, 170"))
       }));
     };
     resize(); window.addEventListener('resize', resize, { passive: true });
