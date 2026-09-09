@@ -1908,29 +1908,31 @@ if (panelLockBtn) {
 // THEME SWITCHER
 // ----------------------------------------------------
 function initTheme() {
-  const toggleBtn = document.getElementById("theme-toggle-btn");
-  const themeIcon = document.getElementById("theme-icon");
+  const toggleBtn = document.getElementById("theme-toggle-btn") || document.getElementById("theme-toggle");
+  const themeIcon = document.getElementById("theme-icon") || document.getElementById("moon-icon");
   const savedTheme = localStorage.getItem("portfolio_theme") || "dark";
 
   if (savedTheme === "light") {
     document.body.classList.add("light-theme");
-    setSunIcon(themeIcon);
+    if (themeIcon) setSunIcon(themeIcon);
   } else {
     document.body.classList.remove("light-theme");
-    setMoonIcon(themeIcon);
+    if (themeIcon) setMoonIcon(themeIcon);
   }
 
-  toggleBtn.addEventListener("click", () => {
-    if (document.body.classList.contains("light-theme")) {
-      document.body.classList.remove("light-theme");
-      localStorage.setItem("portfolio_theme", "dark");
-      setMoonIcon(themeIcon);
-    } else {
-      document.body.classList.add("light-theme");
-      localStorage.setItem("portfolio_theme", "light");
-      setSunIcon(themeIcon);
-    }
-  });
+  if (toggleBtn) {
+    toggleBtn.addEventListener("click", () => {
+      if (document.body.classList.contains("light-theme")) {
+        document.body.classList.remove("light-theme");
+        localStorage.setItem("portfolio_theme", "dark");
+        if (themeIcon) setMoonIcon(themeIcon);
+      } else {
+        document.body.classList.add("light-theme");
+        localStorage.setItem("portfolio_theme", "light");
+        if (themeIcon) setSunIcon(themeIcon);
+      }
+    });
+  }
 }
 
 function setSunIcon(svgEl) {
