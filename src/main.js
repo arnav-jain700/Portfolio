@@ -2025,10 +2025,9 @@ function renderRadarChart() {
   allCats.forEach((cat, idx) => {
     const items = tech.filter(t => t.category && t.category.toLowerCase() === cat.toLowerCase());
     const count = items.length;
-    const avg = count > 0 
-      ? Math.round(items.reduce((sum, item) => sum + (Number(item.level) || 50), 0) / count)
-      : 40;
     
+    const key = cat.toLowerCase();
+    const config = CELESTIAL_PALETTE[key] || EXTRA_COLORS[idx % EXTRA_COLORS.length];
     const maxCount = Math.max(...allCats.map(c => tech.filter(t => t.category && t.category.toLowerCase() === c.toLowerCase()).length), 1);
     const scaledVal = Math.min(100, Math.max(35, Math.round((count / maxCount) * 100)));
 
