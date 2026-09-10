@@ -61,7 +61,7 @@ const DEFAULT_SETTINGS = {
   codolio: "https://codolio.com/profile/Jarnav",
   medium: "https://medium.com/@arnav4334",
   geminiKey: "",
-  categories: ["Frontend", "Backend", "Databases", "DevOps", "Version Control", "Data Science"]
+  categories: ["Frontend", "Backend", "Databases", "DevOps", "Version Control", "Data Science", "Non-Technical Skills"]
 };
 
 // Initialize Storage
@@ -87,10 +87,21 @@ function initStorage() {
   } else {
     try {
       const parsed = JSON.parse(currentSettings);
+      const existingCats = Array.isArray(parsed.categories) && parsed.categories.length > 0
+        ? parsed.categories
+        : DEFAULT_SETTINGS.categories;
+      
+      const mergedCats = [...existingCats];
+      DEFAULT_SETTINGS.categories.forEach(cat => {
+        if (!mergedCats.some(c => c.toLowerCase() === cat.toLowerCase())) {
+          mergedCats.push(cat);
+        }
+      });
+
       const updated = {
         ...DEFAULT_SETTINGS,
         ...parsed,
-        categories: parsed.categories && parsed.categories.length > 0 ? parsed.categories : DEFAULT_SETTINGS.categories
+        categories: mergedCats
       };
       localStorage.setItem("portfolio_settings", JSON.stringify(updated));
     } catch (e) {

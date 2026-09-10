@@ -56,7 +56,7 @@
         <ul class="nav-links" id="main-nav-links">
           <li><a href="#home" class="nav-link active" data-page="home">Home</a></li>
           <li><a href="#journey" class="nav-link" data-page="journey">Journey</a></li>
-          <li><a href="#tech" class="nav-link" data-page="tech">Toolkit</a></li>
+          <li><a href="#tech" class="nav-link" data-page="tech">Skillset</a></li>
           <li><a href="#projects" class="nav-link" data-page="projects">Projects</a></li>
           <li><a href="#hackathons" class="nav-link" data-page="hackathons">Hackathons</a></li>
           <li><a href="#certificates" class="nav-link" data-page="certificates">Certificates</a></li>
@@ -210,11 +210,11 @@
           </div>
         </section>
 
-        <!-- PAGE 2: TECH STACK -->
+        <!-- PAGE 2: SKILLSET -->
         <section id="tech-page" class="page">
-          <h2 class="section-title reveal-text">Technical Toolkit</h2>
+          <h2 class="section-title reveal-text">Skillset</h2>
           <p class="section-subtitle">
-            A comprehensive ecosystem of data science proficiencies, machine learning frameworks, backend architectures, and developer tools.
+            A comprehensive ecosystem of technical capabilities, non-technical proficiencies, machine learning frameworks, and engineering tools.
           </p>
 
           <!-- Skill Radar Chart -->
@@ -375,7 +375,7 @@
               </div>
               <button class="admin-tab-btn active" data-pane="admin-pane-tech">
                 <svg viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" stroke-width="2" fill="none"><rect x="3" y="3" width="7" height="9"/><rect x="14" y="3" width="7" height="5"/><rect x="14" y="12" width="7" height="9"/><rect x="3" y="16" width="7" height="5"/></svg>
-                Manage Toolkit
+                Manage Skillset
               </button>
               <button class="admin-tab-btn" data-pane="admin-pane-projects">
                 <svg viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" stroke-width="2" fill="none"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>
@@ -412,21 +412,21 @@
               
               <!-- PANE A: TECH STACK -->
               <div id="admin-pane-tech" class="admin-pane active">
-                <h3 style="margin-bottom: 8px;">Technical Toolkit Database</h3>
-                <p style="color: var(--text-muted); font-size: 0.85rem; margin-bottom: 24px;">Manage your skill categories and database entries separately.</p>
+                <h3 style="margin-bottom: 8px;">Skillset Database</h3>
+                <p style="color: var(--text-muted); font-size: 0.85rem; margin-bottom: 24px;">Manage your skill categories, technical tools, and non-technical competencies.</p>
                 
                 <div class="admin-tech-grid">
                   <!-- Left Column: Tech Stack Entries -->
                   <div class="admin-tech-left-column">
-                    <h4 style="margin-bottom: 12px; color: var(--accent-indigo); font-size: 0.95rem;">Manage Tech Stack Entries</h4>
+                    <h4 style="margin-bottom: 12px; color: var(--accent-indigo); font-size: 0.95rem;">Manage Skillset Entries</h4>
                     
                     <!-- Add/edit tech form -->
                     <form id="admin-tech-form" style="display: flex; flex-direction: column; gap: 12px; margin-bottom: 30px;">
                       <input type="hidden" id="admin-tech-id" value="" />
                       <div class="form-row-2">
                         <div class="form-group">
-                          <label class="form-label">Tech Name</label>
-                          <input type="text" id="admin-tech-name" class="glass-input" placeholder="e.g. Angular, Go, AWS..." required />
+                          <label class="form-label">Skill / Technology Name</label>
+                          <input type="text" id="admin-tech-name" class="glass-input" placeholder="e.g. Python, Agile Leadership, AWS..." required />
                         </div>
                         <div class="form-group">
                           <label class="form-label">Category</label>
@@ -435,7 +435,7 @@
                           </select>
                           <div id="admin-tech-custom-category-group" style="display: none; margin-top: 10px;">
                             <label class="form-label" style="font-size: 0.8rem; color: var(--accent-cyan);">New Category Name</label>
-                            <input type="text" id="admin-tech-custom-category" class="glass-input" placeholder="e.g. Mobile Apps, Machine Learning..." />
+                            <input type="text" id="admin-tech-custom-category" class="glass-input" placeholder="e.g. Non-Technical Skills, Machine Learning..." />
                           </div>
                         </div>
                       </div>
@@ -443,7 +443,7 @@
                         <input type="hidden" id="admin-tech-level" value="80" />
                       </div>
                       <div style="display: flex; gap: 10px;">
-                        <button type="submit" class="btn btn-primary" id="admin-tech-submit-btn" style="align-self: flex-start;">Add Technology</button>
+                        <button type="submit" class="btn btn-primary" id="admin-tech-submit-btn" style="align-self: flex-start;">Add Skill</button>
                         <button type="button" class="btn btn-secondary" id="admin-tech-cancel-btn" style="display: none;">Cancel Edit</button>
                       </div>
                     </form>

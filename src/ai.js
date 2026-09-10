@@ -118,7 +118,7 @@ function getSimulatedResponse(message) {
 
   // Who are you / bio
   if (msg.includes("who are you") || msg.includes("about") || msg.includes("yourself") || msg.includes("bio")) {
-    return `**${settings.ownerName || "Arnav Jain"}** is a Data Science and AI Developer. Summary: "${settings.ownerBio || "Dedicated to forging robust data architectures and building generative, intelligent models."}". Would you like to explore his technical toolkit or featured projects?`;
+    return `**${settings.ownerName || "Arnav Jain"}** is a Data Science and AI Developer. Summary: "${settings.ownerBio || "Dedicated to forging robust data architectures and building generative, intelligent models."}". Would you like to explore his skillset or featured projects?`;
   }
 
   // Projects inquiry
@@ -133,10 +133,10 @@ function getSimulatedResponse(message) {
     return response;
   }
 
-  // Tech stack inquiry
-  if (msg.includes("skills") || msg.includes("tech") || msg.includes("stack") || msg.includes("know") || msg.includes("language")) {
+  // Tech stack / skillset inquiry
+  if (msg.includes("skills") || msg.includes("skillset") || msg.includes("tech") || msg.includes("stack") || msg.includes("know") || msg.includes("language") || msg.includes("non-technical") || msg.includes("soft skills")) {
     if (techStacks.length === 0) {
-      return "No technical skills currently listed in the database.";
+      return "No skills currently listed in the database.";
     }
     const categories = {};
     techStacks.forEach(t => {
@@ -144,7 +144,7 @@ function getSimulatedResponse(message) {
       categories[t.category].push(t.name);
     });
 
-    let response = "Here is an overview of Arnav's technical proficiencies by category:\n\n";
+    let response = "Here is an overview of Arnav's skillset and proficiencies by category:\n\n";
     for (const [cat, items] of Object.entries(categories)) {
       response += `✦ **${cat}**: ${items.join(", ")}\n`;
     }

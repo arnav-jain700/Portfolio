@@ -7,11 +7,9 @@ Arnav Jain is a Data Science and AI Developer dedicated to forging robust data a
 - Global Nav Plexus: An interactive, graph-based 3D geospatial routing engine visualising optimal paths on a custom WebGL globe with high-performance C++17 REST API backend.
 - Persona AI Co-Pilot: Client-side AI portfolio representative with Gemini API integration and hybrid offline/cloud database synchronization.
 
-## Tech Stack
-- Backend: C++, Python
-- Frontend: HTML, CSS, JavaScript, Three.js, WebGL
-- AI / ML: Gemini API, TensorFlow, Generative Models
-- Databases: Firebase Firestore, Local Storage
+## Skillset
+- Technical: C++, Python, HTML, CSS, JavaScript, Three.js, WebGL, Gemini API, TensorFlow, Generative Models, Databases, DevOps, Git
+- Non-Technical: Problem Solving, Team Collaboration, Agile Delivery, Systems Thinking
 
 ## Education & Background
 - B.Tech Hons (Data Science and Data Engineering), Lovely Professional University (2024 - 2028).

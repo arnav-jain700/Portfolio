@@ -347,7 +347,7 @@ let activeTechFilter = "All";
 
 function getAllCategories() {
   const settings = Database.getSettings();
-  const defaultCats = ["Frontend", "Backend", "Databases", "DevOps", "Version Control", "Data Science"];
+  const defaultCats = ["Frontend", "Backend", "Databases", "DevOps", "Version Control", "Data Science", "Non-Technical Skills"];
   const settingsCats = Array.isArray(settings.categories) ? settings.categories : [];
   const techStacks = Database.getTechStacks();
   const techCats = techStacks.map(t => t.category).filter(Boolean);
@@ -377,7 +377,7 @@ function renderTechGrid(category) {
   techGrid.innerHTML = "";
 
   if (filtered.length === 0) {
-    techGrid.innerHTML = `<div style="grid-column: 1/-1; text-align: center; color: var(--text-dimmed); padding: 40px;">No tech stacks added under this category. Add them in the Admin page!</div>`;
+    techGrid.innerHTML = `<div style="grid-column: 1/-1; text-align: center; color: var(--text-dimmed); padding: 40px;">No skills added under this category. Add them in the Admin page!</div>`;
     return;
   }
 
@@ -401,6 +401,8 @@ function renderTechGrid(category) {
       iconSvg = `<svg viewBox="0 0 24 24" width="28" height="28" stroke="currentColor" stroke-width="2" fill="none"><path d="M12 22a7 7 0 0 0 5-5h-3a4 4 0 0 1-4-4V7H5a7 7 0 0 0 7 15z"/><path d="M12 2a7 7 0 0 0-5 5h3a4 4 0 0 1 4 4v6h5a7 7 0 0 0-7-15z"/></svg>`;
     } else if (tech.name.toLowerCase().includes("docker")) {
       iconSvg = `<svg viewBox="0 0 24 24" width="28" height="28" stroke="currentColor" stroke-width="2" fill="none"><rect x="2" y="2" width="20" height="20" rx="4"/><path d="M6 6h4v4H6zm8 0h4v4h-4zm0 8h4v4h-4zm-8 0h4v4H6z"/></svg>`;
+    } else if ((tech.category && tech.category.toLowerCase().includes("non-tech")) || tech.name.toLowerCase().includes("leadership") || tech.name.toLowerCase().includes("communication") || tech.name.toLowerCase().includes("management") || tech.name.toLowerCase().includes("problem solving") || tech.name.toLowerCase().includes("team")) {
+      iconSvg = `<svg viewBox="0 0 24 24" width="28" height="28" stroke="currentColor" stroke-width="2" fill="none"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>`;
     } else {
       iconSvg = `<svg viewBox="0 0 24 24" width="28" height="28" stroke="currentColor" stroke-width="2" fill="none"><path d="M18 10h-1.26A8 8 0 1 0 9 20h9a5 5 0 0 0 0-10z"/></svg>`;
     }
@@ -430,7 +432,7 @@ function renderTechCategoryFilters() {
   const categories = getAllCategories();
   const techStacks = Database.getTechStacks();
 
-  container.innerHTML = `<button class="tech-filter-btn active" data-category="All">All Tech (${techStacks.length})</button>`;
+  container.innerHTML = `<button class="tech-filter-btn active" data-category="All">All Skills (${techStacks.length})</button>`;
   categories.forEach(cat => {
     const count = techStacks.filter(t => t.category && t.category.toLowerCase() === cat.toLowerCase()).length;
     if (count > 0 || (Database.getSettings().categories || []).map(c => c.toLowerCase()).includes(cat.toLowerCase())) {
@@ -953,7 +955,7 @@ function populateAdminCategoryList() {
   if (!container) return;
 
   const settings = Database.getSettings();
-  const categories = settings.categories || ["Frontend", "Backend", "Databases", "DevOps"];
+  const categories = settings.categories || ["Frontend", "Backend", "Databases", "DevOps", "Version Control", "Data Science", "Non-Technical Skills"];
 
   container.innerHTML = "";
   if (categories.length === 0) {
@@ -983,7 +985,7 @@ function populateAdminCategoryList() {
 
 function deleteCategory(catName) {
   const settings = Database.getSettings();
-  const categories = settings.categories || ["Frontend", "Backend", "Databases", "DevOps"];
+  const categories = settings.categories || ["Frontend", "Backend", "Databases", "DevOps", "Version Control", "Data Science", "Non-Technical Skills"];
   const updated = categories.filter(c => c !== catName);
   
   Database.saveSettings({ categories: updated });
@@ -1008,7 +1010,7 @@ function setupAdminCategoryFormOnce() {
     if (!newCat) return;
 
     const settings = Database.getSettings();
-    const categories = settings.categories || ["Frontend", "Backend", "Databases", "DevOps"];
+    const categories = settings.categories || ["Frontend", "Backend", "Databases", "DevOps", "Version Control", "Data Science", "Non-Technical Skills"];
     
     if (categories.some(c => c.toLowerCase() === newCat.toLowerCase())) {
       showToast("This category already exists.", "error");
@@ -1169,7 +1171,7 @@ techForm.addEventListener("submit", async (e) => {
 
     // Save to settings
     const settings = Database.getSettings();
-    const categories = settings.categories || ["Frontend", "Backend", "Databases", "DevOps"];
+    const categories = settings.categories || ["Frontend", "Backend", "Databases", "DevOps", "Version Control", "Data Science", "Non-Technical Skills"];
     if (!categories.includes(category)) {
       categories.push(category);
       await Database.saveSettings({ categories });
@@ -1177,8 +1179,8 @@ techForm.addEventListener("submit", async (e) => {
   }
 
   await Database.saveTechStack({ id: id || undefined, name, category, level, icon: name });
-  flashButtonSuccess(submitTechBtn, id ? "✓ Updated!" : "✓ Added to Toolkit!");
-  showToast(id ? `Updated technology "${name}"` : `Added "${name}" to toolkit!`);
+  flashButtonSuccess(submitTechBtn, id ? "✓ Updated!" : "✓ Added to Skillset!");
+  showToast(id ? `Updated skill "${name}"` : `Added "${name}" to skillset!`);
   resetTechForm();
   renderAdminTechList();
   populateAdminTechCategoriesDropdown();
@@ -1191,7 +1193,7 @@ function resetTechForm() {
   techForm.reset();
   document.getElementById("admin-tech-id").value = "";
   if (!submitTechBtn.classList.contains("btn-success-flash")) {
-    submitTechBtn.textContent = "Add Technology";
+    submitTechBtn.textContent = "Add Skill";
   }
   cancelTechEdit.style.display = "none";
   document.getElementById("admin-tech-custom-category-group").style.display = "none";
@@ -1204,7 +1206,7 @@ function renderAdminTechList() {
   
   container.innerHTML = "";
   if (tech.length === 0) {
-    container.innerHTML = `<div style="text-align: center; color: var(--text-dimmed); padding: 20px;">No tech stacks saved.</div>`;
+    container.innerHTML = `<div style="text-align: center; color: var(--text-dimmed); padding: 20px;">No skills saved.</div>`;
     return;
   }
 
@@ -1235,14 +1237,14 @@ function renderAdminTechList() {
       document.getElementById("admin-tech-custom-category-group").style.display = "none";
       document.getElementById("admin-tech-custom-category").required = false;
 
-      submitTechBtn.textContent = "Update Technology";
+      submitTechBtn.textContent = "Update Skill";
       cancelTechEdit.style.display = "inline-block";
       document.getElementById("admin-tech-form").scrollIntoView({ behavior: "smooth" });
     });
 
     el.querySelector(".delete").addEventListener("click", () => {
       Database.deleteTechStack(t.id);
-      showToast(`Removed "${t.name}" from toolkit.`, "delete");
+      showToast(`Removed "${t.name}" from skillset.`, "delete");
       renderAdminTechList();
       refreshAllPublicViews();
     });
@@ -1344,7 +1346,7 @@ function renderTechCheckboxes() {
   container.innerHTML = "";
 
   if (tech.length === 0) {
-    container.innerHTML = `<span style="color: var(--text-dimmed); font-size: 0.85rem;">No technologies available. Add some in 'Manage Toolkit' first!</span>`;
+    container.innerHTML = `<span style="color: var(--text-dimmed); font-size: 0.85rem;">No skills available. Add some in 'Manage Skillset' first!</span>`;
     return;
   }
 
@@ -2003,7 +2005,11 @@ const CELESTIAL_PALETTE = {
   "backend": { color: "#e4e4e7", light: "#ffffff", dark: "#3f3f46", ring: true, size: 30, speed: 52 },
   "databases": { color: "#d4d4d8", light: "#f4f4f5", dark: "#27272a", ring: false, size: 26, speed: 64 },
   "devops": { color: "#a1a1aa", light: "#e4e4e7", dark: "#18181b", ring: false, size: 27, speed: 76 },
-  "version control": { color: "#cbd5e1", light: "#f8fafc", dark: "#334155", ring: true, size: 24, speed: 88 }
+  "version control": { color: "#cbd5e1", light: "#f8fafc", dark: "#334155", ring: true, size: 24, speed: 88 },
+  "non-technical skills": { color: "#e2e8f0", light: "#ffffff", dark: "#475569", ring: true, size: 28, speed: 58 },
+  "non technical skills": { color: "#e2e8f0", light: "#ffffff", dark: "#475569", ring: true, size: 28, speed: 58 },
+  "non-technical": { color: "#e2e8f0", light: "#ffffff", dark: "#475569", ring: true, size: 28, speed: 58 },
+  "non technical": { color: "#e2e8f0", light: "#ffffff", dark: "#475569", ring: true, size: 28, speed: 58 }
 };
 
 const EXTRA_COLORS = [
@@ -2302,7 +2308,7 @@ function bindSolarSystemEvents(data) {
         });
       }
       renderTechGrid(catName);
-      showToast(`Filtered toolkit for: ${catName}`);
+      showToast(`Filtered skillset for: ${catName}`);
       
       const grid = document.getElementById("tech-grid-container");
       if (grid) {
