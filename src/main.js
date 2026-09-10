@@ -231,6 +231,11 @@ function renderHomeStats() {
   if (certsEl) certsEl.textContent = certs.length;
   if (subStatusEl) subStatusEl.textContent = "Autonomous Space Representative";
 
+  const bentoProjEl = document.getElementById("bento-projects-count");
+  const bentoSkillsEl = document.getElementById("bento-skills-count");
+  if (bentoProjEl) bentoProjEl.textContent = projects.length;
+  if (bentoSkillsEl) bentoSkillsEl.textContent = tech.length;
+
   document.getElementById("owner-name-display").textContent = settings.ownerName || "Arnav Jain";
   document.getElementById("owner-bio-display").textContent = settings.ownerBio || "";
 
