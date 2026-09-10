@@ -229,7 +229,7 @@ function renderHomeStats() {
   if (projEl) projEl.textContent = projects.length;
   if (skillsEl) skillsEl.textContent = tech.length;
   if (certsEl) certsEl.textContent = certs.length;
-  if (subStatusEl) subStatusEl.textContent = "Autonomous Space Representative";
+  if (subStatusEl) subStatusEl.textContent = "Portfolio Representative";
 
   const bentoProjEl = document.getElementById("bento-projects-count");
   const bentoSkillsEl = document.getElementById("bento-skills-count");

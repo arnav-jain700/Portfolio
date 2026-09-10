@@ -113,22 +113,22 @@ function getSimulatedResponse(message) {
 
   // Basic greeting
   if (msg.includes("hello") || msg.includes("hi ") || msg.includes("hey")) {
-    return `Greetings, Spacefarer! 🚀 I am the autonomous Cosmic Co-Pilot for ${settings.ownerName || "Arnav Jain"}'s fleet. Ask me anything about his technical stack, ship designs, or expedition logs!`;
+    return `Hello! I am the AI Representative for **${settings.ownerName || "Arnav Jain"}**. Feel free to ask about his technical proficiencies, portfolio projects, engineering background, or how to get in touch!`;
   }
 
   // Who are you / bio
   if (msg.includes("who are you") || msg.includes("about") || msg.includes("yourself") || msg.includes("bio")) {
-    return `The commander of this ship is ${settings.ownerName || "Arnav Jain"}. Mission Briefing: "${settings.ownerBio}". Would you like to inspect his planetary tech stack or launch telemetry?`;
+    return `**${settings.ownerName || "Arnav Jain"}** is a Data Science and AI Developer. Summary: "${settings.ownerBio || "Dedicated to forging robust data architectures and building generative, intelligent models."}". Would you like to explore his technical toolkit or featured projects?`;
   }
 
   // Projects inquiry
   if (msg.includes("project") || msg.includes("built") || msg.includes("portfolio")) {
     if (projects.length === 0) {
-      return "No missions logged in the shipyard yet! Add some from the Mission Control Admin.";
+      return "No projects currently listed in the database. Please check back soon or add projects via the admin panel.";
     }
-    let response = "Here are the orbital payloads & ships launched by Arnav:\n\n";
+    let response = "Here are some of the key projects built by Arnav:\n\n";
     projects.forEach(p => {
-      response += `• 🛰️ **${p.title}**: ${p.description} (${(Array.isArray(p.tags) ? p.tags : []).join(", ")})\n`;
+      response += `• **${p.title}**: ${p.description} *(Technologies: ${(Array.isArray(p.tags) ? p.tags : []).join(", ")})*\n`;
     });
     return response;
   }
@@ -136,7 +136,7 @@ function getSimulatedResponse(message) {
   // Tech stack inquiry
   if (msg.includes("skills") || msg.includes("tech") || msg.includes("stack") || msg.includes("know") || msg.includes("language")) {
     if (techStacks.length === 0) {
-      return "No planetary orbits calibrated yet! Add them from Mission Control.";
+      return "No technical skills currently listed in the database.";
     }
     const categories = {};
     techStacks.forEach(t => {
@@ -144,9 +144,9 @@ function getSimulatedResponse(message) {
       categories[t.category].push(`${t.name} (${t.level}%)`);
     });
 
-    let response = "Here is Arnav's planetary technology constellation:\n\n";
+    let response = "Here is an overview of Arnav's technical proficiencies by category:\n\n";
     for (const [cat, items] of Object.entries(categories)) {
-      response += `🪐 **${cat}**: ${items.join(", ")}\n`;
+      response += `✦ **${cat}**: ${items.join(", ")}\n`;
     }
     return response;
   }
@@ -158,11 +158,11 @@ function getSimulatedResponse(message) {
         (Array.isArray(p.tags) ? p.tags : []).some(tag => tag.toLowerCase() === tech.name.toLowerCase())
       );
       
-      let response = `Arnav has strong mastery over **${tech.name}** (calibration level: ${tech.level}%). `;
+      let response = `Arnav has strong hands-on experience with **${tech.name}** (Proficiency level: ${tech.level}%). `;
       if (matchingProjects.length > 0) {
-        response += `It powers deep-space builds like: ${matchingProjects.map(p => p.title).join(", ")}.`;
+        response += `It is utilized in projects such as: ${matchingProjects.map(p => p.title).join(", ")}.`;
       } else {
-        response += "It is ready in his toolkit for future interstellar deployments.";
+        response += "It is part of his core technical skillset for machine learning and system engineering.";
       }
       return response;
     }
@@ -170,11 +170,11 @@ function getSimulatedResponse(message) {
 
   // Contact info
   if (msg.includes("contact") || msg.includes("hire") || msg.includes("email") || msg.includes("message")) {
-    return `You can establish a direct quantum uplink via the **Contact** page terminal, or transmit directly to **${settings.email || "arnavjain1905@gmail.com"}** 📡.`;
+    return `You can connect directly with Arnav via the **Contact** page form or send an email to **${settings.email || "arnavjain1905@gmail.com"}**.`;
   }
 
   // Default response
-  return `I am here to guide you through ${settings.ownerName || "Arnav"}'s engineering ships, telemetry, certifications, and flight logs. Feel free to query any specific stack or transmit a direct uplink via the Contact station! ✦`;
+  return `I am here to help you navigate ${settings.ownerName || "Arnav"}'s engineering portfolio, technical skills, projects, and certifications. Feel free to ask any specific question or head over to the Contact page to connect! ✦`;
 }
 
 export const AI = {
@@ -183,9 +183,9 @@ export const AI = {
     try {
       const portfolioContext = compilePortfolioContext();
       
-      const systemInstruction = `You are the Cosmic Co-Pilot & Autonomous AI Representative for software engineer and data scientist Arnav Jain.
-Your job is to interact with space travelers and recruiters visiting this cosmic portfolio website, answering questions about Arnav's experience, technologies, missions, and codebases.
-Maintain an elegant, sharp, welcoming, and slightly cosmic yet highly professional demeanor. Make the developer look stellar! Refer strictly to the provided context and avoid hallucinations. If something is unknown, direct them to the Contact uplink terminal.
+      const systemInstruction = `You are the AI Assistant & Portfolio Representative for software engineer and data scientist Arnav Jain.
+Your role is to interact with engineering leaders, recruiters, and visitors exploring this portfolio website, answering questions about Arnav's background, technical proficiencies, machine learning projects, and experience.
+Maintain an articulate, intelligent, welcoming, and senior professional demeanor. Refer accurately to the provided context and avoid making assumptions or hallucinating details. If something is unknown, direct them to the Contact page.
 
 PORTFOLIO CONTEXT:
 ${portfolioContext}`;
