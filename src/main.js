@@ -2319,80 +2319,6 @@ function bindSolarSystemEvents(data) {
 }
 
 // ----------------------------------------------------
-// AI JOB-FIT SCANNER INTERACTIVE LOGIC
-// ----------------------------------------------------
-function initJobScanner() {
-  const btn = document.getElementById("scanner-btn");
-  const input = document.getElementById("scanner-input");
-  const results = document.getElementById("scanner-results-container");
-  const progress = document.getElementById("scanner-progress");
-  const percentageText = document.getElementById("scanner-percentage-text");
-  const summaryText = document.getElementById("scanner-summary-text");
-  const gapsGroup = document.getElementById("scanner-gaps-group");
-  const gapsText = document.getElementById("scanner-gaps-text");
-  const projectsText = document.getElementById("scanner-projects-text");
-
-  if (!btn) return;
-
-  if (input) {
-    input.addEventListener("input", () => {
-      input.style.height = "auto";
-      input.style.height = input.scrollHeight + "px";
-    });
-  }
-
-  btn.addEventListener("click", async () => {
-    const jd = input.value.trim();
-    if (!jd) {
-      alert("Please paste a job description first.");
-      return;
-    }
-
-    btn.disabled = true;
-    btn.textContent = "Scanning Job Alignment...";
-    results.classList.remove("active");
-
-    try {
-      const analysis = await AI.analyzeJobFit(jd);
-
-      results.classList.add("active");
-
-      const perimeter = 282.7;
-      const score = Math.round(analysis.score || analysis.matchPercentage || 50);
-      const offset = perimeter - (score / 100) * perimeter;
-      
-      progress.style.strokeDasharray = perimeter;
-      progress.style.strokeDashoffset = perimeter;
-      
-      setTimeout(() => {
-        progress.style.strokeDashoffset = offset;
-      }, 100);
-
-      percentageText.textContent = `${score}%`;
-      summaryText.textContent = analysis.summary || analysis.suitabilitySummary || "";
-      
-      const gaps = analysis.gaps || [];
-      if (gaps.length > 0 && gaps[0] !== "") {
-        gapsGroup.style.display = "block";
-        gapsText.textContent = gaps.join(", ");
-      } else {
-        gapsGroup.style.display = "none";
-      }
-
-      const recProjs = analysis.projects || analysis.recommendedProjects || [];
-      projectsText.textContent = recProjs.join(", ") || "None specified";
-
-    } catch (err) {
-      console.error(err);
-      alert("Error during job-fit analysis. Falling back to offline scanner.");
-    } finally {
-      btn.disabled = false;
-      btn.textContent = "Analyze Job Fit";
-    }
-  });
-}
-
-// ----------------------------------------------------
 // ----------------------------------------------------
 // DYNAMIC CERTIFICATES RENDERING
 // ----------------------------------------------------
@@ -3904,7 +3830,6 @@ async function initApp() {
   }
   initTheme();
   initButtonRipples();
-  initJobScanner();
   updateAdminLockUI();
 
   if (isCloudActive) {

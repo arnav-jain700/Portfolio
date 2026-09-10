@@ -272,42 +272,6 @@ Sign off as ${ownerName}.`
     }
   },
 
-  // Analyze recruiter job description for alignment
-  async analyzeJobFit(jobDescription) {
-    try {
-      const portfolioContext = compilePortfolioContext();
-      
-      const systemInstruction = `You are a senior technical recruiter evaluating a developer named Arnav Jain.
-Evaluate if Arnav fits the provided job description.
-You MUST output ONLY a valid JSON object matching this schema:
-{
-  "score": 85,
-  "summary": "Arnav has strong experience with C++, Python and modern web frameworks which align well with the position.",
-  "strengths": ["Strong foundational programming skills", "Practical project and full-stack development experience"],
-  "gaps": ["No direct reference to specialized proprietary cloud tools in the JD context"],
-  "projects": ["Global Nav Plexus"]
-}
-Keep summary to 2 sentences. Limit strengths/gaps/projects lists to 2-3 bullet items.`;
-
-      const messages = [
-        { role: "system", content: systemInstruction },
-        { role: "user", content: `Evaluate this job description:\n"${jobDescription}"\n\nCandidate portfolio context:\n${portfolioContext}` }
-      ];
-
-      const text = await callGroqApi(messages, {
-        temperature: 0.2,
-        max_tokens: 400,
-        json: true
-      });
-
-      const parsed = JSON.parse(text);
-      return parsed;
-    } catch (error) {
-      console.warn("Groq job-fit analysis failed:", error);
-      return this.analyzeJobFitOffline(jobDescription);
-    }
-  },
-
   // Generate blog article outline
   async generateBlogOutline(title) {
     try {
@@ -332,82 +296,6 @@ Keep summary to 2 sentences. Limit strengths/gaps/projects lists to 2-3 bullet i
       console.warn("Groq blog outline generation fallback:", error);
       return `### 1. Introduction to ${title}\n- Core concepts and motivation\n\n### 2. Architecture & Design\n- Technical patterns and benchmarks\n\n### 3. Implementation Steps\n- Best practices and code structure\n\n### 4. Conclusion & Key Takeaways`;
     }
-  },
-
-  // Offline rule-based job-fit analyzer
-  analyzeJobFitOffline(jobDescription) {
-    const jd = jobDescription.toLowerCase();
-    const tech = Database.getTechStacks();
-    const projects = Database.getProjects();
-
-    const matchedTech = [];
-    tech.forEach(t => {
-      if (jd.includes(t.name.toLowerCase())) {
-        matchedTech.push(t);
-      }
-    });
-
-    // Score calculations
-    let score = 40; // baseline
-    if (matchedTech.length > 0) {
-      score += matchedTech.length * 10;
-    }
-    if (jd.includes("fullstack") || jd.includes("full stack")) {
-      score += 5;
-    }
-    if (jd.includes("ai") || jd.includes("llm") || jd.includes("intelligence")) {
-      score += 10;
-    }
-    if (score > 95) score = 95; // cap offline at 95%
-
-    const strengths = [];
-    const gaps = [];
-    const recommendedProjects = [];
-
-    if (matchedTech.length > 0) {
-      strengths.push(`Direct matching skills: ${matchedTech.slice(0, 3).map(m => m.name).join(", ")}`);
-    } else {
-      strengths.push("Broad conceptual alignment with web design and algorithms");
-    }
-
-    if (score > 75) {
-      strengths.push("High alignment with full-stack and modern state management concepts");
-    } else {
-      strengths.push("Strong candidate for core frontend and scripting tasks");
-    }
-
-    // Identify gaps
-    const allTechNames = tech.map(t => t.name.toLowerCase());
-    const commonGaps = ["aws", "kubernetes", "typescript", "c#", "java", "next.js", "tailwind"];
-    commonGaps.forEach(g => {
-      if (jd.includes(g) && !allTechNames.includes(g)) {
-        gaps.push(`Requires proficiency in ${g.toUpperCase()}`);
-      }
-    });
-
-    if (gaps.length === 0) {
-      gaps.push("No major technical stack mismatch detected");
-    }
-
-    // Recommended projects
-    projects.forEach(p => {
-      const matchedCount = p.tags.filter(t => jd.includes(t.toLowerCase())).length;
-      if (matchedCount > 0) {
-        recommendedProjects.push(p.title);
-      }
-    });
-
-    if (recommendedProjects.length === 0 && projects.length > 0) {
-      recommendedProjects.push(projects[0].title);
-    }
-
-    return {
-      score: score,
-      summary: `Candidate profile matches ${score}% of the required competencies. Strong background in ${matchedTech.map(m => m.name).join(", ") || "software development and data engineering"} provides relevant alignment for this role.`,
-      strengths: strengths,
-      gaps: gaps,
-      projects: recommendedProjects
-    };
   }
 };
 
