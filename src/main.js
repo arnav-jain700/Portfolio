@@ -177,6 +177,10 @@ function switchPage(pageId) {
 navLinks.forEach(link => {
   link.addEventListener("click", () => {
     switchPage(link.dataset.page);
+    const mainNav = document.getElementById("main-nav-links");
+    if (mainNav) {
+      mainNav.classList.remove("mobile-open");
+    }
   });
 });
 
