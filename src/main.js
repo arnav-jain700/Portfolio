@@ -408,31 +408,20 @@ function renderTechGrid(category) {
     card.innerHTML = `
       <div class="tech-icon-wrapper">${iconSvg}</div>
       <h3>${tech.name}</h3>
-      <p style="color: var(--text-dimmed); font-size: 0.8rem;">${tech.category}</p>
-      <div class="tech-level-bar">
-        <div class="tech-level-fill" style="width: 0%" data-width="${tech.level}%"></div>
-      </div>
-      <span class="tech-level-text">${tech.level}%</span>
+      <span class="tech-category-badge" style="color: var(--text-dimmed); font-size: 0.8rem; margin-top: 4px; padding: 3px 10px; border-radius: 12px; background: rgba(255,255,255,0.04); border: 1px solid var(--border-light);">${tech.category}</span>
     `;
 
     // Clicking a tech card navigates to projects and searches for that tech
     card.addEventListener("click", () => {
       switchPage("projects");
       const searchBox = document.getElementById("project-search-input");
-      searchBox.value = tech.name;
+      if (searchBox) searchBox.value = tech.name;
       // Trigger search filter
       filterProjects();
     });
 
     techGrid.appendChild(card);
   });
-
-  // Animate the skill level fills after cards render
-  setTimeout(() => {
-    document.querySelectorAll(".tech-level-fill").forEach(fill => {
-      fill.style.width = fill.dataset.width;
-    });
-  }, 100);
 }
 
 function renderTechCategoryFilters() {
@@ -1207,7 +1196,6 @@ function resetTechForm() {
   cancelTechEdit.style.display = "none";
   document.getElementById("admin-tech-custom-category-group").style.display = "none";
   document.getElementById("admin-tech-custom-category").required = false;
-  document.getElementById("prof-label").textContent = "Proficiency: 80%";
 }
 
 function renderAdminTechList() {
@@ -1226,7 +1214,7 @@ function renderAdminTechList() {
     el.innerHTML = `
       <div class="admin-list-info">
         <h4>${t.name}</h4>
-        <p>${t.category} — ${t.level}% Proficiency</p>
+        <p>${t.category}</p>
       </div>
       <div class="admin-list-actions">
         <button class="action-btn edit" data-id="${t.id}" title="Edit details">
@@ -1246,9 +1234,6 @@ function renderAdminTechList() {
       categorySelect.value = t.category;
       document.getElementById("admin-tech-custom-category-group").style.display = "none";
       document.getElementById("admin-tech-custom-category").required = false;
-
-      document.getElementById("admin-tech-level").value = t.level;
-      document.getElementById("prof-label").textContent = `Proficiency: ${t.level}%`;
 
       submitTechBtn.textContent = "Update Technology";
       cancelTechEdit.style.display = "inline-block";
@@ -2044,14 +2029,14 @@ function renderRadarChart() {
       ? Math.round(items.reduce((sum, item) => sum + (Number(item.level) || 50), 0) / count)
       : 40;
     
-    const key = cat.toLowerCase();
-    const config = CELESTIAL_PALETTE[key] || EXTRA_COLORS[idx % EXTRA_COLORS.length];
+    const maxCount = Math.max(...allCats.map(c => tech.filter(t => t.category && t.category.toLowerCase() === c.toLowerCase()).length), 1);
+    const scaledVal = Math.min(100, Math.max(35, Math.round((count / maxCount) * 100)));
 
     data.push({
       name: cat,
-      value: avg,
+      value: scaledVal,
       count: count,
-      items: items.map(i => `${i.name} (${i.level}%)`),
+      items: items.map(i => i.name),
       color: config.color,
       light: config.light,
       dark: config.dark,
@@ -2107,7 +2092,7 @@ function renderRadarChart() {
               <span>Category</span>
               <span style="font-size: 0.75rem; opacity: 0.85;" id="solar-hud-count">0 skills</span>
             </div>
-            <div class="solar-hud-stats" id="solar-hud-stats">Avg Mastery: 0%</div>
+            <div class="solar-hud-stats" id="solar-hud-stats">Click planet to filter</div>
             <div class="solar-hud-skills-list" id="solar-hud-skills"></div>
           </div>
         </div>
@@ -2139,13 +2124,12 @@ function renderPlanetaryBodies(data) {
     let moonsMarkup = "";
     if (p.items && p.items.length > 0) {
       const topItems = p.items.slice(0, 3);
-      topItems.forEach((skillStr, sIdx) => {
+      topItems.forEach((skillName, sIdx) => {
         const moonOrbitSize = 44 + (sIdx * 10);
         const moonSpeed = 7 + (sIdx * 3);
-        const skillName = skillStr.split(" ")[0];
         moonsMarkup += `
-          <div class="solar-moon-track" style="--moon-orbit-size: ${moonOrbitSize}px; --moon-speed: ${moonSpeed}s;" title="${skillStr}">
-            <div class="solar-moon-node" data-skill="${skillStr}"></div>
+          <div class="solar-moon-track" style="--moon-orbit-size: ${moonOrbitSize}px; --moon-speed: ${moonSpeed}s;" title="${skillName}">
+            <div class="solar-moon-node" data-skill="${skillName}"></div>
           </div>
         `;
       });
@@ -2226,12 +2210,12 @@ function renderGeometricRadarSvg(data) {
 
     labelsMarkup += `<text x="${labelX.toFixed(1)}" y="${labelY.toFixed(1)}" class="radar-axis-label" text-anchor="${anchor}" dominant-baseline="central">${d.name}</text>`;
 
-    const valRadius = radius * (Math.max(15, Math.min(100, d.value)) / 100);
+    const valRadius = radius * (Math.max(25, Math.min(100, d.value)) / 100);
     const xVal = centerX + valRadius * Math.sin(angle);
     const yVal = centerY - valRadius * Math.cos(angle);
     points.push(`${xVal.toFixed(1)},${yVal.toFixed(1)}`);
     
-    dotsMarkup.push(`<circle cx="${xVal.toFixed(1)}" cy="${yVal.toFixed(1)}" class="radar-point"><title>${d.name}: ${Math.round(d.value)}% (${d.count} skills)</title></circle>`);
+    dotsMarkup.push(`<circle cx="${xVal.toFixed(1)}" cy="${yVal.toFixed(1)}" class="radar-point"><title>${d.name}: ${d.count} technologies</title></circle>`);
   });
 
   const polygonMarkup = `<polygon points="${points.join(" ")}" class="radar-polygon" />`;
@@ -2296,8 +2280,8 @@ function bindSolarSystemEvents(data) {
     planet.addEventListener("mouseenter", () => {
       if (ring) ring.classList.add("active-highlight");
       if (hud && catData) {
-        hudTitle.innerHTML = `<span>🪐 ${catData.name}</span><span style="font-size:0.75rem; color:var(--accent-cyan);">${catData.count} skills</span>`;
-        hudStats.textContent = `Average Mastery: ${catData.value}% • Click planet to filter`;
+        hudTitle.innerHTML = `<span>🪐 ${catData.name}</span><span style="font-size:0.75rem; color:var(--accent-cyan);">${catData.count} technologies</span>`;
+        hudStats.textContent = `Click planet to filter ${catData.name} tools`;
         hudSkills.innerHTML = (catData.items && catData.items.length > 0)
           ? catData.items.slice(0, 6).map(s => `<span class="solar-hud-chip">${s}</span>`).join("")
           : `<span class="solar-hud-chip" style="opacity:0.6;">No skills listed</span>`;

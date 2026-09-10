@@ -23,7 +23,7 @@ SKILLS & TECH STACK:
 `;
 
   techStacks.forEach(tech => {
-    context += `- ${tech.name} (Category: ${tech.category}, Proficiency: ${tech.level}%)\n`;
+    context += `- ${tech.name} (Category: ${tech.category})\n`;
   });
 
   context += `\nPROFESSIONAL JOURNEY & EDUCATION:\n`;
@@ -141,7 +141,7 @@ function getSimulatedResponse(message) {
     const categories = {};
     techStacks.forEach(t => {
       if (!categories[t.category]) categories[t.category] = [];
-      categories[t.category].push(`${t.name} (${t.level}%)`);
+      categories[t.category].push(t.name);
     });
 
     let response = "Here is an overview of Arnav's technical proficiencies by category:\n\n";
@@ -158,7 +158,7 @@ function getSimulatedResponse(message) {
         (Array.isArray(p.tags) ? p.tags : []).some(tag => tag.toLowerCase() === tech.name.toLowerCase())
       );
       
-      let response = `Arnav has strong hands-on experience with **${tech.name}** (Proficiency level: ${tech.level}%). `;
+      let response = `Arnav has strong hands-on experience with **${tech.name}**. `;
       if (matchingProjects.length > 0) {
         response += `It is utilized in projects such as: ${matchingProjects.map(p => p.title).join(", ")}.`;
       } else {
