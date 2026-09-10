@@ -221,14 +221,7 @@ function renderHomeStats() {
   const certs = Database.getCertificates();
   const settings = Database.getSettings();
 
-  const projEl = document.getElementById("stat-projects-count");
-  const skillsEl = document.getElementById("stat-skills-count");
-  const certsEl = document.getElementById("stat-credentials-count");
   const subStatusEl = document.getElementById("chat-sub-status");
-
-  if (projEl) projEl.textContent = projects.length;
-  if (skillsEl) skillsEl.textContent = tech.length;
-  if (certsEl) certsEl.textContent = certs.length;
   if (subStatusEl) subStatusEl.textContent = "Portfolio Representative";
 
   const bentoProjEl = document.getElementById("bento-projects-count");
