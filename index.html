@@ -32,6 +32,7 @@
     <link rel="apple-touch-icon" href="./favicon.svg" />
 
     <link rel="stylesheet" href="./src/style.css" />
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
   </head>
   <body>
     <div id="app">
@@ -470,7 +471,7 @@
                   <div class="form-group">
                     <label class="form-label">Project Screenshot / Banner (Upload File or Paste Image URL)</label>
                     <div style="display: flex; gap: 12px; align-items: center; flex-wrap: wrap;">
-                      <input type="file" id="admin-project-file" class="glass-input" accept="image/*" style="padding: 6px 12px; flex: 1; min-width: 200px;" />
+                      <input type="file" id="admin-project-file" class="glass-input" accept="image/*,application/pdf" style="padding: 6px 12px; flex: 1; min-width: 200px;" />
                       <span style="color: var(--text-dimmed); font-size: 0.85rem;">or</span>
                       <input type="url" id="admin-project-image-url" class="glass-input" placeholder="https://example.com/project-screenshot.jpg" style="flex: 1; min-width: 200px;" />
                     </div>
@@ -715,7 +716,7 @@
                   <div class="form-group">
                     <label class="form-label">Certificate Image (Upload File or Paste Image URL)</label>
                     <div style="display: flex; gap: 12px; align-items: center; flex-wrap: wrap;">
-                      <input type="file" id="admin-cert-file" class="glass-input" accept="image/*" style="padding: 6px 12px; flex: 1; min-width: 200px;" />
+                      <input type="file" id="admin-cert-file" class="glass-input" accept="image/*,application/pdf" style="padding: 6px 12px; flex: 1; min-width: 200px;" />
                       <span style="color: var(--text-dimmed); font-size: 0.85rem;">or</span>
                       <input type="url" id="admin-cert-image-url" class="glass-input" placeholder="https://example.com/certificate.jpg" style="flex: 1; min-width: 200px;" />
                     </div>
@@ -793,7 +794,7 @@
                   <div class="form-group">
                     <label class="form-label">Hackathon Photo / Banner (Upload File or Paste Image URL)</label>
                     <div style="display: flex; gap: 12px; align-items: center; flex-wrap: wrap;">
-                      <input type="file" id="admin-hack-file" class="glass-input" accept="image/*" style="padding: 6px 12px; flex: 1; min-width: 200px;" />
+                      <input type="file" id="admin-hack-file" class="glass-input" accept="image/*,application/pdf" style="padding: 6px 12px; flex: 1; min-width: 200px;" />
                       <span style="color: var(--text-dimmed); font-size: 0.85rem;">or</span>
                       <input type="url" id="admin-hack-image-url" class="glass-input" placeholder="https://example.com/hackathon-photo.jpg" style="flex: 1; min-width: 200px;" />
                     </div>

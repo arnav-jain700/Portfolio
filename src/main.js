@@ -1276,6 +1276,84 @@ function hideProjPreview() {
   currentUploadedProjImage = "";
 }
 
+// High-Fidelity Sharp Media Processor (Handles Images & PDFs in Ultra-HD)
+async function processHighResMediaUpload(file, callback) {
+  if (!file) return;
+
+  // 1. PDF Handler (Uses PDF.js for 300DPI crisp page rendering)
+  if (file.type === "application/pdf" || file.name.toLowerCase().endsWith(".pdf")) {
+    try {
+      if (window.pdfjsLib) {
+        window.pdfjsLib.GlobalWorkerOptions.workerSrc = "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js";
+        const arrayBuffer = await file.arrayBuffer();
+        const pdf = await window.pdfjsLib.getDocument({ data: arrayBuffer }).promise;
+        const page = await pdf.getPage(1);
+        
+        const unscaledViewport = page.getViewport({ scale: 1.0 });
+        const targetWidth = Math.min(2800, Math.max(2000, unscaledViewport.width * 2.5));
+        const scale = targetWidth / unscaledViewport.width;
+        const viewport = page.getViewport({ scale });
+
+        const canvas = document.createElement("canvas");
+        canvas.width = viewport.width;
+        canvas.height = viewport.height;
+        const ctx = canvas.getContext("2d", { alpha: false });
+        ctx.imageSmoothingEnabled = true;
+        ctx.imageSmoothingQuality = "high";
+
+        await page.render({ canvasContext: ctx, viewport }).promise;
+        const crispDataUrl = canvas.toDataURL("image/jpeg", 0.92);
+        callback(crispDataUrl);
+        return;
+      }
+    } catch (pdfErr) {
+      console.warn("PDF high-res rasterization failed, falling back to data URL:", pdfErr);
+    }
+  }
+
+  // 2. Image File Handler (Preserves crispness up to 2560px with high smoothing)
+  const reader = new FileReader();
+  reader.onload = function(evt) {
+    const rawData = evt.target.result;
+    const img = new Image();
+    img.onload = function() {
+      const MAX_BOUND = 2560; // 2K/Ultra HD resolution boundary
+      let width = img.width;
+      let height = img.height;
+
+      // If already within bounds and under 2.5MB, preserve raw image directly for maximum lossless clarity
+      if (width <= MAX_BOUND && height <= MAX_BOUND && file.size < 2.5 * 1024 * 1024) {
+        callback(rawData);
+        return;
+      }
+
+      if (width > MAX_BOUND || height > MAX_BOUND) {
+        if (width > height) {
+          height = Math.round((height * MAX_BOUND) / width);
+          width = MAX_BOUND;
+        } else {
+          width = Math.round((width * MAX_BOUND) / height);
+          height = MAX_BOUND;
+        }
+      }
+
+      const canvas = document.createElement("canvas");
+      canvas.width = width;
+      canvas.height = height;
+      const ctx = canvas.getContext("2d", { alpha: false });
+      ctx.imageSmoothingEnabled = true;
+      ctx.imageSmoothingQuality = "high";
+      ctx.drawImage(img, 0, 0, width, height);
+
+      const isPng = file.type === "image/png" || file.name.toLowerCase().endsWith(".png");
+      const highResData = canvas.toDataURL(isPng ? "image/png" : "image/jpeg", 0.92);
+      callback(highResData);
+    };
+    img.src = rawData;
+  };
+  reader.readAsDataURL(file);
+}
+
 // Bind project image upload handlers
 const projFileInput = document.getElementById("admin-project-file");
 const projUrlInput = document.getElementById("admin-project-image-url");
@@ -1286,32 +1364,10 @@ if (projFileInput) {
     const file = e.target.files[0];
     if (file) {
       if (projUrlInput) projUrlInput.value = "";
-      const reader = new FileReader();
-      reader.onload = function(evt) {
-        const img = new Image();
-        img.onload = function() {
-          const canvas = document.createElement("canvas");
-          const MAX_WIDTH = 600;
-          let width = img.width;
-          let height = img.height;
-
-          if (width > MAX_WIDTH) {
-            height = Math.round((height * MAX_WIDTH) / width);
-            width = MAX_WIDTH;
-          }
-
-          canvas.width = width;
-          canvas.height = height;
-
-          const ctx = canvas.getContext("2d");
-          ctx.drawImage(img, 0, 0, width, height);
-
-          currentUploadedProjImage = canvas.toDataURL("image/jpeg", 0.75);
-          showProjPreview(currentUploadedProjImage);
-        };
-        img.src = evt.target.result;
-      };
-      reader.readAsDataURL(file);
+      processHighResMediaUpload(file, (dataUrl) => {
+        currentUploadedProjImage = dataUrl;
+        showProjPreview(currentUploadedProjImage);
+      });
     }
   });
 }
@@ -2368,7 +2424,7 @@ function renderCertificatesGrid() {
     const imgEl = card.querySelector(".certificate-image-container");
     if (imgEl) {
       imgEl.addEventListener("click", () => {
-        openCertLightbox(cert.image);
+        openCertLightbox(cert.image, cert.title || cert.issuer);
       });
     }
 
@@ -2376,30 +2432,229 @@ function renderCertificatesGrid() {
   });
 }
 
-// Global Lightbox helper
-function openCertLightbox(src) {
+// ----------------------------------------------------
+// ULTRA-SHARP INTERACTIVE CERTIFICATE LIGHTBOX ENGINE
+// ----------------------------------------------------
+let certZoomScale = 1.0;
+let certPanX = 0;
+let certPanY = 0;
+let isCertDragging = false;
+let certDragStartX = 0;
+let certDragStartY = 0;
+let certCurrentSrc = "";
+
+function updateCertLightboxTransform() {
+  const img = document.getElementById("cert-lightbox-img");
+  const scaleText = document.getElementById("cert-tool-scale-text");
+  const viewport = document.getElementById("cert-lightbox-viewport");
+  if (!img) return;
+
+  img.style.transform = `translate3d(${certPanX}px, ${certPanY}px, 0) scale(${certZoomScale})`;
+  if (scaleText) scaleText.textContent = `${Math.round(certZoomScale * 100)}%`;
+
+  if (viewport) {
+    if (certZoomScale > 1.05) {
+      viewport.classList.add("can-pan");
+    } else {
+      viewport.classList.remove("can-pan");
+    }
+  }
+}
+
+function resetCertLightboxZoom() {
+  certZoomScale = 1.0;
+  certPanX = 0;
+  certPanY = 0;
+  updateCertLightboxTransform();
+}
+
+function setCertLightboxZoom(newScale, focalX, focalY) {
+  const prevScale = certZoomScale;
+  certZoomScale = Math.min(4.5, Math.max(0.6, newScale));
+
+  if (focalX !== undefined && focalY !== undefined && prevScale !== certZoomScale) {
+    const scaleRatio = certZoomScale / prevScale;
+    certPanX = focalX - (focalX - certPanX) * scaleRatio;
+    certPanY = focalY - (focalY - certPanY) * scaleRatio;
+  }
+  
+  if (certZoomScale <= 1.0) {
+    certPanX = 0;
+    certPanY = 0;
+  }
+  updateCertLightboxTransform();
+}
+
+function closeCertLightbox() {
+  const lightbox = document.getElementById("cert-lightbox-widget");
+  if (lightbox) {
+    lightbox.classList.remove("open");
+    resetCertLightboxZoom();
+    document.body.style.overflow = "";
+  }
+}
+
+function openCertLightbox(src, title = "Certificate Document") {
+  if (!src) return;
   let lightbox = document.getElementById("cert-lightbox-widget");
   if (!lightbox) {
     lightbox = document.createElement("div");
     lightbox.id = "cert-lightbox-widget";
     lightbox.className = "cert-lightbox";
     lightbox.innerHTML = `
-      <div class="cert-lightbox-close">&times;</div>
-      <img class="cert-lightbox-content" src="" />
+      <div class="cert-lightbox-backdrop"></div>
+      <div class="cert-lightbox-toolbar glass-panel">
+        <div class="cert-lightbox-title" id="cert-lightbox-title">${title}</div>
+        <div class="cert-lightbox-actions">
+          <button type="button" class="cert-tool-btn" id="cert-tool-zoom-out" title="Zoom Out (-)">
+            <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/><line x1="8" y1="11" x2="14" y2="11"/></svg>
+          </button>
+          <span class="cert-tool-scale" id="cert-tool-scale-text">100%</span>
+          <button type="button" class="cert-tool-btn" id="cert-tool-zoom-in" title="Zoom In (+)">
+            <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/><line x1="11" y1="8" x2="11" y2="14"/><line x1="8" y1="11" x2="14" y2="11"/></svg>
+          </button>
+          <button type="button" class="cert-tool-btn" id="cert-tool-reset" title="Fit to Screen (100%)">
+            <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"/></svg>
+          </button>
+          <button type="button" class="cert-tool-btn" id="cert-tool-open-tab" title="Open High-Resolution Original in New Tab">
+            <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+          </button>
+          <button type="button" class="cert-tool-btn cert-tool-close" id="cert-tool-close" title="Close (Esc)">
+            <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+          </button>
+        </div>
+      </div>
+      <div class="cert-lightbox-viewport" id="cert-lightbox-viewport">
+        <div class="cert-lightbox-canvas" id="cert-lightbox-canvas">
+          <img class="cert-lightbox-content" id="cert-lightbox-img" src="" alt="Certificate" draggable="false" />
+        </div>
+      </div>
+      <div class="cert-lightbox-hint">Scroll to zoom • Click/drag to pan • Click image to toggle 2× zoom</div>
     `;
     document.body.appendChild(lightbox);
-    
-    lightbox.addEventListener("click", () => {
-      lightbox.classList.remove("open");
-    });
-    lightbox.querySelector(".cert-lightbox-close").addEventListener("click", (e) => {
+
+    // Bind controls
+    document.getElementById("cert-tool-zoom-in").addEventListener("click", (e) => {
       e.stopPropagation();
-      lightbox.classList.remove("open");
+      setCertLightboxZoom(certZoomScale + 0.35);
+    });
+    document.getElementById("cert-tool-zoom-out").addEventListener("click", (e) => {
+      e.stopPropagation();
+      setCertLightboxZoom(certZoomScale - 0.35);
+    });
+    document.getElementById("cert-tool-reset").addEventListener("click", (e) => {
+      e.stopPropagation();
+      resetCertLightboxZoom();
+    });
+    document.getElementById("cert-tool-open-tab").addEventListener("click", (e) => {
+      e.stopPropagation();
+      if (certCurrentSrc) {
+        const w = window.open("");
+        if (w) {
+          w.document.write(`<title>${title}</title><style>body{margin:0;background:#060608;display:flex;justify-content:center;align-items:center;min-height:100vh;}img{max-width:100%;height:auto;image-rendering:-webkit-optimize-contrast;box-shadow:0 10px 40px rgba(0,0,0,0.8);border-radius:4px;}</style><img src="${certCurrentSrc}" />`);
+        }
+      }
+    });
+    document.getElementById("cert-tool-close").addEventListener("click", (e) => {
+      e.stopPropagation();
+      closeCertLightbox();
+    });
+    lightbox.querySelector(".cert-lightbox-backdrop").addEventListener("click", () => {
+      closeCertLightbox();
+    });
+
+    const viewport = document.getElementById("cert-lightbox-viewport");
+    const img = document.getElementById("cert-lightbox-img");
+
+    // Mouse wheel zoom
+    viewport.addEventListener("wheel", (e) => {
+      e.preventDefault();
+      const rect = viewport.getBoundingClientRect();
+      const focalX = e.clientX - rect.left - rect.width / 2;
+      const focalY = e.clientY - rect.top - rect.height / 2;
+      const factor = e.deltaY < 0 ? 1.2 : 0.83;
+      setCertLightboxZoom(certZoomScale * factor, focalX, focalY);
+    }, { passive: false });
+
+    // Click on image to toggle 2x zoom
+    img.addEventListener("click", (e) => {
+      if (isCertDragging) return;
+      if (certZoomScale <= 1.05) {
+        const rect = viewport.getBoundingClientRect();
+        const focalX = e.clientX - rect.left - rect.width / 2;
+        const focalY = e.clientY - rect.top - rect.height / 2;
+        setCertLightboxZoom(2.0, focalX, focalY);
+      } else {
+        resetCertLightboxZoom();
+      }
+    });
+
+    // Pointer Drag & Pan
+    viewport.addEventListener("pointerdown", (e) => {
+      if (e.target.closest(".cert-lightbox-toolbar")) return;
+      if (certZoomScale <= 1.0) return;
+      isCertDragging = false;
+      certDragStartX = e.clientX - certPanX;
+      certDragStartY = e.clientY - certPanY;
+      viewport.setPointerCapture(e.pointerId);
+      viewport.classList.add("dragging");
+
+      const onPointerMove = (pe) => {
+        const dx = pe.clientX - certDragStartX;
+        const dy = pe.clientY - certDragStartY;
+        if (Math.abs(dx - certPanX) > 3 || Math.abs(dy - certPanY) > 3) {
+          isCertDragging = true;
+        }
+        certPanX = dx;
+        certPanY = dy;
+        updateCertLightboxTransform();
+      };
+
+      const onPointerUp = (pe) => {
+        viewport.releasePointerCapture(pe.pointerId);
+        viewport.classList.remove("dragging");
+        viewport.removeEventListener("pointermove", onPointerMove);
+        viewport.removeEventListener("pointerup", onPointerUp);
+        viewport.removeEventListener("pointercancel", onPointerUp);
+        setTimeout(() => { isCertDragging = false; }, 50);
+      };
+
+      viewport.addEventListener("pointermove", onPointerMove);
+      viewport.addEventListener("pointerup", onPointerUp);
+      viewport.addEventListener("pointercancel", onPointerUp);
+    });
+
+    // Keyboard shortcuts
+    window.addEventListener("keydown", (e) => {
+      const activeLightbox = document.getElementById("cert-lightbox-widget");
+      if (!activeLightbox || !activeLightbox.classList.contains("open")) return;
+      if (e.key === "Escape") {
+        closeCertLightbox();
+      } else if (e.key === "+" || e.key === "=") {
+        setCertLightboxZoom(certZoomScale + 0.35);
+      } else if (e.key === "-" || e.key === "_") {
+        setCertLightboxZoom(certZoomScale - 0.35);
+      } else if (e.key === "0" || e.key.toLowerCase() === "r") {
+        resetCertLightboxZoom();
+      } else if (certZoomScale > 1.0) {
+        if (e.key === "ArrowLeft") certPanX += 50;
+        if (e.key === "ArrowRight") certPanX -= 50;
+        if (e.key === "ArrowUp") certPanY += 50;
+        if (e.key === "ArrowDown") certPanY -= 50;
+        updateCertLightboxTransform();
+      }
     });
   }
-  
-  lightbox.querySelector(".cert-lightbox-content").src = src;
+
+  certCurrentSrc = src;
+  const titleEl = document.getElementById("cert-lightbox-title");
+  if (titleEl) titleEl.textContent = title;
+
+  const img = document.getElementById("cert-lightbox-img");
+  if (img) img.src = src;
+  resetCertLightboxZoom();
   lightbox.classList.add("open");
+  document.body.style.overflow = "hidden";
 }
 
 // ----------------------------------------------------
@@ -2444,38 +2699,15 @@ function setupAdminCertFormOnce() {
 
   if (!form) return;
 
-  // Handle local image file picker and compress via Canvas
+  // Handle local image / PDF file picker and process in ultra-HD
   fileInput.addEventListener("change", (e) => {
     const file = e.target.files[0];
     if (file) {
       urlInput.value = ""; // clear URL input
-      const reader = new FileReader();
-      reader.onload = function(evt) {
-        const img = new Image();
-        img.onload = function() {
-          const canvas = document.createElement("canvas");
-          const MAX_WIDTH = 500; // Optimal width for local storage
-          let width = img.width;
-          let height = img.height;
-
-          if (width > MAX_WIDTH) {
-            height = Math.round((height * MAX_WIDTH) / width);
-            width = MAX_WIDTH;
-          }
-
-          canvas.width = width;
-          canvas.height = height;
-
-          const ctx = canvas.getContext("2d");
-          ctx.drawImage(img, 0, 0, width, height);
-
-          // Compress to JPEG with 0.7 quality
-          currentUploadedCertImage = canvas.toDataURL("image/jpeg", 0.7);
-          showCertPreview(currentUploadedCertImage);
-        };
-        img.src = evt.target.result;
-      };
-      reader.readAsDataURL(file);
+      processHighResMediaUpload(file, (dataUrl) => {
+        currentUploadedCertImage = dataUrl;
+        showCertPreview(currentUploadedCertImage);
+      });
     }
   });
 
@@ -2728,32 +2960,10 @@ function setupAdminHackathonFormOnce() {
     const file = e.target.files[0];
     if (file) {
       urlInput.value = "";
-      const reader = new FileReader();
-      reader.onload = function(evt) {
-        const img = new Image();
-        img.onload = function() {
-          const canvas = document.createElement("canvas");
-          const MAX_WIDTH = 500;
-          let width = img.width;
-          let height = img.height;
-
-          if (width > MAX_WIDTH) {
-            height = Math.round((height * MAX_WIDTH) / width);
-            width = MAX_WIDTH;
-          }
-
-          canvas.width = width;
-          canvas.height = height;
-
-          const ctx = canvas.getContext("2d");
-          ctx.drawImage(img, 0, 0, width, height);
-
-          currentUploadedHackImage = canvas.toDataURL("image/jpeg", 0.7);
-          showHackPreview(currentUploadedHackImage);
-        };
-        img.src = evt.target.result;
-      };
-      reader.readAsDataURL(file);
+      processHighResMediaUpload(file, (dataUrl) => {
+        currentUploadedHackImage = dataUrl;
+        showHackPreview(currentUploadedHackImage);
+      });
     }
   });
 
