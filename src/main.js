@@ -96,7 +96,7 @@ function initButtonRipples() {
   document.addEventListener("pointerdown", (e) => {
     // 1. Button/Control specific ripple strictly contained within clicked element
     const btn = e.target.closest(
-      ".btn, .admin-tab-btn, .action-btn, .nav-link, .chat-chip, .filter-chip, .tech-filter-chip, .project-filter-pill, .skill-cat-btn, .mobile-menu-toggle, .cert-view-btn"
+      ".btn, .admin-tab-btn, .action-btn, .nav-link, .chat-chip, .filter-chip, .tech-filter-chip, .tech-filter-btn, .project-filter-pill, .skill-cat-btn, .mobile-menu-toggle, .cert-view-btn"
     );
     if (btn) {
       const computed = window.getComputedStyle(btn);
@@ -130,8 +130,9 @@ function initButtonRipples() {
 function refreshAllPublicViews() {
   try { renderHomeStats(); } catch (e) {}
   try { renderTimeline(); } catch (e) {}
-  try { renderTechCategoryFilters(); } catch (e) {}
-  try { renderTechGrid("All"); } catch (e) {}
+  try { renderTechCategoryFilters(activeTechFilter); } catch (e) {}
+  try { renderTechGrid(activeTechFilter); } catch (e) {}
+  try { renderRadarChart(); } catch (e) {}
   try { renderProjectFilters(); } catch (e) {}
   try { renderProjectsGrid(); } catch (e) {}
   try { renderHackathonsGrid(); } catch (e) {}
@@ -383,18 +384,22 @@ function getAllCategories() {
   return Array.from(uniqueMap.values());
 }
 
-function renderTechGrid(category) {
+function renderTechGrid(category = activeTechFilter) {
   const techGrid = document.getElementById("tech-grid-container");
+  if (!techGrid) return;
   const techStacks = Database.getTechStacks();
   
-  const filtered = category === "All" 
+  const targetCategory = category || activeTechFilter || "All";
+  activeTechFilter = targetCategory;
+
+  const filtered = targetCategory === "All" 
     ? techStacks 
-    : techStacks.filter(t => t.category && t.category.toLowerCase() === category.toLowerCase());
+    : techStacks.filter(t => t.category && t.category.trim().toLowerCase() === targetCategory.trim().toLowerCase());
 
   techGrid.innerHTML = "";
 
   if (filtered.length === 0) {
-    techGrid.innerHTML = `<div style="grid-column: 1/-1; text-align: center; color: var(--text-dimmed); padding: 40px;">No skills found under this category.</div>`;
+    techGrid.innerHTML = `<div style="grid-column: 1/-1; text-align: center; color: var(--text-dimmed); padding: 40px;">No skills added yet under ${targetCategory === "All" ? "skillset" : `"${targetCategory}"`}.</div>`;
     return;
   }
 
@@ -406,22 +411,27 @@ function renderTechGrid(category) {
     
     // Quick custom SVG fallback based on icon text
     let iconSvg = "";
-    if (tech.name.toLowerCase().includes("react")) {
+    const nameLower = (tech.name || "").toLowerCase();
+    const catLower = (tech.category || "").toLowerCase();
+
+    if (nameLower.includes("react")) {
       iconSvg = `<svg viewBox="0 0 24 24" width="28" height="28" stroke="currentColor" stroke-width="2" fill="none"><circle cx="12" cy="12" r="2"/><path d="M12 2v20M17 5L7 19M19 17L5 7"/></svg>`;
-    } else if (tech.name.toLowerCase().includes("js") || tech.name.toLowerCase().includes("javascript")) {
+    } else if (nameLower.includes("js") || nameLower.includes("javascript")) {
       iconSvg = `<svg viewBox="0 0 24 24" width="28" height="28" stroke="currentColor" stroke-width="2" fill="none"><path d="M3 15h12M9 9h6M13 3l-4 18"/></svg>`;
-    } else if (tech.name.toLowerCase().includes("node")) {
+    } else if (nameLower.includes("node")) {
       iconSvg = `<svg viewBox="0 0 24 24" width="28" height="28" stroke="currentColor" stroke-width="2" fill="none"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>`;
-    } else if (tech.name.toLowerCase().includes("db") || tech.name.toLowerCase().includes("mongo") || tech.name.toLowerCase().includes("sql")) {
+    } else if (nameLower.includes("db") || nameLower.includes("mongo") || nameLower.includes("sql") || catLower.includes("database")) {
       iconSvg = `<svg viewBox="0 0 24 24" width="28" height="28" stroke="currentColor" stroke-width="2" fill="none"><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5M3 12c0 1.66 4 3 9 3s9-1.34 9-3"/></svg>`;
-    } else if (tech.name.toLowerCase().includes("python") || tech.name.toLowerCase().includes("pandas") || tech.name.toLowerCase().includes("numpy")) {
+    } else if (nameLower.includes("python") || nameLower.includes("pandas") || nameLower.includes("numpy") || catLower.includes("data science") || nameLower.includes("pytorch") || nameLower.includes("tensorflow") || nameLower.includes("ai") || nameLower.includes("ml")) {
       iconSvg = `<svg viewBox="0 0 24 24" width="28" height="28" stroke="currentColor" stroke-width="2" fill="none"><path d="M12 22a7 7 0 0 0 5-5h-3a4 4 0 0 1-4-4V7H5a7 7 0 0 0 7 15z"/><path d="M12 2a7 7 0 0 0-5 5h3a4 4 0 0 1 4 4v6h5a7 7 0 0 0-7-15z"/></svg>`;
-    } else if (tech.name.toLowerCase().includes("docker")) {
+    } else if (nameLower.includes("docker") || nameLower.includes("k8s") || nameLower.includes("kubernetes") || nameLower.includes("aws") || nameLower.includes("ci/cd") || catLower.includes("devops")) {
       iconSvg = `<svg viewBox="0 0 24 24" width="28" height="28" stroke="currentColor" stroke-width="2" fill="none"><rect x="2" y="2" width="20" height="20" rx="4"/><path d="M6 6h4v4H6zm8 0h4v4h-4zm0 8h4v4h-4zm-8 0h4v4H6z"/></svg>`;
-    } else if ((tech.category && tech.category.toLowerCase().includes("non-tech")) || tech.name.toLowerCase().includes("leadership") || tech.name.toLowerCase().includes("communication") || tech.name.toLowerCase().includes("management") || tech.name.toLowerCase().includes("problem solving") || tech.name.toLowerCase().includes("team")) {
+    } else if (nameLower.includes("git") || nameLower.includes("github") || catLower.includes("version control")) {
+      iconSvg = `<svg viewBox="0 0 24 24" width="28" height="28" stroke="currentColor" stroke-width="2" fill="none"><circle cx="18" cy="18" r="3"/><circle cx="6" cy="6" r="3"/><path d="M6 9v12"/><path d="M18 9a9 9 0 0 1-9 9"/></svg>`;
+    } else if (catLower.includes("non-tech") || catLower.includes("soft") || nameLower.includes("leadership") || nameLower.includes("communication") || nameLower.includes("management") || nameLower.includes("problem solving") || nameLower.includes("team") || nameLower.includes("agile") || nameLower.includes("strategy")) {
       iconSvg = `<svg viewBox="0 0 24 24" width="28" height="28" stroke="currentColor" stroke-width="2" fill="none"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>`;
     } else {
-      iconSvg = `<svg viewBox="0 0 24 24" width="28" height="28" stroke="currentColor" stroke-width="2" fill="none"><path d="M18 10h-1.26A8 8 0 1 0 9 20h9a5 5 0 0 0 0-10z"/></svg>`;
+      iconSvg = `<svg viewBox="0 0 24 24" width="28" height="28" stroke="currentColor" stroke-width="2" fill="none"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>`;
     }
 
     card.innerHTML = `
@@ -443,26 +453,32 @@ function renderTechGrid(category) {
   });
 }
 
-function renderTechCategoryFilters() {
+function renderTechCategoryFilters(selectedCat = activeTechFilter) {
   const container = document.getElementById("tech-category-filters");
   if (!container) return;
+  activeTechFilter = selectedCat || "All";
   const categories = getAllCategories();
   const techStacks = Database.getTechStacks();
 
-  container.innerHTML = `<button class="tech-filter-btn active" data-category="All">All Skills (${techStacks.length})</button>`;
+  const isAllActive = activeTechFilter === "All" || !activeTechFilter;
+  let html = `<button class="tech-filter-btn ${isAllActive ? 'active' : ''}" data-category="All">All Skills (${techStacks.length})</button>`;
+  
   categories.forEach(cat => {
-    const count = techStacks.filter(t => t.category && t.category.toLowerCase() === cat.toLowerCase()).length;
-    if (count > 0 || (Database.getSettings().categories || []).map(c => c.toLowerCase()).includes(cat.toLowerCase())) {
-      container.innerHTML += `<button class="tech-filter-btn" data-category="${cat}">${cat} (${count})</button>`;
-    }
+    const count = techStacks.filter(t => t.category && t.category.trim().toLowerCase() === cat.trim().toLowerCase()).length;
+    const isActive = !isAllActive && activeTechFilter.trim().toLowerCase() === cat.trim().toLowerCase();
+    html += `<button class="tech-filter-btn ${isActive ? 'active' : ''}" data-category="${cat}">${cat} (${count})</button>`;
   });
+
+  container.innerHTML = html;
 
   // Re-bind click events
   container.querySelectorAll(".tech-filter-btn").forEach(btn => {
     btn.addEventListener("click", () => {
+      const cat = btn.dataset.category;
+      activeTechFilter = cat;
       container.querySelectorAll(".tech-filter-btn").forEach(b => b.classList.remove("active"));
       btn.classList.add("active");
-      renderTechGrid(btn.dataset.category);
+      renderTechGrid(cat);
     });
   });
 }
@@ -1003,15 +1019,18 @@ function populateAdminCategoryList() {
 function deleteCategory(catName) {
   const settings = Database.getSettings();
   const categories = settings.categories || ["Frontend", "Backend", "Databases", "DevOps", "Version Control", "Data Science", "Non-Technical Skills"];
-  const updated = categories.filter(c => c !== catName);
+  const updated = categories.filter(c => c.toLowerCase().trim() !== catName.toLowerCase().trim());
   
   Database.saveSettings({ categories: updated });
   
+  if (activeTechFilter.toLowerCase().trim() === catName.toLowerCase().trim()) {
+    activeTechFilter = "All";
+  }
+
   // Refresh UI
   populateAdminCategoryList();
   populateAdminTechCategoriesDropdown();
-  renderTechCategoryFilters();
-  renderAdminTechList();
+  refreshAllPublicViews();
 }
 
 let isCategoryFormSetup = false;
@@ -1029,7 +1048,7 @@ function setupAdminCategoryFormOnce() {
     const settings = Database.getSettings();
     const categories = settings.categories || ["Frontend", "Backend", "Databases", "DevOps", "Version Control", "Data Science", "Non-Technical Skills"];
     
-    if (categories.some(c => c.toLowerCase() === newCat.toLowerCase())) {
+    if (categories.some(c => c.toLowerCase().trim() === newCat.toLowerCase().trim())) {
       showToast("This category already exists.", "error");
       return;
     }
@@ -1189,7 +1208,7 @@ techForm.addEventListener("submit", async (e) => {
     // Save to settings
     const settings = Database.getSettings();
     const categories = settings.categories || ["Frontend", "Backend", "Databases", "DevOps", "Version Control", "Data Science", "Non-Technical Skills"];
-    if (!categories.includes(category)) {
+    if (!categories.some(c => c.toLowerCase().trim() === category.toLowerCase().trim())) {
       categories.push(category);
       await Database.saveSettings({ categories });
     }
@@ -2186,9 +2205,9 @@ function renderPlanetaryBodies(data) {
   if (!data || data.length === 0) return "";
 
   const total = data.length;
-  // Dynamic orbital radial step
+  // Dynamic orbital radial step with responsive scaling for any category count
   const minRadius = 80;
-  const maxRadius = 265;
+  const maxRadius = Math.max(265, Math.min(320, minRadius + (total - 1) * 32));
   const step = total > 1 ? (maxRadius - minRadius) / (total - 1) : 0;
 
   let markup = "";
@@ -2332,12 +2351,8 @@ function bindSolarSystemEvents(data) {
   const sunBtn = document.getElementById("solar-sun-button");
   if (sunBtn) {
     sunBtn.addEventListener("click", () => {
-      const filters = document.getElementById("tech-category-filters");
-      if (filters) {
-        filters.querySelectorAll(".tech-filter-btn").forEach(b => b.classList.remove("active"));
-        const allBtn = filters.querySelector('[data-category="All"]');
-        if (allBtn) allBtn.classList.add("active");
-      }
+      activeTechFilter = "All";
+      renderTechCategoryFilters("All");
       renderTechGrid("All");
       showToast("Displaying all core engineering skills");
     });
@@ -2373,13 +2388,9 @@ function bindSolarSystemEvents(data) {
     });
 
     planet.addEventListener("click", () => {
-      // Filter the grid below
-      const filters = document.getElementById("tech-category-filters");
-      if (filters) {
-        filters.querySelectorAll(".tech-filter-btn").forEach(b => {
-          b.classList.toggle("active", b.dataset.category.toLowerCase() === catName.toLowerCase());
-        });
-      }
+      // Filter the grid below and sync buttons
+      activeTechFilter = catName;
+      renderTechCategoryFilters(catName);
       renderTechGrid(catName);
       showToast(`Filtered skillset for: ${catName}`);
       
