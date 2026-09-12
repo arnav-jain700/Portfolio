@@ -80,26 +80,50 @@ function flashButtonSuccess(btn, successText = "✓ Saved Successfully!") {
   }, 2200);
 }
 
+function createGlobalClickPulse(x, y) {
+  if (typeof x !== "number" || typeof y !== "number" || (x === 0 && y === 0)) return;
+  const pulse = document.createElement("div");
+  pulse.className = "celestial-click-pulse";
+  pulse.style.left = `${x}px`;
+  pulse.style.top = `${y}px`;
+  document.body.appendChild(pulse);
+  setTimeout(() => {
+    pulse.remove();
+  }, 480);
+}
+
 function initButtonRipples() {
   document.addEventListener("pointerdown", (e) => {
-    const btn = e.target.closest(".btn, .admin-tab-btn, .action-btn, .nav-link");
-    if (!btn) return;
+    // 1. Button/Control specific ripple strictly contained within clicked element
+    const btn = e.target.closest(
+      ".btn, .admin-tab-btn, .action-btn, .nav-link, .chat-chip, .filter-chip, .tech-filter-chip, .project-filter-pill, .skill-cat-btn, .mobile-menu-toggle, .cert-view-btn"
+    );
+    if (btn) {
+      const computed = window.getComputedStyle(btn);
+      if (computed.position === "static") {
+        btn.style.position = "relative";
+      }
+      btn.style.overflow = "hidden";
 
-    const circle = document.createElement("span");
-    const diameter = Math.max(btn.clientWidth, btn.clientHeight) || 60;
-    const radius = diameter / 2;
-    const rect = btn.getBoundingClientRect();
+      const circle = document.createElement("span");
+      const rect = btn.getBoundingClientRect();
+      const diameter = Math.max(rect.width, rect.height, 40);
+      const radius = diameter / 2;
 
-    circle.style.width = circle.style.height = `${diameter}px`;
-    circle.style.left = `${e.clientX - rect.left - radius}px`;
-    circle.style.top = `${e.clientY - rect.top - radius}px`;
-    circle.classList.add("btn-ripple");
+      circle.style.width = circle.style.height = `${diameter}px`;
+      circle.style.left = `${e.clientX - rect.left - radius}px`;
+      circle.style.top = `${e.clientY - rect.top - radius}px`;
+      circle.classList.add("btn-ripple");
 
-    const existing = btn.querySelector(".btn-ripple");
-    if (existing) existing.remove();
+      const existing = btn.querySelector(".btn-ripple");
+      if (existing) existing.remove();
 
-    btn.appendChild(circle);
-    setTimeout(() => circle.remove(), 600);
+      btn.appendChild(circle);
+      setTimeout(() => circle.remove(), 600);
+    }
+
+    // 2. Global Celestial Click Burst at the EXACT cursor pointer coordinates
+    createGlobalClickPulse(e.clientX, e.clientY);
   });
 }
 
@@ -4119,6 +4143,12 @@ function initVisualEngine() {
       const card = event.target.closest('.tilt-card, .project-card');
       if (card && !card.contains(event.relatedTarget)) card.style.transform = '';
     });
+    document.addEventListener('pointerdown', () => {
+      document.body.classList.add('cursor-clicking');
+    }, { passive: true });
+    document.addEventListener('pointerup', () => {
+      document.body.classList.remove('cursor-clicking');
+    }, { passive: true });
     const animateCursor = () => {
       orbX += (mouseX - orbX) * .13; orbY += (mouseY - orbY) * .13;
       if (orb) { orb.style.left = `${orbX}px`; orb.style.top = `${orbY}px`; }
