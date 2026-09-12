@@ -96,7 +96,7 @@ function initButtonRipples() {
   document.addEventListener("pointerdown", (e) => {
     // 1. Button/Control specific ripple strictly contained within clicked element
     const btn = e.target.closest(
-      ".btn, .admin-tab-btn, .action-btn, .nav-link, .chat-chip, .filter-chip, .tech-filter-chip, .tech-filter-btn, .project-filter-pill, .skill-cat-btn, .mobile-menu-toggle, .cert-view-btn"
+      ".btn, .admin-tab-btn, .action-btn, .nav-link, .chat-chip, .filter-chip, .tech-filter-chip, .tech-filter-btn, .core-skill-tab, .tech-sub-pill, .project-filter-pill, .skill-cat-btn, .mobile-menu-toggle, .cert-view-btn"
     );
     if (btn) {
       const computed = window.getComputedStyle(btn);
@@ -361,7 +361,19 @@ function resetSliderTimer() {
 // ----------------------------------------------------
 // TECH STACK PAGE
 // ----------------------------------------------------
+let mainSkillTab = "all"; // "all" | "technical" | "non-technical"
+let subTechCategory = "all"; // "all" | "Frontend" | "Backend" | ...
 let activeTechFilter = "All";
+
+function isNonTechnicalCategory(cat) {
+  if (!cat) return false;
+  const lower = cat.toLowerCase().trim();
+  return lower.includes("non-tech") || lower.includes("non technical") || lower.includes("soft") || lower.includes("interpersonal") || lower.includes("leadership") || lower.includes("communication") || lower.includes("management");
+}
+
+function isTechnicalCategory(cat) {
+  return !isNonTechnicalCategory(cat);
+}
 
 function getAllCategories() {
   const settings = Database.getSettings();
@@ -389,17 +401,30 @@ function renderTechGrid(category = activeTechFilter) {
   if (!techGrid) return;
   const techStacks = Database.getTechStacks();
   
-  const targetCategory = category || activeTechFilter || "All";
-  activeTechFilter = targetCategory;
+  const targetFilter = category || activeTechFilter || "All";
+  activeTechFilter = targetFilter;
 
-  const filtered = targetCategory === "All" 
-    ? techStacks 
-    : techStacks.filter(t => t.category && t.category.trim().toLowerCase() === targetCategory.trim().toLowerCase());
+  let filtered = [];
+  if (targetFilter === "All") {
+    filtered = techStacks;
+  } else if (targetFilter === "Technical Skills" || targetFilter === "all-technical") {
+    filtered = techStacks.filter(t => isTechnicalCategory(t.category));
+  } else if (targetFilter === "Non-Technical Skills" || targetFilter === "non-technical") {
+    filtered = techStacks.filter(t => isNonTechnicalCategory(t.category));
+  } else {
+    filtered = techStacks.filter(t => t.category && t.category.trim().toLowerCase() === targetFilter.trim().toLowerCase());
+  }
 
   techGrid.innerHTML = "";
 
   if (filtered.length === 0) {
-    techGrid.innerHTML = `<div style="grid-column: 1/-1; text-align: center; color: var(--text-dimmed); padding: 40px;">No skills added yet under ${targetCategory === "All" ? "skillset" : `"${targetCategory}"`}.</div>`;
+    let emptyLabel = targetFilter;
+    if (targetFilter === "All") emptyLabel = "skillset";
+    else if (targetFilter === "Technical Skills") emptyLabel = "technical skills";
+    else if (targetFilter === "Non-Technical Skills") emptyLabel = "non-technical skills";
+    else emptyLabel = `"${targetFilter}"`;
+
+    techGrid.innerHTML = `<div style="grid-column: 1/-1; text-align: center; color: var(--text-dimmed); padding: 40px;">No skills added yet under ${emptyLabel}.</div>`;
     return;
   }
 
@@ -453,32 +478,128 @@ function renderTechGrid(category = activeTechFilter) {
   });
 }
 
-function renderTechCategoryFilters(selectedCat = activeTechFilter) {
+function renderTechCategoryFilters(selectedTab = mainSkillTab, selectedSub = subTechCategory) {
   const container = document.getElementById("tech-category-filters");
   if (!container) return;
-  activeTechFilter = selectedCat || "All";
-  const categories = getAllCategories();
+
+  mainSkillTab = selectedTab || "all";
+  subTechCategory = selectedSub || "all";
+
+  const allCategories = getAllCategories();
   const techStacks = Database.getTechStacks();
 
-  const isAllActive = activeTechFilter === "All" || !activeTechFilter;
-  let html = `<button class="tech-filter-btn ${isAllActive ? 'active' : ''}" data-category="All">All Skills (${techStacks.length})</button>`;
-  
-  categories.forEach(cat => {
+  const totalCount = techStacks.length;
+  const techCats = allCategories.filter(isTechnicalCategory);
+  const nonTechCats = allCategories.filter(isNonTechnicalCategory);
+
+  const techCount = techStacks.filter(t => isTechnicalCategory(t.category)).length;
+  const nonTechCount = techStacks.filter(t => isNonTechnicalCategory(t.category)).length;
+
+  const isAllActive = mainSkillTab === "all";
+  const isTechActive = mainSkillTab === "technical";
+  const isNonTechActive = mainSkillTab === "non-technical";
+
+  let html = `
+    <div class="tech-filter-system">
+      <!-- 1. Top-Level Three Core Filters -->
+      <div class="tech-core-filters">
+        <button class="core-skill-tab ${isAllActive ? 'active' : ''}" data-tab="all">
+          <span class="core-tab-icon">✦</span>
+          <span>All Skills</span>
+          <span class="core-tab-count">(${totalCount})</span>
+        </button>
+
+        <button class="core-skill-tab ${isTechActive ? 'active expanded' : ''}" data-tab="technical" title="Click to view technical disciplines">
+          <span class="core-tab-icon">⚡</span>
+          <span>Technical Skills</span>
+          <span class="core-tab-count">(${techCount})</span>
+          <svg class="core-tab-chevron" viewBox="0 0 24 24" width="14" height="14" stroke="currentColor" stroke-width="2.5" fill="none">
+            <polyline points="6 9 12 15 18 9"></polyline>
+          </svg>
+        </button>
+
+        <button class="core-skill-tab ${isNonTechActive ? 'active' : ''}" data-tab="non-technical">
+          <span class="core-tab-icon">🧠</span>
+          <span>Non-Technical Skills</span>
+          <span class="core-tab-count">(${nonTechCount})</span>
+        </button>
+      </div>
+
+      <!-- 2. Animated Sub-Categories Tray for Technical Skills -->
+      <div class="tech-sub-tray ${isTechActive ? 'open' : ''}" id="tech-subcategories-tray">
+        <div class="tech-sub-tray-inner">
+          <div class="tech-sub-tray-header">
+            <span class="tech-sub-tray-title"><span class="celestial-sparkle">✦</span> TECHNICAL DISCIPLINES</span>
+          </div>
+          <div class="tech-sub-pills-list">
+            <button class="tech-sub-pill ${subTechCategory === 'all' ? 'active' : ''}" data-sub="all" style="--i: 0;">
+              <span class="sub-pill-dot"></span>
+              <span>All Technical</span>
+              <span class="sub-pill-count">(${techCount})</span>
+            </button>
+  `;
+
+  techCats.forEach((cat, idx) => {
     const count = techStacks.filter(t => t.category && t.category.trim().toLowerCase() === cat.trim().toLowerCase()).length;
-    const isActive = !isAllActive && activeTechFilter.trim().toLowerCase() === cat.trim().toLowerCase();
-    html += `<button class="tech-filter-btn ${isActive ? 'active' : ''}" data-category="${cat}">${cat} (${count})</button>`;
+    const isSubActive = subTechCategory.trim().toLowerCase() === cat.trim().toLowerCase();
+    html += `
+      <button class="tech-sub-pill ${isSubActive ? 'active' : ''}" data-sub="${cat}" style="--i: ${idx + 1};">
+        <span class="sub-pill-dot"></span>
+        <span>${cat}</span>
+        <span class="sub-pill-count">(${count})</span>
+      </button>
+    `;
   });
+
+  html += `
+          </div>
+        </div>
+      </div>
+    </div>
+  `;
 
   container.innerHTML = html;
 
-  // Re-bind click events
-  container.querySelectorAll(".tech-filter-btn").forEach(btn => {
-    btn.addEventListener("click", () => {
-      const cat = btn.dataset.category;
-      activeTechFilter = cat;
-      container.querySelectorAll(".tech-filter-btn").forEach(b => b.classList.remove("active"));
-      btn.classList.add("active");
-      renderTechGrid(cat);
+  // Bind Core Tab Clicks
+  container.querySelectorAll(".core-skill-tab").forEach(tabBtn => {
+    tabBtn.addEventListener("click", () => {
+      const tab = tabBtn.dataset.tab;
+      mainSkillTab = tab;
+      
+      if (tab === "all") {
+        subTechCategory = "all";
+        activeTechFilter = "All";
+        renderTechCategoryFilters("all", "all");
+        renderTechGrid("All");
+      } else if (tab === "technical") {
+        subTechCategory = "all";
+        activeTechFilter = "Technical Skills";
+        renderTechCategoryFilters("technical", "all");
+        renderTechGrid("Technical Skills");
+      } else if (tab === "non-technical") {
+        subTechCategory = "all";
+        activeTechFilter = "Non-Technical Skills";
+        renderTechCategoryFilters("non-technical", "all");
+        renderTechGrid("Non-Technical Skills");
+      }
+    });
+  });
+
+  // Bind Sub Pill Clicks
+  container.querySelectorAll(".tech-sub-pill").forEach(pillBtn => {
+    pillBtn.addEventListener("click", () => {
+      const sub = pillBtn.dataset.sub;
+      subTechCategory = sub;
+      container.querySelectorAll(".tech-sub-pill").forEach(p => p.classList.remove("active"));
+      pillBtn.classList.add("active");
+      
+      if (sub === "all") {
+        activeTechFilter = "Technical Skills";
+        renderTechGrid("Technical Skills");
+      } else {
+        activeTechFilter = sub;
+        renderTechGrid(sub);
+      }
     });
   });
 }
@@ -2351,8 +2472,10 @@ function bindSolarSystemEvents(data) {
   const sunBtn = document.getElementById("solar-sun-button");
   if (sunBtn) {
     sunBtn.addEventListener("click", () => {
+      mainSkillTab = "all";
+      subTechCategory = "all";
       activeTechFilter = "All";
-      renderTechCategoryFilters("All");
+      renderTechCategoryFilters("all", "all");
       renderTechGrid("All");
       showToast("Displaying all core engineering skills");
     });
@@ -2389,9 +2512,19 @@ function bindSolarSystemEvents(data) {
 
     planet.addEventListener("click", () => {
       // Filter the grid below and sync buttons
-      activeTechFilter = catName;
-      renderTechCategoryFilters(catName);
-      renderTechGrid(catName);
+      if (isNonTechnicalCategory(catName)) {
+        mainSkillTab = "non-technical";
+        subTechCategory = "all";
+        activeTechFilter = catName;
+        renderTechCategoryFilters("non-technical", "all");
+        renderTechGrid(catName);
+      } else {
+        mainSkillTab = "technical";
+        subTechCategory = catName;
+        activeTechFilter = catName;
+        renderTechCategoryFilters("technical", catName);
+        renderTechGrid(catName);
+      }
       showToast(`Filtered skillset for: ${catName}`);
       
       const grid = document.getElementById("tech-grid-container");
