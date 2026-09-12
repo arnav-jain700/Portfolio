@@ -394,7 +394,7 @@ function renderTechGrid(category) {
   techGrid.innerHTML = "";
 
   if (filtered.length === 0) {
-    techGrid.innerHTML = `<div style="grid-column: 1/-1; text-align: center; color: var(--text-dimmed); padding: 40px;">No skills added under this category. Add them in the Admin page!</div>`;
+    techGrid.innerHTML = `<div style="grid-column: 1/-1; text-align: center; color: var(--text-dimmed); padding: 40px;">No skills found under this category.</div>`;
     return;
   }
 
@@ -628,7 +628,7 @@ function renderProjectsGrid(projectsList = null) {
   grid.innerHTML = "";
 
   if (projects.length === 0) {
-    grid.innerHTML = `<div style="grid-column: 1/-1; text-align: center; color: var(--text-dimmed); padding: 40px;">No projects match the selected criteria. Add/edit them in the Admin tab!</div>`;
+    grid.innerHTML = `<div style="grid-column: 1/-1; text-align: center; color: var(--text-dimmed); padding: 40px;">No projects match the selected criteria.</div>`;
     return;
   }
 
@@ -2402,7 +2402,6 @@ function renderCertificatesGrid() {
   
   container.innerHTML = "";
   if (certs.length === 0) {
-    container.innerHTML = `<div style="grid-column: 1/-1; text-align: center; color: var(--text-dimmed); padding: 40px;">No certificates added yet. Add some in the Admin panel!</div>`;
     return;
   }
   
@@ -2868,7 +2867,6 @@ function renderHackathonsGrid() {
 
   container.innerHTML = "";
   if (hackathons.length === 0) {
-    container.innerHTML = `<div style="grid-column: 1/-1; text-align: center; color: var(--text-dimmed); padding: 40px;">No hackathons added yet. Add some in the Admin panel!</div>`;
     return;
   }
 
@@ -3142,7 +3140,6 @@ function renderBlogGrid() {
 
   container.innerHTML = "";
   if (sorted.length === 0) {
-    container.innerHTML = `<div style="grid-column: 1/-1; text-align: center; color: var(--text-dimmed); padding: 40px;">No articles published yet. Publish one in Admin!</div>`;
     return;
   }
 
