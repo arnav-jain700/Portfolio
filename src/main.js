@@ -1577,10 +1577,46 @@ async function processHighResMediaUpload(file, callback) {
   reader.readAsDataURL(file);
 }
 
+// Rotate Image Data URL helper
+function rotateImageDataUrl(dataUrl, degrees, callback) {
+  if (!dataUrl) return;
+  const img = new Image();
+  img.onload = () => {
+    const canvas = document.createElement("canvas");
+    const isSideways = Math.abs(degrees % 180) === 90;
+
+    const w = img.naturalWidth || img.width;
+    const h = img.naturalHeight || img.height;
+
+    if (isSideways) {
+      canvas.width = h;
+      canvas.height = w;
+    } else {
+      canvas.width = w;
+      canvas.height = h;
+    }
+
+    const ctx = canvas.getContext("2d", { alpha: false });
+    ctx.imageSmoothingEnabled = true;
+    ctx.imageSmoothingQuality = "high";
+
+    ctx.translate(canvas.width / 2, canvas.height / 2);
+    ctx.rotate((degrees * Math.PI) / 180);
+    ctx.drawImage(img, -w / 2, -h / 2);
+
+    const isPng = dataUrl.startsWith("data:image/png");
+    const rotatedDataUrl = canvas.toDataURL(isPng ? "image/png" : "image/jpeg", 0.94);
+    if (callback) callback(rotatedDataUrl);
+  };
+  img.src = dataUrl;
+}
+
 // Bind project image upload handlers
 const projFileInput = document.getElementById("admin-project-file");
 const projUrlInput = document.getElementById("admin-project-image-url");
 const projRemoveImgBtn = document.getElementById("admin-project-remove-img-btn");
+const projRotateCwBtn = document.getElementById("admin-project-rotate-cw-btn");
+const projRotateCcwBtn = document.getElementById("admin-project-rotate-ccw-btn");
 
 if (projFileInput) {
   projFileInput.addEventListener("change", (e) => {
@@ -1604,6 +1640,28 @@ if (projUrlInput) {
       showProjPreview(val);
     } else {
       hideProjPreview();
+    }
+  });
+}
+
+if (projRotateCwBtn) {
+  projRotateCwBtn.addEventListener("click", () => {
+    if (currentUploadedProjImage) {
+      rotateImageDataUrl(currentUploadedProjImage, 90, (rotated) => {
+        currentUploadedProjImage = rotated;
+        showProjPreview(rotated);
+      });
+    }
+  });
+}
+
+if (projRotateCcwBtn) {
+  projRotateCcwBtn.addEventListener("click", () => {
+    if (currentUploadedProjImage) {
+      rotateImageDataUrl(currentUploadedProjImage, -90, (rotated) => {
+        currentUploadedProjImage = rotated;
+        showProjPreview(rotated);
+      });
     }
   });
 }
@@ -2922,6 +2980,8 @@ function setupAdminCertFormOnce() {
   const fileInput = document.getElementById("admin-cert-file");
   const urlInput = document.getElementById("admin-cert-image-url");
   const removeImgBtn = document.getElementById("admin-cert-remove-img-btn");
+  const rotateCwBtn = document.getElementById("admin-cert-rotate-cw-btn");
+  const rotateCcwBtn = document.getElementById("admin-cert-rotate-ccw-btn");
 
   if (!form) return;
 
@@ -2948,6 +3008,30 @@ function setupAdminCertFormOnce() {
       hideCertPreview();
     }
   });
+
+  // Rotate 90° Clockwise
+  if (rotateCwBtn) {
+    rotateCwBtn.addEventListener("click", () => {
+      if (currentUploadedCertImage) {
+        rotateImageDataUrl(currentUploadedCertImage, 90, (rotated) => {
+          currentUploadedCertImage = rotated;
+          showCertPreview(rotated);
+        });
+      }
+    });
+  }
+
+  // Rotate 90° Counter-Clockwise
+  if (rotateCcwBtn) {
+    rotateCcwBtn.addEventListener("click", () => {
+      if (currentUploadedCertImage) {
+        rotateImageDataUrl(currentUploadedCertImage, -90, (rotated) => {
+          currentUploadedCertImage = rotated;
+          showCertPreview(rotated);
+        });
+      }
+    });
+  }
 
   // Remove image preview action
   removeImgBtn.addEventListener("click", () => {
