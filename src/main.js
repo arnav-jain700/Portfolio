@@ -611,28 +611,69 @@ let activeProjectFilter = "All";
 
 function renderProjectFilters() {
   const container = document.getElementById("project-tech-filters");
-  const techStacks = Database.getTechStacks();
+  if (!container) return;
   const projects = Database.getProjects();
   
-  container.innerHTML = `<button class="tech-filter-btn active" data-tag="All">All Projects (${projects.length})</button>`;
+  container.innerHTML = "";
   
-  techStacks.forEach(tech => {
-    const count = projects.filter(p => (Array.isArray(p.tags) ? p.tags : []).some(tag => tag && tag.toLowerCase() === tech.name.toLowerCase())).length;
-    if (count > 0) {
-      const btn = document.createElement("button");
-      btn.className = "tech-filter-btn";
-      btn.textContent = `${tech.name} (${count})`;
-      btn.dataset.tag = tech.name;
-      container.appendChild(btn);
+  // 1. "All Projects" Pill
+  const allBtn = document.createElement("button");
+  allBtn.className = `project-filter-pill ${activeProjectFilter === "All" ? "active" : ""}`;
+  allBtn.dataset.filter = "All";
+  allBtn.innerHTML = `<span>All Projects</span><span class="pill-count">${projects.length}</span>`;
+  container.appendChild(allBtn);
+
+  // 2. Extract unique project categories
+  const categoryMap = new Map();
+  projects.forEach(p => {
+    if (p.category && p.category.trim()) {
+      const cat = p.category.trim();
+      const key = cat.toLowerCase();
+      categoryMap.set(key, { name: cat, count: (categoryMap.get(key)?.count || 0) + 1 });
     }
   });
 
+  categoryMap.forEach(item => {
+    const btn = document.createElement("button");
+    const isActive = activeProjectFilter.toLowerCase() === item.name.toLowerCase();
+    btn.className = `project-filter-pill ${isActive ? "active" : ""}`;
+    btn.dataset.filter = item.name;
+    btn.innerHTML = `<span>${item.name}</span><span class="pill-count">${item.count}</span>`;
+    container.appendChild(btn);
+  });
+
+  // 3. Extract prominent tags that don't duplicate existing category names
+  const tagMap = new Map();
+  projects.forEach(p => {
+    const tags = Array.isArray(p.tags) ? p.tags : (typeof p.tags === "string" ? p.tags.split(",") : []);
+    tags.forEach(t => {
+      if (t && typeof t === "string" && t.trim()) {
+        const cleanTag = t.trim();
+        const key = cleanTag.toLowerCase();
+        if (!categoryMap.has(key)) {
+          tagMap.set(key, { name: cleanTag, count: (tagMap.get(key)?.count || 0) + 1 });
+        }
+      }
+    });
+  });
+
+  // Sort tags by frequency (highest count first)
+  const sortedTags = Array.from(tagMap.values()).sort((a, b) => b.count - a.count);
+  sortedTags.forEach(item => {
+    const btn = document.createElement("button");
+    const isActive = activeProjectFilter.toLowerCase() === item.name.toLowerCase();
+    btn.className = `project-filter-pill ${isActive ? "active" : ""}`;
+    btn.dataset.filter = item.name;
+    btn.innerHTML = `<span>${item.name}</span><span class="pill-count">${item.count}</span>`;
+    container.appendChild(btn);
+  });
+
   // Re-bind click events
-  container.querySelectorAll(".tech-filter-btn").forEach(btn => {
+  container.querySelectorAll(".project-filter-pill").forEach(btn => {
     btn.addEventListener("click", () => {
-      container.querySelectorAll(".tech-filter-btn").forEach(b => b.classList.remove("active"));
+      container.querySelectorAll(".project-filter-pill").forEach(b => b.classList.remove("active"));
       btn.classList.add("active");
-      activeProjectFilter = btn.dataset.tag;
+      activeProjectFilter = btn.dataset.filter;
       filterProjects();
     });
   });
@@ -827,23 +868,41 @@ function renderProjectsGrid(projectsList = null) {
 }
 
 function filterProjects() {
-  const searchVal = document.getElementById("project-search-input").value.toLowerCase();
+  const searchInput = document.getElementById("project-search-input");
+  const searchVal = searchInput ? searchInput.value.toLowerCase().trim() : "";
   const projects = Database.getProjects();
 
   const filtered = projects.filter(proj => {
-    const matchesSearch = proj.title.toLowerCase().includes(searchVal) || 
-                          proj.description.toLowerCase().includes(searchVal);
-                          
-    const matchesTag = activeProjectFilter === "All" || 
-                       (Array.isArray(proj.tags) ? proj.tags : []).some(t => t && t.toLowerCase() === activeProjectFilter.toLowerCase());
+    const tags = Array.isArray(proj.tags) ? proj.tags : (typeof proj.tags === "string" ? proj.tags.split(",") : []);
+    
+    // Search match
+    const titleMatch = (proj.title || "").toLowerCase().includes(searchVal);
+    const descMatch = (proj.description || "").toLowerCase().includes(searchVal);
+    const catMatch = (proj.category || "").toLowerCase().includes(searchVal);
+    const tagMatch = tags.some(t => t && t.toLowerCase().includes(searchVal));
+    const matchesSearch = !searchVal || titleMatch || descMatch || catMatch || tagMatch;
 
-    return matchesSearch && matchesTag;
+    // Filter pill match
+    let matchesFilter = false;
+    if (activeProjectFilter === "All") {
+      matchesFilter = true;
+    } else {
+      const activeLower = activeProjectFilter.toLowerCase();
+      const isCatMatch = (proj.category || "").toLowerCase() === activeLower;
+      const isTagMatch = tags.some(t => t && t.toLowerCase() === activeLower);
+      matchesFilter = isCatMatch || isTagMatch;
+    }
+
+    return matchesSearch && matchesFilter;
   });
 
   renderProjectsGrid(filtered);
 }
 
-document.getElementById("project-search-input").addEventListener("input", filterProjects);
+const searchInputEl = document.getElementById("project-search-input");
+if (searchInputEl) {
+  searchInputEl.addEventListener("input", filterProjects);
+}
 
 // ----------------------------------------------------
 // PORTFOLIO MODAL (Detail View)

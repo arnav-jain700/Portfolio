@@ -894,17 +894,159 @@ body.light-theme .tech-sub-pill.active .sub-pill-count {
 }
 
 /* PROJECTS PAGE */
-.projects-header {
+.projects-control-bar {
   display: flex;
-  justify-content: space-between;
+  flex-direction: column;
   align-items: center;
-  margin-bottom: 32px;
-  flex-wrap: wrap;
-  gap: 16px;
+  gap: 20px;
+  max-width: 980px;
+  margin: 0 auto 36px auto;
+  width: 100%;
 }
 
-.project-search {
-  max-width: 320px;
+.project-search-wrapper {
+  position: relative;
+  width: 100%;
+  max-width: 480px;
+}
+
+.project-search-icon {
+  position: absolute;
+  left: 16px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--text-dimmed);
+  pointer-events: none;
+  transition: color 0.25s ease;
+}
+
+.project-search-input {
+  padding-left: 44px !important;
+  border-radius: 999px !important;
+  background: rgba(255, 255, 255, 0.03) !important;
+  border: 1px solid rgba(255, 255, 255, 0.1) !important;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.25) !important;
+  font-size: 0.92rem !important;
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1) !important;
+  width: 100%;
+}
+
+.project-search-input:focus {
+  border-color: rgba(255, 255, 255, 0.35) !important;
+  box-shadow: 0 0 20px rgba(255, 255, 255, 0.15), 0 4px 20px rgba(0, 0, 0, 0.4) !important;
+  background: rgba(255, 255, 255, 0.06) !important;
+}
+
+.project-search-wrapper:focus-within .project-search-icon {
+  color: #ffffff;
+}
+
+.project-filter-tray {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  width: 100%;
+  padding: 4px;
+}
+
+.project-filter-pill,
+.tech-filter-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 18px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: var(--text-muted);
+  font-family: inherit;
+  font-size: 0.88rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+  user-select: none;
+  white-space: nowrap;
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+}
+
+.project-filter-pill .pill-count,
+.tech-filter-btn .pill-count {
+  font-size: 0.75rem;
+  font-family: monospace;
+  font-weight: 600;
+  padding: 2px 7px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.08);
+  color: var(--text-dimmed);
+  transition: all 0.25s ease;
+}
+
+.project-filter-pill:hover,
+.tech-filter-btn:hover {
+  background: rgba(255, 255, 255, 0.08);
+  border-color: rgba(255, 255, 255, 0.25);
+  color: #ffffff;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3);
+}
+
+.project-filter-pill.active,
+.tech-filter-btn.active {
+  background: #ffffff !important;
+  color: #09090b !important;
+  font-weight: 600;
+  border-color: #ffffff !important;
+  box-shadow: 0 0 20px rgba(255, 255, 255, 0.35), 0 4px 12px rgba(0, 0, 0, 0.4) !important;
+  transform: translateY(-1px);
+}
+
+.project-filter-pill.active .pill-count,
+.tech-filter-btn.active .pill-count {
+  background: rgba(0, 0, 0, 0.15);
+  color: #09090b;
+}
+
+/* Light Theme Support */
+body.light-theme .project-search-input {
+  background: rgba(255, 255, 255, 0.9) !important;
+  border-color: rgba(0, 0, 0, 0.12) !important;
+  color: #18181b !important;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.05) !important;
+}
+
+body.light-theme .project-search-icon {
+  color: #71717a;
+}
+
+body.light-theme .project-filter-pill,
+body.light-theme .tech-filter-btn {
+  background: rgba(0, 0, 0, 0.03);
+  border-color: rgba(0, 0, 0, 0.08);
+  color: #52525b;
+}
+
+body.light-theme .project-filter-pill:hover,
+body.light-theme .tech-filter-btn:hover {
+  background: rgba(0, 0, 0, 0.06);
+  border-color: rgba(0, 0, 0, 0.15);
+  color: #18181b;
+}
+
+body.light-theme .project-filter-pill.active,
+body.light-theme .tech-filter-btn.active {
+  background: #18181b !important;
+  color: #ffffff !important;
+  border-color: #18181b !important;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2) !important;
+}
+
+body.light-theme .project-filter-pill.active .pill-count,
+body.light-theme .tech-filter-btn.active .pill-count {
+  background: rgba(255, 255, 255, 0.2);
+  color: #ffffff;
 }
 
 .projects-grid {
