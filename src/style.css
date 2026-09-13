@@ -2725,31 +2725,7 @@ body.light-theme .chat-chip {
 }
 
 .certificate-image-container:hover img {
-  transform: scale(1.06);
-}
-
-.certificate-image-container::after {
-  content: '🔍 Magnify';
-  position: absolute;
-  bottom: 8px;
-  right: 8px;
-  font-size: 0.72rem;
-  font-weight: 600;
-  color: #ffffff;
-  background: rgba(7, 7, 9, 0.75);
-  backdrop-filter: blur(6px);
-  padding: 3px 8px;
-  border-radius: 4px;
-  border: 1px solid rgba(255, 255, 255, 0.15);
-  opacity: 0;
-  transform: translateY(4px);
-  transition: opacity 0.25s ease, transform 0.25s ease;
-  pointer-events: none;
-}
-
-.certificate-image-container:hover::after {
-  opacity: 1;
-  transform: translateY(0);
+  transform: scale(1.04);
 }
 
 /* ====================================================
