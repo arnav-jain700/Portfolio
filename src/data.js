@@ -136,7 +136,7 @@ export const Database = {
         console.warn("Supabase settings sync error:", err);
       }
 
-      // 2. Helper to fetch any table from cloud and update local fast-read cache, or upload local if cloud is empty
+      // 2. Helper to perform a non-destructive 2-way merge between cloud and local cache
       const syncTable = async (tableName, storageKey) => {
         try {
           const { data: cloudItems, error } = await supabase.from(tableName).select("*");
@@ -147,41 +147,62 @@ export const Database = {
           const localItems = JSON.parse(localStorage.getItem(storageKey) || "[]");
           const cloudList = Array.isArray(cloudItems) ? cloudItems : [];
 
-          if (cloudList.length > 0) {
-            const cleaned = cloudList.map(item => {
-              if (tableName === "portfolio_certificates") {
-                return {
-                  ...item,
-                  url: item.url || item.credentialUrl || "",
-                  credentialUrl: item.credentialUrl || item.url || ""
-                };
+          const cleanItem = (item) => {
+            if (tableName === "portfolio_certificates") {
+              return {
+                ...item,
+                url: item.url || item.credentialUrl || "",
+                credentialUrl: item.credentialUrl || item.url || "",
+                image: item.image || ""
+              };
+            }
+            if (tableName === "portfolio_projects") {
+              return {
+                ...item,
+                tags: Array.isArray(item.tags) ? item.tags : (typeof item.tags === "string" ? item.tags.split(",").map(t => t.trim()).filter(Boolean) : [])
+              };
+            }
+            return item;
+          };
+
+          const mergedMap = new Map();
+
+          // 1. Add all cloud items
+          cloudList.forEach(c => {
+            if (c && c.id) mergedMap.set(c.id, cleanItem(c));
+          });
+
+          // 2. Keep local items and upload any un-synced local records to cloud
+          for (const loc of localItems) {
+            if (loc && loc.id) {
+              if (!mergedMap.has(loc.id)) {
+                mergedMap.set(loc.id, loc);
+                const payload = tableName === "portfolio_certificates"
+                  ? {
+                      id: loc.id,
+                      title: loc.title || "",
+                      issuer: loc.issuer || "",
+                      date: loc.date || "",
+                      credentialUrl: loc.url || loc.credentialUrl || "",
+                      skills: loc.skills || "",
+                      image: loc.image || ""
+                    }
+                  : loc;
+                await supabase.from(tableName).upsert(payload).catch(err => console.warn(`Sync upsert failed for ${loc.id}:`, err));
+              } else {
+                // If local copy has an image while cloud copy doesn't, preserve local image and sync to cloud
+                const cloudObj = mergedMap.get(loc.id);
+                if (loc.image && !cloudObj.image) {
+                  cloudObj.image = loc.image;
+                  mergedMap.set(loc.id, cloudObj);
+                  await supabase.from(tableName).upsert(cloudObj).catch(err => console.warn(`Image sync update failed for ${loc.id}:`, err));
+                }
               }
-              if (tableName === "portfolio_projects") {
-                return {
-                  ...item,
-                  tags: Array.isArray(item.tags) ? item.tags : (typeof item.tags === "string" ? item.tags.split(",").map(t => t.trim()).filter(Boolean) : [])
-                };
-              }
-              return item;
-            });
-            localStorage.setItem(storageKey, JSON.stringify(cleaned));
-          } else if (localItems.length > 0) {
-            console.log(`Cloud '${tableName}' has 0 rows. Uploading ${localItems.length} local items to Cloud...`);
-            for (const item of localItems) {
-              const payload = tableName === "portfolio_certificates" 
-                ? { 
-                    id: item.id, 
-                    title: item.title || "", 
-                    issuer: item.issuer || "", 
-                    date: item.date || "", 
-                    credentialUrl: item.url || item.credentialUrl || "", 
-                    skills: item.skills || "", 
-                    image: item.image || "" 
-                  }
-                : item;
-              await supabase.from(tableName).upsert(payload).catch(err => console.warn(`Auto-upload failed for ${tableName}:`, err));
             }
           }
+
+          const mergedList = Array.from(mergedMap.values());
+          localStorage.setItem(storageKey, JSON.stringify(mergedList));
         } catch (err) {
           console.warn(`Supabase table sync error for '${tableName}':`, err);
         }
@@ -660,20 +681,22 @@ export const Database = {
   async saveCertificate(cert) {
     try {
       const certs = this.getCertificates();
+      cert.id = cert.id || "cert-" + Date.now();
       cert.url = cert.url || cert.credentialUrl || "";
       cert.credentialUrl = cert.credentialUrl || cert.url || "";
-      if (cert.id) {
-        const index = certs.findIndex(c => c.id === cert.id);
-        if (index !== -1) {
-          certs[index] = { ...certs[index], ...cert };
-        } else {
-          certs.push(cert);
-        }
+      
+      const index = certs.findIndex(c => c.id === cert.id);
+      if (index !== -1) {
+        certs[index] = { ...certs[index], ...cert };
       } else {
-        cert.id = "cert-" + Date.now();
-        certs.push(cert);
+        certs.unshift(cert);
       }
-      localStorage.setItem("portfolio_certificates", JSON.stringify(certs));
+      
+      try {
+        localStorage.setItem("portfolio_certificates", JSON.stringify(certs));
+      } catch (storageErr) {
+        console.warn("LocalStorage setItem warning:", storageErr);
+      }
       
       if (isCloudActive && supabase) {
         const cloudPayload = {
@@ -686,7 +709,11 @@ export const Database = {
           image: cert.image || ""
         };
         const { error } = await supabase.from("portfolio_certificates").upsert(cloudPayload);
-        if (error) console.error("Supabase certificate save error:", error);
+        if (error) {
+          console.error("Supabase certificate save error:", error);
+        } else {
+          console.log("Certificate synced to Supabase Cloud:", cert.id);
+        }
       }
     } catch (err) {
       console.error("Save certificate error:", err);
