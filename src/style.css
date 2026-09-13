@@ -101,6 +101,41 @@ h1, h2, h3, h4, h5, h6 {
   width: 100%;
 }
 
+select.glass-input,
+select {
+  color-scheme: dark;
+  background-color: #121217;
+  color: var(--text-primary);
+  cursor: pointer;
+}
+
+select.glass-input option,
+select option,
+option {
+  background-color: #18181b !important;
+  color: #ffffff !important;
+  padding: 10px 14px;
+  font-size: 0.95rem;
+}
+
+select.glass-input option:checked,
+select.glass-input option:hover,
+select option:checked,
+select option:hover,
+option:checked,
+option:hover {
+  background-color: #27272a !important;
+  color: #ffffff !important;
+}
+
+select.glass-input optgroup,
+select optgroup,
+optgroup {
+  background-color: #121217 !important;
+  color: var(--text-muted) !important;
+  font-weight: 600;
+}
+
 .glass-input:focus {
   outline: none;
   border-color: rgba(255, 255, 255, 0.4);
@@ -1736,9 +1771,35 @@ body.light-theme .slider-dot.active {
   background: var(--accent-indigo);
 }
 
-body.light-theme select.glass-input option {
-  background-color: hsl(220, 20%, 96%);
-  color: var(--text-primary);
+body.light-theme select.glass-input,
+body.light-theme select {
+  color-scheme: light;
+  background-color: #ffffff;
+  color: #18181b;
+}
+
+body.light-theme select.glass-input option,
+body.light-theme select option,
+body.light-theme option {
+  background-color: #ffffff !important;
+  color: #18181b !important;
+}
+
+body.light-theme select.glass-input option:checked,
+body.light-theme select.glass-input option:hover,
+body.light-theme select option:checked,
+body.light-theme select option:hover,
+body.light-theme option:checked,
+body.light-theme option:hover {
+  background-color: #f4f4f5 !important;
+  color: #18181b !important;
+}
+
+body.light-theme select.glass-input optgroup,
+body.light-theme select optgroup,
+body.light-theme optgroup {
+  background-color: #f9fafb !important;
+  color: #71717a !important;
 }
 
 /* ====================================================
