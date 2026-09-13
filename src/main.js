@@ -1503,7 +1503,7 @@ function hideProjPreview() {
 async function processHighResMediaUpload(file, callback) {
   if (!file) return;
 
-  // 1. PDF Handler (Uses PDF.js for 300DPI crisp page rendering)
+  // 1. PDF Handler (Uses PDF.js for crisp page rendering)
   if (file.type === "application/pdf" || file.name.toLowerCase().endsWith(".pdf")) {
     try {
       if (window.pdfjsLib) {
@@ -1513,7 +1513,7 @@ async function processHighResMediaUpload(file, callback) {
         const page = await pdf.getPage(1);
         
         const unscaledViewport = page.getViewport({ scale: 1.0 });
-        const targetWidth = Math.min(2800, Math.max(2000, unscaledViewport.width * 2.5));
+        const targetWidth = Math.min(1800, Math.max(1200, unscaledViewport.width * 1.8));
         const scale = targetWidth / unscaledViewport.width;
         const viewport = page.getViewport({ scale });
 
@@ -1525,7 +1525,7 @@ async function processHighResMediaUpload(file, callback) {
         ctx.imageSmoothingQuality = "high";
 
         await page.render({ canvasContext: ctx, viewport }).promise;
-        const crispDataUrl = canvas.toDataURL("image/jpeg", 0.92);
+        const crispDataUrl = canvas.toDataURL("image/jpeg", 0.85);
         callback(crispDataUrl);
         return;
       }
@@ -1534,21 +1534,16 @@ async function processHighResMediaUpload(file, callback) {
     }
   }
 
-  // 2. Image File Handler (Preserves crispness up to 2560px with high smoothing)
+  // 2. Image File Handler (Preserves crispness with high smoothing)
   const reader = new FileReader();
   reader.onload = function(evt) {
     const rawData = evt.target.result;
     const img = new Image();
+    img.crossOrigin = "anonymous";
     img.onload = function() {
-      const MAX_BOUND = 2560; // 2K/Ultra HD resolution boundary
-      let width = img.width;
-      let height = img.height;
-
-      // If already within bounds and under 2.5MB, preserve raw image directly for maximum lossless clarity
-      if (width <= MAX_BOUND && height <= MAX_BOUND && file.size < 2.5 * 1024 * 1024) {
-        callback(rawData);
-        return;
-      }
+      const MAX_BOUND = 1800; // Optimal HD web boundary
+      let width = img.naturalWidth || img.width;
+      let height = img.naturalHeight || img.height;
 
       if (width > MAX_BOUND || height > MAX_BOUND) {
         if (width > height) {
@@ -1568,8 +1563,7 @@ async function processHighResMediaUpload(file, callback) {
       ctx.imageSmoothingQuality = "high";
       ctx.drawImage(img, 0, 0, width, height);
 
-      const isPng = file.type === "image/png" || file.name.toLowerCase().endsWith(".png");
-      const highResData = canvas.toDataURL(isPng ? "image/png" : "image/jpeg", 0.92);
+      const highResData = canvas.toDataURL("image/jpeg", 0.85);
       callback(highResData);
     };
     img.src = rawData;
@@ -1580,35 +1574,56 @@ async function processHighResMediaUpload(file, callback) {
 // Rotate Image Data URL helper
 function rotateImageDataUrl(dataUrl, degrees, callback) {
   if (!dataUrl) return;
-  const img = new Image();
-  img.onload = () => {
-    const canvas = document.createElement("canvas");
-    const isSideways = Math.abs(degrees % 180) === 90;
+  try {
+    const img = new Image();
+    img.crossOrigin = "anonymous";
+    img.onload = () => {
+      try {
+        const isSideways = Math.abs(degrees % 180) === 90;
+        let origW = img.naturalWidth || img.width;
+        let origH = img.naturalHeight || img.height;
 
-    const w = img.naturalWidth || img.width;
-    const h = img.naturalHeight || img.height;
+        const MAX_DIM = 1800;
+        if (origW > MAX_DIM || origH > MAX_DIM) {
+          if (origW > origH) {
+            origH = Math.round((origH * MAX_DIM) / origW);
+            origW = MAX_DIM;
+          } else {
+            origW = Math.round((origW * MAX_DIM) / origH);
+            origH = MAX_DIM;
+          }
+        }
 
-    if (isSideways) {
-      canvas.width = h;
-      canvas.height = w;
-    } else {
-      canvas.width = w;
-      canvas.height = h;
-    }
+        const canvas = document.createElement("canvas");
+        if (isSideways) {
+          canvas.width = origH;
+          canvas.height = origW;
+        } else {
+          canvas.width = origW;
+          canvas.height = origH;
+        }
 
-    const ctx = canvas.getContext("2d", { alpha: false });
-    ctx.imageSmoothingEnabled = true;
-    ctx.imageSmoothingQuality = "high";
+        const ctx = canvas.getContext("2d", { alpha: false });
+        ctx.imageSmoothingEnabled = true;
+        ctx.imageSmoothingQuality = "high";
 
-    ctx.translate(canvas.width / 2, canvas.height / 2);
-    ctx.rotate((degrees * Math.PI) / 180);
-    ctx.drawImage(img, -w / 2, -h / 2);
+        ctx.translate(canvas.width / 2, canvas.height / 2);
+        ctx.rotate((degrees * Math.PI) / 180);
+        ctx.drawImage(img, -origW / 2, -origH / 2, origW, origH);
 
-    const isPng = dataUrl.startsWith("data:image/png");
-    const rotatedDataUrl = canvas.toDataURL(isPng ? "image/png" : "image/jpeg", 0.94);
-    if (callback) callback(rotatedDataUrl);
-  };
-  img.src = dataUrl;
+        const rotatedDataUrl = canvas.toDataURL("image/jpeg", 0.85);
+        if (callback) callback(rotatedDataUrl);
+      } catch (err) {
+        console.error("Canvas rotation export error:", err);
+      }
+    };
+    img.onerror = (err) => {
+      console.error("Image load for rotation failed:", err);
+    };
+    img.src = dataUrl;
+  } catch (e) {
+    console.error("rotateImageDataUrl error:", e);
+  }
 }
 
 // Bind project image upload handlers
@@ -3046,6 +3061,8 @@ function setupAdminCertFormOnce() {
       const date = document.getElementById("admin-cert-date").value.trim();
       const url = document.getElementById("admin-cert-url").value.trim();
       const skills = document.getElementById("admin-cert-skills").value.trim();
+      const manualUrl = document.getElementById("admin-cert-image-url") ? document.getElementById("admin-cert-image-url").value.trim() : "";
+      const imageToSave = currentUploadedCertImage || manualUrl || "";
 
       await Database.saveCertificate({
         id: id || undefined,
@@ -3054,7 +3071,7 @@ function setupAdminCertFormOnce() {
         date,
         url,
         skills,
-        image: currentUploadedCertImage
+        image: imageToSave
       });
 
       const submitBtn = document.getElementById("admin-cert-submit-btn");
