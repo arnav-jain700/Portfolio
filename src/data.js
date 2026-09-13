@@ -606,7 +606,7 @@ export const Database = {
   getCertificates() {
     try {
       const items = JSON.parse(localStorage.getItem("portfolio_certificates") || "[]");
-      return (Array.isArray(items) ? items : []).map(c => ({
+      const list = (Array.isArray(items) ? items : []).map(c => ({
         id: c.id || "cert-" + Date.now(),
         title: c.title || "",
         issuer: c.issuer || "",
@@ -616,6 +616,42 @@ export const Database = {
         skills: c.skills || "",
         image: c.image || ""
       }));
+
+      // Sort chronologically by date of issue (newest first)
+      const parseDateForSort = (dateStr) => {
+        if (!dateStr || typeof dateStr !== "string") return 0;
+        const str = dateStr.trim();
+        if (!str) return 0;
+        if (/present|current|ongoing/i.test(str)) return Date.now() + 1000000000;
+        
+        // Match Month'YY or Month'YYYY (e.g. Aug'26, Jul'26, Mar'25)
+        const monthApos = str.match(/([a-zA-Z]+)\s*['’](\d{2,4})/);
+        if (monthApos) {
+          const m = monthApos[1];
+          let y = parseInt(monthApos[2], 10);
+          if (y < 100) y += 2000;
+          const p = Date.parse(`${m} 1, ${y}`);
+          if (!isNaN(p)) return p;
+        }
+
+        let p = Date.parse(str);
+        if (!isNaN(p)) return p;
+        p = Date.parse("1 " + str);
+        if (!isNaN(p)) return p;
+
+        const yMatch = str.match(/\b(19\d\d|20\d\d)\b/);
+        const mMatch = str.match(/\b(jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec)[a-z]*\b/i);
+        if (yMatch) {
+          const year = parseInt(yMatch[1], 10);
+          const month = mMatch ? mMatch[1] : "Jan";
+          const res = Date.parse(`${month} 1, ${year}`);
+          if (!isNaN(res)) return res;
+          return new Date(year, 0, 1).getTime();
+        }
+        return 0;
+      };
+
+      return list.sort((a, b) => parseDateForSort(b.date) - parseDateForSort(a.date));
     } catch (e) {
       return [];
     }
