@@ -1363,6 +1363,7 @@ function initAdminPanel() {
   setupAdminTimelineFormOnce();
   setupAdminBlogFormOnce();
   setupAdminCertFormOnce();
+  setupAdminCustomCvHandlersOnce();
 }
 
 // Admin: Manage Tech Stacks
@@ -1983,8 +1984,108 @@ function renderAdminMessages() {
   });
 }
 
-// Admin: Settings Pane
+// Admin: Settings Pane & Custom CV PDF Management
+let currentCustomCvUrl = "";
+let currentCustomCvName = "";
+let customCvFormBound = false;
+
+function showCustomCvPreview(url, name) {
+  const box = document.getElementById("admin-custom-cv-preview-box");
+  const nameEl = document.getElementById("admin-custom-cv-filename");
+  const badge = document.getElementById("admin-custom-cv-status-badge");
+  if (box && nameEl) {
+    nameEl.textContent = name || "Custom_CV.pdf";
+    box.style.display = "flex";
+  }
+  if (badge) {
+    badge.textContent = "✓ Custom PDF Active";
+    badge.style.background = "rgba(0, 229, 255, 0.15)";
+    badge.style.color = "var(--accent-cyan)";
+    badge.style.borderColor = "rgba(0, 229, 255, 0.4)";
+  }
+}
+
+function hideCustomCvPreview() {
+  const box = document.getElementById("admin-custom-cv-preview-box");
+  const fileInput = document.getElementById("admin-custom-cv-file");
+  const urlInput = document.getElementById("admin-custom-cv-url");
+  const badge = document.getElementById("admin-custom-cv-status-badge");
+  if (box) {
+    box.style.display = "none";
+  }
+  if (fileInput) fileInput.value = "";
+  if (urlInput) urlInput.value = "";
+  if (badge) {
+    badge.textContent = "Dynamic ATS Generator Mode";
+    badge.style.background = "rgba(255, 255, 255, 0.06)";
+    badge.style.color = "var(--text-dimmed)";
+    badge.style.borderColor = "var(--border-light)";
+  }
+  currentCustomCvUrl = "";
+  currentCustomCvName = "";
+}
+
+function setupAdminCustomCvHandlersOnce() {
+  if (customCvFormBound) return;
+  customCvFormBound = true;
+
+  const fileInput = document.getElementById("admin-custom-cv-file");
+  const urlInput = document.getElementById("admin-custom-cv-url");
+  const removeBtn = document.getElementById("admin-custom-cv-remove-btn");
+  const viewBtn = document.getElementById("admin-custom-cv-view-btn");
+
+  if (fileInput) {
+    fileInput.addEventListener("change", (e) => {
+      const file = e.target.files[0];
+      if (file) {
+        if (urlInput) urlInput.value = "";
+        const reader = new FileReader();
+        reader.onload = (evt) => {
+          currentCustomCvUrl = evt.target.result;
+          currentCustomCvName = file.name || "Custom_CV.pdf";
+          showCustomCvPreview(currentCustomCvUrl, currentCustomCvName);
+          showToast(`Loaded "${currentCustomCvName}". Click "Save Settings" to apply.`);
+        };
+        reader.readAsDataURL(file);
+      }
+    });
+  }
+
+  if (urlInput) {
+    urlInput.addEventListener("input", (e) => {
+      const val = e.target.value.trim();
+      if (val) {
+        if (fileInput) fileInput.value = "";
+        currentCustomCvUrl = val;
+        currentCustomCvName = val.split("/").pop().split("?")[0] || "Custom_CV.pdf";
+        showCustomCvPreview(currentCustomCvUrl, currentCustomCvName);
+      } else {
+        hideCustomCvPreview();
+      }
+    });
+  }
+
+  if (removeBtn) {
+    removeBtn.addEventListener("click", () => {
+      hideCustomCvPreview();
+      showToast("Custom PDF cleared. Will use dynamic ATS resume. Click 'Save Settings' to apply.", "delete");
+    });
+  }
+
+  if (viewBtn) {
+    viewBtn.addEventListener("click", () => {
+      if (!currentCustomCvUrl) {
+        showToast("No custom CV PDF currently loaded.", "error");
+        return;
+      }
+      handleDownloadOrOpenPdf(currentCustomCvUrl, currentCustomCvName || "Custom_CV.pdf", true);
+    });
+  }
+}
+
 function loadAdminSettings() {
+  setupAdminCustomCvHandlersOnce();
+
   const settings = Database.getSettings();
   const keyInput = document.getElementById("admin-settings-key");
   const bioInput = document.getElementById("admin-settings-bio");
@@ -2000,6 +2101,19 @@ function loadAdminSettings() {
   document.getElementById("admin-settings-github").value = settings.github || "";
   document.getElementById("admin-settings-codolio").value = settings.codolio || "";
   document.getElementById("admin-settings-medium").value = settings.medium || "";
+
+  // Load Custom CV PDF state
+  currentCustomCvUrl = settings.customCvUrl || "";
+  currentCustomCvName = settings.customCvName || "";
+  if (currentCustomCvUrl) {
+    showCustomCvPreview(currentCustomCvUrl, currentCustomCvName);
+    if (!currentCustomCvUrl.startsWith("data:")) {
+      const urlInput = document.getElementById("admin-custom-cv-url");
+      if (urlInput) urlInput.value = currentCustomCvUrl;
+    }
+  } else {
+    hideCustomCvPreview();
+  }
 
   updateApiBadge(settings.groqKey || settings.geminiKey);
 }
@@ -2036,13 +2150,15 @@ document.getElementById("admin-settings-save").addEventListener("click", () => {
     linkedin, 
     github, 
     codolio, 
-    medium 
+    medium,
+    customCvUrl: currentCustomCvUrl,
+    customCvName: currentCustomCvName
   });
   updateApiBadge(groqKey);
   
   const saveBtn = document.getElementById("admin-settings-save");
   flashButtonSuccess(saveBtn, "✓ Settings Saved & Synced!");
-  showToast("Platform profile and Groq AI Co-Pilot settings saved!");
+  showToast("Platform profile, custom CV PDF, and Groq AI Co-Pilot settings saved!");
   refreshAllPublicViews();
 });
 
@@ -4338,16 +4454,80 @@ function generatePrintLayout(type) {
   }
 }
 
+// PDF Handler & Downloader (Supports Custom PDF Document or Dynamic ATS Fallback)
+function dataUrlToBlob(dataUrl) {
+  try {
+    const arr = dataUrl.split(",");
+    const mime = (arr[0].match(/:(.*?);/) || [])[1] || "application/pdf";
+    const bstr = atob(arr[1]);
+    let n = bstr.length;
+    const u8arr = new Uint8Array(n);
+    while (n--) {
+      u8arr[n] = bstr.charCodeAt(n);
+    }
+    return new Blob([u8arr], { type: mime });
+  } catch (e) {
+    console.error("dataUrlToBlob conversion failed:", e);
+    return null;
+  }
+}
+
+function handleDownloadOrOpenPdf(url, filename = "Arnav_Jain_CV.pdf", forceOpen = false) {
+  if (!url) return;
+  if (url.startsWith("data:")) {
+    const blob = dataUrlToBlob(url);
+    if (blob) {
+      const blobUrl = URL.createObjectURL(blob);
+      if (forceOpen) {
+        window.open(blobUrl, "_blank");
+      } else {
+        const a = document.createElement("a");
+        a.href = blobUrl;
+        a.download = filename;
+        document.body.appendChild(a);
+        a.click();
+        setTimeout(() => {
+          a.remove();
+          URL.revokeObjectURL(blobUrl);
+        }, 3000);
+        showToast(`Downloading custom document: ${filename}`);
+      }
+    } else {
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = filename;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+    }
+  } else if (url.startsWith("http")) {
+    window.open(url, "_blank");
+    showToast(`Opening custom document: ${filename}`);
+  } else {
+    window.open(url, "_blank");
+  }
+}
+
+function handleCvDownload(type) {
+  const settings = Database.getSettings();
+  if (settings && settings.customCvUrl) {
+    const filename = settings.customCvName || (type === "resume" ? "Arnav_Jain_Resume.pdf" : "Arnav_Jain_CV.pdf");
+    handleDownloadOrOpenPdf(settings.customCvUrl, filename, false);
+  } else {
+    exportPDF(type);
+  }
+}
+
 // Bind events to resume/cv download buttons
 function initResumeExporter() {
   const resumeBtn = document.getElementById("btn-download-resume");
   const cvBtn = document.getElementById("btn-download-cv");
 
   if (resumeBtn) {
-    resumeBtn.addEventListener("click", () => exportPDF("resume"));
+    resumeBtn.addEventListener("click", () => handleCvDownload("resume"));
   }
   if (cvBtn) {
-    cvBtn.addEventListener("click", () => exportPDF("cv"));
+    cvBtn.addEventListener("click", () => handleCvDownload("cv"));
   }
 }
 
