@@ -1363,6 +1363,7 @@ function initAdminPanel() {
   setupAdminTimelineFormOnce();
   setupAdminBlogFormOnce();
   setupAdminCertFormOnce();
+  setupAdminCustomResumeHandlersOnce();
   setupAdminCustomCvHandlersOnce();
 }
 
@@ -1984,10 +1985,108 @@ function renderAdminMessages() {
   });
 }
 
-// Admin: Settings Pane & Custom CV PDF Management
+// Admin: Settings Pane & Custom Resume & CV PDF Management
+let currentCustomResumeUrl = "";
+let currentCustomResumeName = "";
+let customResumeFormBound = false;
+
 let currentCustomCvUrl = "";
 let currentCustomCvName = "";
 let customCvFormBound = false;
+
+function showCustomResumePreview(url, name) {
+  const box = document.getElementById("admin-custom-resume-preview-box");
+  const nameEl = document.getElementById("admin-custom-resume-filename");
+  const badge = document.getElementById("admin-custom-resume-status-badge");
+  if (box && nameEl) {
+    nameEl.textContent = name || "Custom_Resume.pdf";
+    box.style.display = "flex";
+  }
+  if (badge) {
+    badge.textContent = "✓ Custom Resume Active";
+    badge.style.background = "rgba(0, 229, 255, 0.15)";
+    badge.style.color = "var(--accent-cyan)";
+    badge.style.borderColor = "rgba(0, 229, 255, 0.4)";
+  }
+}
+
+function hideCustomResumePreview() {
+  const box = document.getElementById("admin-custom-resume-preview-box");
+  const fileInput = document.getElementById("admin-custom-resume-file");
+  const urlInput = document.getElementById("admin-custom-resume-url");
+  const badge = document.getElementById("admin-custom-resume-status-badge");
+  if (box) {
+    box.style.display = "none";
+  }
+  if (fileInput) fileInput.value = "";
+  if (urlInput) urlInput.value = "";
+  if (badge) {
+    badge.textContent = "Dynamic 1-Page ATS Generator";
+    badge.style.background = "rgba(255, 255, 255, 0.06)";
+    badge.style.color = "var(--text-dimmed)";
+    badge.style.borderColor = "var(--border-light)";
+  }
+  currentCustomResumeUrl = "";
+  currentCustomResumeName = "";
+}
+
+function setupAdminCustomResumeHandlersOnce() {
+  if (customResumeFormBound) return;
+  customResumeFormBound = true;
+
+  const fileInput = document.getElementById("admin-custom-resume-file");
+  const urlInput = document.getElementById("admin-custom-resume-url");
+  const removeBtn = document.getElementById("admin-custom-resume-remove-btn");
+  const viewBtn = document.getElementById("admin-custom-resume-view-btn");
+
+  if (fileInput) {
+    fileInput.addEventListener("change", (e) => {
+      const file = e.target.files[0];
+      if (file) {
+        if (urlInput) urlInput.value = "";
+        const reader = new FileReader();
+        reader.onload = (evt) => {
+          currentCustomResumeUrl = evt.target.result;
+          currentCustomResumeName = file.name || "Custom_Resume.pdf";
+          showCustomResumePreview(currentCustomResumeUrl, currentCustomResumeName);
+          showToast(`Loaded Resume "${currentCustomResumeName}". Click "Save Settings" to apply.`);
+        };
+        reader.readAsDataURL(file);
+      }
+    });
+  }
+
+  if (urlInput) {
+    urlInput.addEventListener("input", (e) => {
+      const val = e.target.value.trim();
+      if (val) {
+        if (fileInput) fileInput.value = "";
+        currentCustomResumeUrl = val;
+        currentCustomResumeName = val.split("/").pop().split("?")[0] || "Custom_Resume.pdf";
+        showCustomResumePreview(currentCustomResumeUrl, currentCustomResumeName);
+      } else {
+        hideCustomResumePreview();
+      }
+    });
+  }
+
+  if (removeBtn) {
+    removeBtn.addEventListener("click", () => {
+      hideCustomResumePreview();
+      showToast("Custom Resume cleared. Will use dynamic ATS generator. Click 'Save Settings' to apply.", "delete");
+    });
+  }
+
+  if (viewBtn) {
+    viewBtn.addEventListener("click", () => {
+      if (!currentCustomResumeUrl) {
+        showToast("No custom Resume PDF currently loaded.", "error");
+        return;
+      }
+      handleDownloadOrOpenPdf(currentCustomResumeUrl, currentCustomResumeName || "Custom_Resume.pdf", true);
+    });
+  }
+}
 
 function showCustomCvPreview(url, name) {
   const box = document.getElementById("admin-custom-cv-preview-box");
@@ -1998,10 +2097,10 @@ function showCustomCvPreview(url, name) {
     box.style.display = "flex";
   }
   if (badge) {
-    badge.textContent = "✓ Custom PDF Active";
-    badge.style.background = "rgba(0, 229, 255, 0.15)";
-    badge.style.color = "var(--accent-cyan)";
-    badge.style.borderColor = "rgba(0, 229, 255, 0.4)";
+    badge.textContent = "✓ Custom Full CV Active";
+    badge.style.background = "rgba(168, 85, 247, 0.15)";
+    badge.style.color = "var(--accent-purple, #a855f7)";
+    badge.style.borderColor = "rgba(168, 85, 247, 0.4)";
   }
 }
 
@@ -2016,7 +2115,7 @@ function hideCustomCvPreview() {
   if (fileInput) fileInput.value = "";
   if (urlInput) urlInput.value = "";
   if (badge) {
-    badge.textContent = "Dynamic ATS Generator Mode";
+    badge.textContent = "Dynamic Full CV Generator";
     badge.style.background = "rgba(255, 255, 255, 0.06)";
     badge.style.color = "var(--text-dimmed)";
     badge.style.borderColor = "var(--border-light)";
@@ -2044,7 +2143,7 @@ function setupAdminCustomCvHandlersOnce() {
           currentCustomCvUrl = evt.target.result;
           currentCustomCvName = file.name || "Custom_CV.pdf";
           showCustomCvPreview(currentCustomCvUrl, currentCustomCvName);
-          showToast(`Loaded "${currentCustomCvName}". Click "Save Settings" to apply.`);
+          showToast(`Loaded Full CV "${currentCustomCvName}". Click "Save Settings" to apply.`);
         };
         reader.readAsDataURL(file);
       }
@@ -2068,7 +2167,7 @@ function setupAdminCustomCvHandlersOnce() {
   if (removeBtn) {
     removeBtn.addEventListener("click", () => {
       hideCustomCvPreview();
-      showToast("Custom PDF cleared. Will use dynamic ATS resume. Click 'Save Settings' to apply.", "delete");
+      showToast("Custom Full CV cleared. Will use dynamic CV generator. Click 'Save Settings' to apply.", "delete");
     });
   }
 
@@ -2084,6 +2183,7 @@ function setupAdminCustomCvHandlersOnce() {
 }
 
 function loadAdminSettings() {
+  setupAdminCustomResumeHandlersOnce();
   setupAdminCustomCvHandlersOnce();
 
   const settings = Database.getSettings();
@@ -2102,7 +2202,20 @@ function loadAdminSettings() {
   document.getElementById("admin-settings-codolio").value = settings.codolio || "";
   document.getElementById("admin-settings-medium").value = settings.medium || "";
 
-  // Load Custom CV PDF state
+  // Load Custom Resume (1-Page ATS) PDF state
+  currentCustomResumeUrl = settings.customResumeUrl || "";
+  currentCustomResumeName = settings.customResumeName || "";
+  if (currentCustomResumeUrl) {
+    showCustomResumePreview(currentCustomResumeUrl, currentCustomResumeName);
+    if (!currentCustomResumeUrl.startsWith("data:")) {
+      const urlInput = document.getElementById("admin-custom-resume-url");
+      if (urlInput) urlInput.value = currentCustomResumeUrl;
+    }
+  } else {
+    hideCustomResumePreview();
+  }
+
+  // Load Custom Full CV PDF state
   currentCustomCvUrl = settings.customCvUrl || "";
   currentCustomCvName = settings.customCvName || "";
   if (currentCustomCvUrl) {
@@ -2151,6 +2264,8 @@ document.getElementById("admin-settings-save").addEventListener("click", () => {
     github, 
     codolio, 
     medium,
+    customResumeUrl: currentCustomResumeUrl,
+    customResumeName: currentCustomResumeName,
     customCvUrl: currentCustomCvUrl,
     customCvName: currentCustomCvName
   });
@@ -2158,7 +2273,7 @@ document.getElementById("admin-settings-save").addEventListener("click", () => {
   
   const saveBtn = document.getElementById("admin-settings-save");
   flashButtonSuccess(saveBtn, "✓ Settings Saved & Synced!");
-  showToast("Platform profile, custom CV PDF, and Groq AI Co-Pilot settings saved!");
+  showToast("Platform profile, custom Resume & CV documents, and Groq AI Co-Pilot settings saved!");
   refreshAllPublicViews();
 });
 
@@ -4510,11 +4625,20 @@ function handleDownloadOrOpenPdf(url, filename = "Arnav_Jain_CV.pdf", forceOpen 
 
 function handleCvDownload(type) {
   const settings = Database.getSettings();
-  if (settings && settings.customCvUrl) {
-    const filename = settings.customCvName || (type === "resume" ? "Arnav_Jain_Resume.pdf" : "Arnav_Jain_CV.pdf");
-    handleDownloadOrOpenPdf(settings.customCvUrl, filename, false);
+  if (type === "resume") {
+    if (settings && settings.customResumeUrl) {
+      const filename = settings.customResumeName || "Arnav_Jain_Resume.pdf";
+      handleDownloadOrOpenPdf(settings.customResumeUrl, filename, false);
+    } else {
+      exportPDF("resume");
+    }
   } else {
-    exportPDF(type);
+    if (settings && settings.customCvUrl) {
+      const filename = settings.customCvName || "Arnav_Jain_CV.pdf";
+      handleDownloadOrOpenPdf(settings.customCvUrl, filename, false);
+    } else {
+      exportPDF("cv");
+    }
   }
 }
 

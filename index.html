@@ -677,38 +677,75 @@
                   </p>
                 </div>
 
-                <!-- Custom CV / Resume PDF Document Management -->
-                <div class="form-group" style="margin-bottom: 26px; padding: 18px; background: rgba(0, 0, 0, 0.25); border: 1px solid var(--border-light); border-radius: var(--radius-sm);">
+                <!-- Custom Resume (1-Page ATS) PDF Document Management -->
+                <div class="form-group" style="margin-bottom: 22px; padding: 18px; background: rgba(0, 0, 0, 0.25); border: 1px solid var(--border-light); border-radius: var(--radius-sm);">
                   <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; flex-wrap: wrap; gap: 8px;">
                     <label class="form-label" style="margin-bottom: 0; font-weight: 600; color: var(--accent-cyan); display: flex; align-items: center; gap: 6px;">
                       <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
-                      Custom CV & Resume PDF Document
+                      1. Custom Resume PDF (1-Page ATS)
                     </label>
-                    <span id="admin-custom-cv-status-badge" style="font-size: 0.75rem; padding: 2px 10px; border-radius: 12px; background: rgba(255,255,255,0.06); color: var(--text-dimmed); border: 1px solid var(--border-light);">Dynamic ATS Generator Mode</span>
+                    <span id="admin-custom-resume-status-badge" style="font-size: 0.75rem; padding: 2px 10px; border-radius: 12px; background: rgba(255,255,255,0.06); color: var(--text-dimmed); border: 1px solid var(--border-light);">Dynamic 1-Page ATS Generator</span>
                   </div>
-                  <p style="color: var(--text-dimmed); font-size: 0.8rem; margin-bottom: 14px; line-height: 1.45;">
-                    Upload your own master CV/Resume PDF file or provide an external PDF URL. When set, site visitors clicking "Download Resume" or "Download Full CV" will directly download/open your custom PDF document. If removed or left empty, the portfolio automatically defaults to the dynamic ATS-friendly resume generator.
+                  <p style="color: var(--text-dimmed); font-size: 0.8rem; margin-bottom: 12px; line-height: 1.45;">
+                    Upload your dedicated 1-page Resume PDF file or link a URL. When set, visitors clicking <strong>"Download Resume (1-Page ATS)"</strong> will receive this document. If left empty, the dynamic ATS resume generator will be used.
+                  </p>
+                  <div style="display: flex; gap: 12px; align-items: center; flex-wrap: wrap;">
+                    <input type="file" id="admin-custom-resume-file" class="glass-input" accept="application/pdf,.pdf" style="padding: 6px 12px; flex: 1; min-width: 200px;" />
+                    <span style="color: var(--text-dimmed); font-size: 0.85rem;">or</span>
+                    <input type="url" id="admin-custom-resume-url" class="glass-input" placeholder="https://example.com/my-resume.pdf" style="flex: 1; min-width: 200px;" />
+                  </div>
+                  <div id="admin-custom-resume-preview-box" style="margin-top: 14px; display: none; align-items: center; justify-content: space-between; gap: 12px; padding: 12px 16px; background: rgba(0, 229, 255, 0.05); border: 1px solid rgba(0, 229, 255, 0.25); border-radius: var(--radius-sm); flex-wrap: wrap;">
+                    <div style="display: flex; align-items: center; gap: 10px; font-size: 0.88rem; color: var(--text-primary); min-width: 180px;">
+                      <span style="font-size: 1.3rem;">📄</span>
+                      <div>
+                        <strong id="admin-custom-resume-filename" style="color: var(--accent-cyan); display: block; word-break: break-all;">Custom_Resume.pdf</strong>
+                        <small style="color: var(--text-dimmed); font-size: 0.72rem;">Custom Resume Active &bull; Ready for 1-Page Downloads</small>
+                      </div>
+                    </div>
+                    <div style="display: flex; gap: 8px; align-items: center; flex-wrap: wrap;">
+                      <button type="button" id="admin-custom-resume-view-btn" class="btn btn-secondary btn-sm" style="padding: 5px 12px; font-size: 0.78rem; display: inline-flex; align-items: center; gap: 4px;" title="Test / Open Resume Document">
+                        <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+                        View / Test PDF ↗
+                      </button>
+                      <button type="button" id="admin-custom-resume-remove-btn" class="btn btn-secondary btn-sm" style="padding: 5px 12px; font-size: 0.78rem; border-color: rgba(239, 68, 68, 0.4); color: #f87171;" title="Remove and revert to ATS generator">
+                        Remove Custom Resume
+                      </button>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Custom Full CV PDF Document Management -->
+                <div class="form-group" style="margin-bottom: 26px; padding: 18px; background: rgba(0, 0, 0, 0.25); border: 1px solid var(--border-light); border-radius: var(--radius-sm);">
+                  <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; flex-wrap: wrap; gap: 8px;">
+                    <label class="form-label" style="margin-bottom: 0; font-weight: 600; color: var(--accent-purple, #a855f7); display: flex; align-items: center; gap: 6px;">
+                      <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
+                      2. Custom Full Curriculum Vitae (CV) PDF
+                    </label>
+                    <span id="admin-custom-cv-status-badge" style="font-size: 0.75rem; padding: 2px 10px; border-radius: 12px; background: rgba(255,255,255,0.06); color: var(--text-dimmed); border: 1px solid var(--border-light);">Dynamic Full CV Generator</span>
+                  </div>
+                  <p style="color: var(--text-dimmed); font-size: 0.8rem; margin-bottom: 12px; line-height: 1.45;">
+                    Upload your comprehensive, multi-page Master CV PDF file or link a URL. When set, visitors clicking <strong>"Download Full CV"</strong> will receive this document. If left empty, the dynamic CV generator will be used.
                   </p>
                   <div style="display: flex; gap: 12px; align-items: center; flex-wrap: wrap;">
                     <input type="file" id="admin-custom-cv-file" class="glass-input" accept="application/pdf,.pdf" style="padding: 6px 12px; flex: 1; min-width: 200px;" />
                     <span style="color: var(--text-dimmed); font-size: 0.85rem;">or</span>
-                    <input type="url" id="admin-custom-cv-url" class="glass-input" placeholder="https://example.com/my-resume.pdf" style="flex: 1; min-width: 200px;" />
+                    <input type="url" id="admin-custom-cv-url" class="glass-input" placeholder="https://example.com/my-full-cv.pdf" style="flex: 1; min-width: 200px;" />
                   </div>
-                  <div id="admin-custom-cv-preview-box" style="margin-top: 14px; display: none; align-items: center; justify-content: space-between; gap: 12px; padding: 12px 16px; background: rgba(0, 229, 255, 0.05); border: 1px solid rgba(0, 229, 255, 0.25); border-radius: var(--radius-sm); flex-wrap: wrap;">
+                  <div id="admin-custom-cv-preview-box" style="margin-top: 14px; display: none; align-items: center; justify-content: space-between; gap: 12px; padding: 12px 16px; background: rgba(168, 85, 247, 0.05); border: 1px solid rgba(168, 85, 247, 0.25); border-radius: var(--radius-sm); flex-wrap: wrap;">
                     <div style="display: flex; align-items: center; gap: 10px; font-size: 0.88rem; color: var(--text-primary); min-width: 180px;">
                       <span style="font-size: 1.3rem;">📄</span>
                       <div>
-                        <strong id="admin-custom-cv-filename" style="color: var(--accent-cyan); display: block; word-break: break-all;">Custom_CV.pdf</strong>
-                        <small style="color: var(--text-dimmed); font-size: 0.72rem;">Active Custom Document &bull; Ready to Serve</small>
+                        <strong id="admin-custom-cv-filename" style="color: var(--accent-purple, #a855f7); display: block; word-break: break-all;">Custom_CV.pdf</strong>
+                        <small style="color: var(--text-dimmed); font-size: 0.72rem;">Custom CV Active &bull; Ready for Full CV Downloads</small>
                       </div>
                     </div>
                     <div style="display: flex; gap: 8px; align-items: center; flex-wrap: wrap;">
-                      <button type="button" id="admin-custom-cv-view-btn" class="btn btn-secondary btn-sm" style="padding: 5px 12px; font-size: 0.78rem; display: inline-flex; align-items: center; gap: 4px;" title="Test / Open Document">
+                      <button type="button" id="admin-custom-cv-view-btn" class="btn btn-secondary btn-sm" style="padding: 5px 12px; font-size: 0.78rem; display: inline-flex; align-items: center; gap: 4px;" title="Test / Open CV Document">
                         <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
                         View / Test PDF ↗
                       </button>
-                      <button type="button" id="admin-custom-cv-remove-btn" class="btn btn-secondary btn-sm" style="padding: 5px 12px; font-size: 0.78rem; border-color: rgba(239, 68, 68, 0.4); color: #f87171;" title="Remove and revert to ATS generator">
-                        Remove Custom PDF
+                      <button type="button" id="admin-custom-cv-remove-btn" class="btn btn-secondary btn-sm" style="padding: 5px 12px; font-size: 0.78rem; border-color: rgba(239, 68, 68, 0.4); color: #f87171;" title="Remove and revert to CV generator">
+                        Remove Custom CV
                       </button>
                     </div>
                   </div>

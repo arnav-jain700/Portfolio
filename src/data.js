@@ -62,6 +62,8 @@ const DEFAULT_SETTINGS = {
   medium: "https://medium.com/@arnav4334",
   geminiKey: "",
   categories: ["Frontend", "Backend", "Databases", "DevOps", "Version Control", "Data Science", "Non-Technical Skills"],
+  customResumeUrl: "",
+  customResumeName: "",
   customCvUrl: "",
   customCvName: ""
 };
